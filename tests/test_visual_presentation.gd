@@ -9,9 +9,18 @@ func _run_tests() -> void:
 	var key_art: Texture2D = load("res://assets/art/campaign_key_art.png")
 	var ground_art: Texture2D = load("res://assets/art/jungle_ground.png")
 	var river_art: Texture2D = load("res://assets/art/river_water_v2.png")
+	var app_icon: Texture2D = load("res://assets/art/app_icon.png")
 	_check(key_art != null and key_art.get_width() >= 1200 and key_art.get_width() > key_art.get_height(), "Campaign key art is a high-resolution landscape texture")
 	_check(ground_art != null and ground_art.get_width() >= 1000 and ground_art.get_height() >= 1000, "Battlefield ground art is a high-resolution tile texture")
 	_check(river_art != null and river_art.get_width() >= 1000 and river_art.get_height() >= 1000, "River uses a high-resolution painted water texture")
+	_check(
+		app_icon != null
+		and app_icon.get_width() >= 512
+		and app_icon.get_width() == app_icon.get_height()
+		and app_icon.get_image().detect_alpha() != Image.ALPHA_NONE
+		and str(ProjectSettings.get_setting("application/config/icon", "")) == "res://assets/art/app_icon.png",
+		"The application uses a high-resolution transparent jeep icon"
+	)
 	for sprite_path in [
 		"res://assets/art/player_jeep_v2.png",
 		"res://assets/art/enemy_infantry_v2.png",

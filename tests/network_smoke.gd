@@ -150,6 +150,7 @@ func _run_server(expected_players: int) -> void:
 	)
 	var host_player: Node = get_tree().current_scene.get_node("Player_1")
 	var extraction_zone: Node2D = get_tree().current_scene.get_node("ExtractionZone")
+	extraction_zone.set("helicopter_speed", 5000.0)
 	host_player.call("try_add_passenger")
 	host_player.call("try_add_passenger")
 	upgrade_owner.global_position = extraction_zone.global_position
