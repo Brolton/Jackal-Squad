@@ -24,8 +24,11 @@ func _run_tests() -> void:
 	_check(
 		float(helicopter_signature["travel_direction_x"]) > 0.0
 		and float(helicopter_signature["cockpit_offset_x"]) > 0.0
-		and float(helicopter_signature["tail_offset_x"]) < 0.0,
-		"The rescue helicopter flies nose-first instead of tail-first"
+		and float(helicopter_signature["tail_offset_x"]) < 0.0
+		and bool(helicopter_signature["landing_pad"])
+		and str(helicopter_signature["pad_label"]) == "H"
+		and bool(helicopter_signature["staged_boarding"]),
+		"The rescue helicopter flies nose-first to a marked H pad with staged boarding"
 	)
 	extraction_zone.set("_helicopter_timer", 0.0)
 	extraction_zone.call("_physics_process", 0.1)
@@ -100,7 +103,12 @@ func _run_tests() -> void:
 	var deadline := Time.get_ticks_msec() + 1000
 	while not bool(player.get("_extraction_active")) and Time.get_ticks_msec() < deadline:
 		await physics_frame
-	_check(bool(player.get("_extraction_active")), "Entering extraction starts automatic unloading")
+	_check(
+		bool(player.get("_extraction_active"))
+		and bool(extraction_zone.get("_helicopter_active"))
+		and int(extraction_zone.get("_helicopter_state")) == 2,
+		"Standing on the pad calls the helicopter and unloading waits for its landing"
+	)
 
 	deadline = Time.get_ticks_msec() + 1800
 	while int(session.get("evacuated_passengers")) < 1 and Time.get_ticks_msec() < deadline:
@@ -109,6 +117,8 @@ func _run_tests() -> void:
 		int(session.get("evacuated_passengers")) == 1 and int(player.get("passenger_count")) == 1,
 		"Extraction unloads passengers one at a time"
 	)
+	helicopter_signature = extraction_zone.call("helicopter_visual_signature")
+	_check(int(helicopter_signature["boarding_visuals"]) > 0, "An unloaded passenger visibly walks from the jeep to the helicopter")
 
 	player.velocity = Vector2.ZERO
 	player.global_position = extraction_zone.global_position + Vector2(400.0, 0.0)

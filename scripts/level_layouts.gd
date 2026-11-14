@@ -45,7 +45,9 @@ static func _emerald_approach() -> Dictionary:
 		],
 		"obstacles": _emerald_obstacles(),
 		"rescues": [Vector2(300, 2180), Vector2(1210, 1080)],
-		"extraction": Vector2(750, 245), "base": Vector2(750, 92),
+		"extraction": Vector2(750, 245),
+		"extractions": [Vector2(750, 245), Vector2(720, 2050), Vector2(940, 3470)],
+		"base": Vector2(750, 92),
 		"upgrades": [{"type": &"primary", "position": Vector2(550, 3650)}, {"type": &"secondary", "position": Vector2(1080, 2670)}, {"type": &"primary", "position": Vector2(420, 1850)}, {"type": &"secondary", "position": Vector2(930, 820)}],
 		"hazards": [Vector2(620, 3490), Vector2(880, 3410), Vector2(430, 3170), Vector2(1060, 3150), Vector2(570, 2630), Vector2(820, 2350), Vector2(410, 1940), Vector2(1040, 1770), Vector2(570, 1210), Vector2(890, 690)],
 		"decorations": [
@@ -85,7 +87,9 @@ static func _flooded_delta() -> Dictionary:
 		],
 		"obstacles": _scatter_obstacles(1400, 3600, 739144, 28, &"tree"),
 		"rescues": [Vector2(1080, 3020), Vector2(310, 1780)],
-		"extraction": Vector2(700, 250), "base": Vector2(700, 92),
+		"extraction": Vector2(700, 250),
+		"extractions": [Vector2(700, 250), Vector2(690, 2160), Vector2(1030, 3180)],
+		"base": Vector2(700, 92),
 		"upgrades": [{"type": &"primary", "position": Vector2(420, 3260)}, {"type": &"secondary", "position": Vector2(1020, 2260)}, {"type": &"primary", "position": Vector2(650, 980)}],
 		"hazards": [Vector2(610, 3140), Vector2(890, 2820), Vector2(620, 2290), Vector2(940, 1880), Vector2(530, 1040), Vector2(840, 650)],
 	}
@@ -115,7 +119,9 @@ static func _iron_highlands() -> Dictionary:
 		],
 		"obstacles": _scatter_obstacles(1600, 4000, 991827, 34, &"rock"),
 		"rescues": [Vector2(1240, 2920), Vector2(350, 1180)],
-		"extraction": Vector2(800, 260), "base": Vector2(800, 96),
+		"extraction": Vector2(800, 260),
+		"extractions": [Vector2(800, 260), Vector2(1030, 2020), Vector2(980, 3560)],
+		"base": Vector2(800, 96),
 		"upgrades": [{"type": &"secondary", "position": Vector2(1180, 3650)}, {"type": &"primary", "position": Vector2(390, 2200)}, {"type": &"secondary", "position": Vector2(1180, 1500)}, {"type": &"primary", "position": Vector2(700, 620)}],
 		"hazards": [Vector2(930, 3540), Vector2(650, 3270), Vector2(980, 2810), Vector2(610, 2430), Vector2(950, 2010), Vector2(650, 1580), Vector2(940, 1080), Vector2(680, 620)],
 	}

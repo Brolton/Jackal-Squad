@@ -302,9 +302,12 @@ func _create_rescue_objects() -> void:
 		building.name = "RescueBuilding%02d" % (index + 1)
 		building.position = rescue_positions[index]
 		add_child(building)
-	var extraction_zone := EXTRACTION_ZONE_SCENE.instantiate()
-	extraction_zone.position = _layout["extraction"]
-	add_child(extraction_zone)
+	var extraction_positions: Array = _layout.get("extractions", [_layout["extraction"]])
+	for index in range(extraction_positions.size()):
+		var extraction_zone := EXTRACTION_ZONE_SCENE.instantiate()
+		extraction_zone.name = "ExtractionZone" if index == 0 else "ExtractionZone%02d" % (index + 1)
+		extraction_zone.position = extraction_positions[index]
+		add_child(extraction_zone)
 
 func _create_final_base() -> void:
 	var final_base := FINAL_BASE_SCENE.instantiate()

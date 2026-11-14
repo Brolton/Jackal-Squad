@@ -21,6 +21,7 @@ func _run_tests() -> void:
 		_check(get_nodes_in_group("enemies").size() >= minimum_enemy_counts[level_index], "Mission %d has its full encounter roster" % (level_index + 1))
 		_check(game.get_tree().get_nodes_in_group("rescue_buildings").size() == 2 or game.get_node_or_null("RescueBuilding02") != null, "Mission %d has two rescue sites" % (level_index + 1))
 		_check(game.get_node_or_null("ExtractionZone") != null and game.get_node_or_null("FinalBase") != null, "Mission %d has extraction and a command base" % (level_index + 1))
+		_check(get_nodes_in_group("extraction_zones").size() >= 3, "Mission %d provides helipads along the route" % (level_index + 1))
 		var camera: Camera2D = game.get_node("Player_1/Camera2D")
 		_check(camera.limit_right == int(expected_sizes[level_index].x) and camera.limit_bottom == int(expected_sizes[level_index].y), "Mission %d camera follows its world bounds" % (level_index + 1))
 		if level_index == 0:
