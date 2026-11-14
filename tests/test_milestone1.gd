@@ -111,8 +111,15 @@ func _run_tests() -> void:
 		enemy_projectile.queue_free()
 	player.global_position = Vector2(80.0, 3100.0)
 	player.velocity = Vector2.ZERO
+	player.call("apply_weapon_upgrade", &"primary")
+	player.call("apply_weapon_upgrade", &"secondary")
 	player.call("take_damage", int(player.get("maximum_health")))
 	_check(not player.visible, "A destroyed jeep is hidden during respawn")
+	_check(
+		int(player.get("primary_upgrade_level")) == 0
+		and int(player.get("secondary_upgrade_level")) == 0,
+		"Death immediately removes all collected weapon upgrades"
+	)
 	await create_timer(1.5).timeout
 	_check(
 		int(player.get("health")) == int(player.get("maximum_health")) and player.visible,

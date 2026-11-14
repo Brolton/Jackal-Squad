@@ -68,6 +68,7 @@ func _run_tests() -> void:
 	_check(bool(terrain_signature["textured_water"]), "Rivers use painted water instead of a flat blue rectangle")
 	_check(int(terrain_signature["bank_layers"]) >= 3 and bool(terrain_signature["bridge_planks"]), "Rivers have irregular banks and detailed bridge decks")
 	var base_signature: Dictionary = player.call("weapon_visual_signature")
+	_check(not bool(base_signature["team_stripes"]), "Player color is shown by the name label without painted bars on the jeep")
 	player.call("apply_weapon_upgrade", &"primary")
 	player.call("apply_weapon_upgrade", &"secondary")
 	var upgraded_signature: Dictionary = player.call("weapon_visual_signature")

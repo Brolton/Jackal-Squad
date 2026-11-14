@@ -212,8 +212,14 @@ func rpc_receive_state(
 		primary_upgrade_level != received_primary_level
 		or secondary_upgrade_level != received_secondary_level
 	):
-		_last_upgrade_type = &"primary" if received_primary_level > primary_upgrade_level else &"secondary"
-		_upgrade_flash_time = 1.25
+		var gained_primary := received_primary_level > primary_upgrade_level
+		var gained_secondary := received_secondary_level > secondary_upgrade_level
+		if gained_primary or gained_secondary:
+			_last_upgrade_type = &"primary" if gained_primary else &"secondary"
+			_upgrade_flash_time = 1.25
+		else:
+			_last_upgrade_type = &""
+			_upgrade_flash_time = 0.0
 		primary_upgrade_level = received_primary_level
 		secondary_upgrade_level = received_secondary_level
 		weapon_upgrades_changed.emit(primary_upgrade_level, secondary_upgrade_level)
@@ -293,6 +299,7 @@ func weapon_visual_signature() -> Dictionary:
 		"projectile_style": primary_upgrade_level,
 		"blast_style": secondary_upgrade_level,
 		"secondary_weapon": "grenade" if secondary_upgrade_level == 0 else "rocket",
+		"team_stripes": false,
 		"pickup_flash": _last_upgrade_type,
 	}
 
@@ -425,6 +432,7 @@ func _respawn() -> void:
 	if _respawning:
 		return
 	_respawning = true
+	_reset_weapon_upgrades()
 	_extraction_active = false
 	visible = false
 	_collision_shape.set_deferred("disabled", true)
@@ -439,15 +447,20 @@ func _respawn() -> void:
 	_respawning = false
 	health_changed.emit(health, maximum_health)
 
+func _reset_weapon_upgrades() -> void:
+	if primary_upgrade_level == 0 and secondary_upgrade_level == 0:
+		return
+	primary_upgrade_level = 0
+	secondary_upgrade_level = 0
+	_last_upgrade_type = &""
+	_upgrade_flash_time = 0.0
+	weapon_upgrades_changed.emit(primary_upgrade_level, secondary_upgrade_level)
+	queue_redraw()
+
 func _draw() -> void:
 	draw_ellipse_shadow(Vector2(2.0, 4.0), Vector2(19.0, 27.0), Color(0.0, 0.0, 0.0, 0.34))
 	var texture_tint := Color(1.0, 0.94, 0.76) if _hit_flash > 0.0 else Color.WHITE
 	draw_texture_rect(PLAYER_JEEP_TEXTURE, Rect2(-19.0, -29.0, 38.0, 57.0), false, texture_tint)
-	var player_color: Color = PLAYER_COLORS[color_slot]
-	draw_line(Vector2(-5, -10), Vector2(-5, 10), player_color.darkened(0.20), 3.0)
-	draw_line(Vector2(0, -11), Vector2(0, 11), player_color, 3.0)
-	draw_line(Vector2(5, -10), Vector2(5, 10), player_color.lightened(0.18), 3.0)
-	draw_circle(Vector2(0, 20), 2.2, player_color.lightened(0.22))
 	_draw_weapon_upgrades()
 	if _upgrade_flash_time > 0.0:
 		var flash_progress := _upgrade_flash_time / 1.25
