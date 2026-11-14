@@ -251,7 +251,7 @@ func _create_rescue_objects() -> void:
 func _create_final_base() -> void:
 	var final_base := FINAL_BASE_SCENE.instantiate()
 	final_base.name = "FinalBase"
-	final_base.configure_coop_scaling(maxi(1, NetworkSession.players.size()))
+	final_base.configure_boss(level_index, maxi(1, NetworkSession.players.size()))
 	final_base.position = _layout["base"]
 	add_child(final_base)
 

@@ -217,3 +217,7 @@ Final validation completed on Godot `4.7.2.stable.official.ed1daf0bf`:
 ## Boss pass — mission rules and infantry durability
 
 Infantry maximum health is fixed at one in solo and co-op, while heavy-unit durability still scales with player count. Mission completion now depends only on destroying the final boss; enemy clearing and rescues are optional. Boarding a rescued passenger repairs one missing health point and rescue totals remain in the result statistics. The HUD labels boss destruction as the goal and rescues as a bonus, and solo/host sessions automatically advance four seconds after victory if the player does not press the button first.
+
+## Boss pass — scalable final encounters
+
+Final bases are shielded boss cores surrounded by independently destructible, independently aiming gun turrets. Turret-count scaling is `1/1/2/2` on mission 1, `1/2/3/3` on mission 2, and `1/2/3/4` on mission 3 for one through four players. Each turret is assigned a player target by its index, has mission-scaled health, rate of fire, projectile speed, and damage, and must be destroyed before the core accepts damage. `test_boss_scaling.gd` verifies the complete count matrix, shield gating, sequential turret destruction, and core exposure.

@@ -100,7 +100,8 @@ func _run_server(expected_players: int) -> void:
 		"Host credits enemy defeats to the firing player"
 	)
 	for enemy in get_tree().get_nodes_in_group("enemies"):
-		enemy.queue_free()
+		if not enemy.is_in_group("boss_turrets"):
+			enemy.queue_free()
 	for projectile in get_tree().get_nodes_in_group("enemy_projectiles"):
 		projectile.queue_free()
 	var primary_pickup: Node2D = get_tree().current_scene.get_node("PrimaryUpgrade01")
@@ -184,6 +185,8 @@ func _run_server(expected_players: int) -> void:
 		"Helicopter collects the shared evacuated passenger total"
 	)
 	var final_base: Node = get_tree().current_scene.get_node("FinalBase")
+	for boss_turret in get_tree().get_nodes_in_group("boss_turrets"):
+		boss_turret.call("take_damage", int(boss_turret.get("health")), upgrade_owner_id)
 	final_base.call("take_damage", int(final_base.get("health")), upgrade_owner_id)
 	_check(NetworkSession.final_base_destroyed, "Host records final base destruction")
 	_check(NetworkSession.mission_completed, "Boss destruction completes the mission without mandatory rescues")

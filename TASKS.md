@@ -83,7 +83,7 @@ LAN/Tailscale sessions have not been tested yet.
 ## Boss and upgrade clarity pass
 
 - [x] Make infantry one-hit enemies and make rescues optional bonuses.
-- [ ] Replace the passive final building with scalable multi-turret bosses.
+- [x] Replace the passive final building with scalable multi-turret bosses.
 - [ ] Clarify the extraction helicopter and mission objective presentation.
 - [ ] Redesign upgrade pickups and make every upgrade level visibly and audibly distinct.
 - [ ] Run regression, multiplayer validation, and publish a refreshed build.

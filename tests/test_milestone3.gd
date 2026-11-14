@@ -13,6 +13,8 @@ func _run_tests() -> void:
 
 	var type_counts := {0: 0, 1: 0, 2: 0, 3: 0}
 	for enemy in get_nodes_in_group("enemies"):
+		if enemy.is_in_group("boss_turrets"):
+			continue
 		var kind := int(enemy.get("enemy_type"))
 		type_counts[kind] += 1
 	_check(type_counts[0] >= 8, "Infantry remains present in the mission")
