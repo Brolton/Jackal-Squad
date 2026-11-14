@@ -14,7 +14,7 @@ func _run_tests() -> void:
 	var player: CharacterBody2D = game.get_node("Player_1")
 	var camera: Camera2D = player.get_node("Camera2D")
 	_check(camera.enabled, "Player camera is enabled")
-	_check(camera.limit_right == 1200 and camera.limit_bottom == 3200, "Camera limits match the finite map")
+	_check(camera.limit_right == int(game.get("map_size").x) and camera.limit_bottom == int(game.get("map_size").y), "Camera limits match the finite map")
 	_check(get_nodes_in_group("enemies").size() >= 4, "The battlefield contains infantry enemies")
 
 	var first_enemy: CharacterBody2D = get_nodes_in_group("enemies")[0]
@@ -23,6 +23,8 @@ func _run_tests() -> void:
 		await physics_frame
 	var distance_after := player.global_position.distance_to(first_enemy.global_position)
 	_check(distance_after < distance_before, "Infantry advances toward the player")
+	for enemy in get_nodes_in_group("enemies"):
+		enemy.set_physics_process(false)
 
 	var initial_position := player.global_position
 	Input.action_press("move_up")
@@ -31,13 +33,13 @@ func _run_tests() -> void:
 	Input.action_release("move_up")
 	_check(player.global_position.y < initial_position.y, "WASD movement accelerates the jeep north")
 
-	player.global_position = Vector2(240.0, 1300.0)
+	player.global_position = Vector2(120.0, 3150.0)
 	player.velocity = Vector2.ZERO
-	Input.action_press("move_down")
-	for _frame in range(70):
+	Input.action_press("move_up")
+	for _frame in range(90):
 		await physics_frame
-	Input.action_release("move_down")
-	_check(player.global_position.y < 1420.0, "The river blocks jeep movement away from the bridge")
+	Input.action_release("move_up")
+	_check(player.global_position.y > 3040.0, "The lower river blocks jeeps away from its two bridges")
 
 	player.global_position = Vector2(60.0, 1050.0)
 	player.velocity = Vector2.ZERO
@@ -47,7 +49,7 @@ func _run_tests() -> void:
 	Input.action_release("move_left")
 	_check(player.global_position.x > 0.0 and player.global_position.x < 60.0, "The west map boundary blocks jeep movement")
 
-	player.global_position = Vector2(600.0, 2860.0)
+	player.global_position = player.get("spawn_position")
 	player.velocity = Vector2.ZERO
 	var player_shots_before := get_nodes_in_group("player_projectiles").size()
 	var firing_position := player.global_position
@@ -91,8 +93,6 @@ func _run_tests() -> void:
 	grenade.call("_explode")
 	_check(damage_target.is_queued_for_deletion(), "Grenade area damage destroys a weakened nearby enemy")
 
-	for enemy in get_nodes_in_group("enemies"):
-		enemy.set_physics_process(false)
 	for enemy_projectile in get_nodes_in_group("enemy_projectiles"):
 		enemy_projectile.queue_free()
 	player.global_position = Vector2(80.0, 3100.0)

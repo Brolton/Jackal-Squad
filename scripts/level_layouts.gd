@@ -12,29 +12,54 @@ static func get_layout(index: int) -> Dictionary:
 
 static func _emerald_approach() -> Dictionary:
 	return {
-		"map_size": Vector2(1200.0, 3200.0),
+		"map_size": Vector2(1500.0, 4200.0),
 		"seed": 24681357,
-		"palette": [Color(0.20, 0.31, 0.20), Color(0.28, 0.39, 0.24), Color(0.13, 0.24, 0.16)],
-		"road": [Vector2(600, 3200), Vector2(560, 2780), Vector2(650, 2320), Vector2(520, 1950), Vector2(600, 1620), Vector2(600, 1380), Vector2(690, 1040), Vector2(570, 700), Vector2(630, 350), Vector2(600, 0)],
-		"road_width": 250.0,
-		"water": [Rect2(0, 1420, 1200, 200)],
-		"bridges": [Rect2(510, 1380, 180, 280)],
+		"palette": [Color(0.13, 0.27, 0.18), Color(0.25, 0.43, 0.24), Color(0.07, 0.19, 0.14)],
+		"road": [Vector2(750, 4200), Vector2(750, 3600), Vector2(360, 2960), Vector2(520, 2480), Vector2(720, 1780), Vector2(700, 1500), Vector2(660, 1120), Vector2(760, 620), Vector2(750, 0)],
+		"roads": [
+			[Vector2(750, 4200), Vector2(750, 3600), Vector2(650, 3300), Vector2(360, 3040), Vector2(360, 2790), Vector2(520, 2480), Vector2(720, 1780), Vector2(700, 1500), Vector2(660, 1120), Vector2(760, 620), Vector2(750, 0)],
+			[Vector2(830, 3500), Vector2(1080, 3040), Vector2(1080, 2790), Vector2(960, 2440), Vector2(720, 2050)],
+			[Vector2(520, 2480), Vector2(300, 2280), Vector2(280, 2050), Vector2(470, 1870), Vector2(720, 1780)],
+			[Vector2(720, 1780), Vector2(1180, 1630), Vector2(1180, 1390), Vector2(1210, 1080), Vector2(930, 820), Vector2(760, 620)],
+		],
+		"road_width": 170.0,
+		"water": [Rect2(0, 2820, 1500, 220), Rect2(0, 1420, 1500, 240)],
+		"bridges": [Rect2(280, 2780, 180, 300), Rect2(1000, 2780, 180, 300), Rect2(620, 1380, 180, 320), Rect2(1120, 1380, 180, 320)],
 		"barriers": [
-			{"name": "WestRiverbank", "center": Vector2(255, 1520), "size": Vector2(510, 200)},
-			{"name": "EastRiverbank", "center": Vector2(945, 1520), "size": Vector2(510, 200)},
+			{"name": "LowerWestBank", "center": Vector2(140, 2930), "size": Vector2(280, 220)},
+			{"name": "LowerCenterBank", "center": Vector2(730, 2930), "size": Vector2(540, 220)},
+			{"name": "LowerEastBank", "center": Vector2(1340, 2930), "size": Vector2(320, 220)},
+			{"name": "UpperWestBank", "center": Vector2(310, 1540), "size": Vector2(620, 240)},
+			{"name": "UpperCenterBank", "center": Vector2(960, 1540), "size": Vector2(320, 240)},
+			{"name": "UpperEastBank", "center": Vector2(1400, 1540), "size": Vector2(200, 240)},
 		],
-		"spawns": [Vector2(600, 2860), Vector2(640, 2860), Vector2(600, 2910), Vector2(640, 2910)],
-		"infantry": [Vector2(600, 2500), Vector2(420, 2180), Vector2(800, 1850), Vector2(580, 1640), Vector2(670, 1270), Vector2(390, 930), Vector2(830, 560), Vector2(550, 300)],
+		"spawns": [Vector2(720, 4000), Vector2(780, 4000), Vector2(720, 4060), Vector2(780, 4060)],
+		"infantry": [Vector2(650, 3700), Vector2(850, 3560), Vector2(470, 3380), Vector2(1030, 3300), Vector2(330, 3150), Vector2(1080, 3140), Vector2(540, 2680), Vector2(980, 2520), Vector2(290, 2260), Vector2(480, 2110), Vector2(820, 1950), Vector2(1170, 1810), Vector2(690, 1320), Vector2(1180, 1160), Vector2(520, 960), Vector2(920, 780), Vector2(650, 480), Vector2(820, 310)],
 		"heavy_enemies": [
-			{"name": "Turret01", "type": 1, "position": Vector2(330, 2050)}, {"name": "Tank01", "type": 2, "position": Vector2(760, 1740)},
-			{"name": "Boat01", "type": 3, "position": Vector2(430, 1510)}, {"name": "Boat02", "type": 3, "position": Vector2(770, 1510)},
-			{"name": "Tank02", "type": 2, "position": Vector2(850, 600)}, {"name": "Turret02", "type": 1, "position": Vector2(340, 350)},
+			{"name": "Turret01", "type": 1, "position": Vector2(520, 3450)}, {"name": "Tank01", "type": 2, "position": Vector2(980, 3220)},
+			{"name": "Boat01", "type": 3, "position": Vector2(710, 2930)}, {"name": "Boat02", "type": 3, "position": Vector2(1360, 2930)},
+			{"name": "Turret02", "type": 1, "position": Vector2(230, 2450)}, {"name": "Tank02", "type": 2, "position": Vector2(900, 2200)},
+			{"name": "Turret03", "type": 1, "position": Vector2(1210, 1880)}, {"name": "Boat03", "type": 3, "position": Vector2(420, 1540)},
+			{"name": "Boat04", "type": 3, "position": Vector2(950, 1540)}, {"name": "Tank03", "type": 2, "position": Vector2(1190, 1030)},
+			{"name": "Turret04", "type": 1, "position": Vector2(510, 720)}, {"name": "Tank04", "type": 2, "position": Vector2(810, 390)},
 		],
-		"obstacles": _obstacles_level_one(),
-		"rescues": [Vector2(470, 2330), Vector2(760, 1150)],
-		"extraction": Vector2(600, 220), "base": Vector2(600, 82),
-		"upgrades": [{"type": &"primary", "position": Vector2(500, 2700)}, {"type": &"secondary", "position": Vector2(700, 2700)}],
-		"hazards": [Vector2(430, 2460), Vector2(770, 2120), Vector2(460, 1020), Vector2(750, 740)],
+		"obstacles": _emerald_obstacles(),
+		"rescues": [Vector2(300, 2180), Vector2(1210, 1080)],
+		"extraction": Vector2(750, 245), "base": Vector2(750, 92),
+		"upgrades": [{"type": &"primary", "position": Vector2(550, 3650)}, {"type": &"secondary", "position": Vector2(1080, 2670)}, {"type": &"primary", "position": Vector2(420, 1850)}, {"type": &"secondary", "position": Vector2(930, 820)}],
+		"hazards": [Vector2(620, 3490), Vector2(880, 3410), Vector2(430, 3170), Vector2(1060, 3150), Vector2(570, 2630), Vector2(820, 2350), Vector2(410, 1940), Vector2(1040, 1770), Vector2(570, 1210), Vector2(890, 690)],
+		"decorations": [
+			{"kind": &"barricade", "position": Vector2(610, 3470), "rotation": 0.2}, {"kind": &"watchtower", "position": Vector2(1040, 3360)},
+			{"kind": &"tent", "position": Vector2(230, 2220), "rotation": -0.15}, {"kind": &"tent", "position": Vector2(365, 2130), "rotation": 0.12},
+			{"kind": &"fire", "position": Vector2(300, 2070)}, {"kind": &"antenna", "position": Vector2(190, 2110)}, {"kind": &"barricade", "position": Vector2(470, 2300), "rotation": 0.7},
+			{"kind": &"ruins", "position": Vector2(1030, 2460), "rotation": -0.3}, {"kind": &"bunker", "position": Vector2(770, 1880)},
+			{"kind": &"watchtower", "position": Vector2(1090, 1780)}, {"kind": &"barricade", "position": Vector2(890, 1740), "rotation": -0.4},
+			{"kind": &"tent", "position": Vector2(1160, 1140), "rotation": 0.2}, {"kind": &"tent", "position": Vector2(1290, 1040), "rotation": -0.2},
+			{"kind": &"fire", "position": Vector2(1220, 970)}, {"kind": &"antenna", "position": Vector2(1330, 1160)}, {"kind": &"barricade", "position": Vector2(1050, 1210), "rotation": 0.45},
+			{"kind": &"bunker", "position": Vector2(540, 760)}, {"kind": &"watchtower", "position": Vector2(1020, 650)},
+			{"kind": &"barricade", "position": Vector2(650, 520), "rotation": 0.1}, {"kind": &"barricade", "position": Vector2(860, 520), "rotation": -0.1},
+			{"kind": &"antenna", "position": Vector2(910, 240)}, {"kind": &"bunker", "position": Vector2(590, 300)},
+		],
 	}
 
 static func _flooded_delta() -> Dictionary:
@@ -95,16 +120,28 @@ static func _iron_highlands() -> Dictionary:
 		"hazards": [Vector2(930, 3540), Vector2(650, 3270), Vector2(980, 2810), Vector2(610, 2430), Vector2(950, 2010), Vector2(650, 1580), Vector2(940, 1080), Vector2(680, 620)],
 	}
 
-static func _obstacles_level_one() -> Array[Dictionary]:
-	return [
-		{"position": Vector2(260, 2600), "kind": &"tree", "radius": 27.0}, {"position": Vector2(900, 2700), "kind": &"tree", "radius": 30.0},
-		{"position": Vector2(350, 2360), "kind": &"rock", "radius": 20.0}, {"position": Vector2(820, 2200), "kind": &"tree", "radius": 26.0},
-		{"position": Vector2(250, 1990), "kind": &"tree", "radius": 32.0}, {"position": Vector2(930, 1900), "kind": &"rock", "radius": 24.0},
-		{"position": Vector2(300, 1740), "kind": &"crate", "radius": 24.0}, {"position": Vector2(890, 1690), "kind": &"tree", "radius": 30.0},
-		{"position": Vector2(250, 1260), "kind": &"tree", "radius": 29.0}, {"position": Vector2(930, 1120), "kind": &"rock", "radius": 23.0},
-		{"position": Vector2(330, 870), "kind": &"crate", "radius": 26.0}, {"position": Vector2(870, 760), "kind": &"tree", "radius": 32.0},
-		{"position": Vector2(270, 510), "kind": &"rock", "radius": 24.0}, {"position": Vector2(950, 390), "kind": &"tree", "radius": 29.0}, {"position": Vector2(340, 180), "kind": &"tree", "radius": 28.0},
-	]
+static func _emerald_obstacles() -> Array[Dictionary]:
+	var result: Array[Dictionary] = []
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 24681357
+	for index in range(54):
+		var outer_side := index % 2 == 0
+		var x := rng.randf_range(70.0, 330.0) if outer_side else rng.randf_range(1170.0, 1430.0)
+		var kind: StringName = &"tree"
+		if index % 11 == 0:
+			kind = &"crate"
+		elif index % 7 == 0:
+			kind = &"rock"
+		result.append({"position": Vector2(x, rng.randf_range(260.0, 4050.0)), "kind": kind, "radius": rng.randf_range(23.0, 38.0)})
+	for placement in [
+		{"position": Vector2(480, 3740), "kind": &"tree", "radius": 34.0}, {"position": Vector2(1040, 3700), "kind": &"tree", "radius": 32.0},
+		{"position": Vector2(520, 3300), "kind": &"rock", "radius": 25.0}, {"position": Vector2(940, 3300), "kind": &"crate", "radius": 23.0},
+		{"position": Vector2(500, 2550), "kind": &"tree", "radius": 35.0}, {"position": Vector2(1020, 2380), "kind": &"rock", "radius": 27.0},
+		{"position": Vector2(530, 1810), "kind": &"tree", "radius": 34.0}, {"position": Vector2(980, 1260), "kind": &"tree", "radius": 36.0},
+		{"position": Vector2(440, 900), "kind": &"rock", "radius": 26.0}, {"position": Vector2(1080, 560), "kind": &"tree", "radius": 35.0},
+	]:
+		result.append(placement)
+	return result
 
 static func _scatter_obstacles(width: int, height: int, seed_value: int, count_value: int, dominant: StringName) -> Array[Dictionary]:
 	var result: Array[Dictionary] = []

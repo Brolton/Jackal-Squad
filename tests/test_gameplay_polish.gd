@@ -13,7 +13,7 @@ func _run_tests() -> void:
 	current_scene = game
 	await process_frame
 
-	_check(get_nodes_in_group("hazards").size() == 4, "Emerald Approach contains a designed minefield")
+	_check(get_nodes_in_group("hazards").size() == 10, "Emerald Approach contains a designed multi-zone minefield")
 	var mine: Area2D = get_nodes_in_group("hazards")[0]
 	var player: CharacterBody2D = game.get_node("Player_1")
 	var health_before := int(player.get("health"))

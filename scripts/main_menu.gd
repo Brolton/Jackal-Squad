@@ -91,6 +91,12 @@ func _build_ui() -> void:
 	_nickname_input.text = "Player"
 	content.add_child(_nickname_input)
 
+	var mission_label := Label.new()
+	mission_label.text = "STARTING MISSION  •  CAMPAIGN ADVANCES AFTER VICTORY"
+	mission_label.add_theme_font_size_override("font_size", 12)
+	mission_label.add_theme_color_override("font_color", VisualTheme.GOLD)
+	content.add_child(mission_label)
+
 	_mission_selector = OptionButton.new()
 	for index in range(CampaignCatalog.count()):
 		_mission_selector.add_item(
@@ -111,7 +117,7 @@ func _build_ui() -> void:
 	_main_view.add_theme_constant_override("separation", 10)
 	content.add_child(_main_view)
 
-	var solo_button := _make_button("Play Solo")
+	var solo_button := _make_button("Start Solo Campaign")
 	solo_button.pressed.connect(_on_solo_pressed)
 	_main_view.add_child(solo_button)
 
@@ -170,7 +176,7 @@ func _make_button(text: String) -> Button:
 	var button := Button.new()
 	button.text = text
 	button.custom_minimum_size = Vector2(0.0, 42.0)
-	VisualTheme.decorate_button(button, text in ["Play Solo", "Start Game"])
+	VisualTheme.decorate_button(button, text in ["Start Solo Campaign", "Start Game"])
 	return button
 
 func _on_mission_selected(index: int) -> void:

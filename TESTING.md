@@ -146,3 +146,7 @@ Interactive windowed QA could not be automated because Windows UI control did no
 ## Player feedback pass — production unit art
 
 `test_visual_presentation.gd` now verifies five high-resolution gameplay sprite sources, real alpha transparency, menu/HUD styling, and changing weapon-visual signatures. Primary upgrades add visible barrels and cyan indicators; grenade upgrades add side-mounted rocket pods and orange indicators. The focused presentation and Milestone 3 combat/upgrade suites passed after the sprite replacement.
+
+## Player feedback pass — rebuilt Emerald Approach
+
+The opening mission is now a 1500×4200 battlefield with four branching road paths, two water barriers, four usable bridges, 30 enemies, 10 mine hazards, 64 blocking terrain objects, two rescue camps, four upgrades, and 22 landmark decorations. `test_level_layouts.gd` verifies the new bounds, encounter roster, landmarks, branches, bridge count, camera bounds, rescue objectives, extraction, and base. Milestone 1, 3, 4, 5, and gameplay-polish suites all passed against the rebuilt geometry.

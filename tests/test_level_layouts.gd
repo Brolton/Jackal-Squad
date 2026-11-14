@@ -6,8 +6,8 @@ func _initialize() -> void:
 	call_deferred("_run_tests")
 
 func _run_tests() -> void:
-	var expected_sizes := [Vector2(1200, 3200), Vector2(1400, 3600), Vector2(1600, 4000)]
-	var minimum_enemy_counts := [14, 20, 23]
+	var expected_sizes := [Vector2(1500, 4200), Vector2(1400, 3600), Vector2(1600, 4000)]
+	var minimum_enemy_counts := [30, 20, 23]
 	for level_index in range(3):
 		var session: Node = root.get_node("NetworkSession")
 		session.call("start_solo", "LayoutTester", level_index)
@@ -23,6 +23,10 @@ func _run_tests() -> void:
 		_check(game.get_node_or_null("ExtractionZone") != null and game.get_node_or_null("FinalBase") != null, "Mission %d has extraction and a command base" % (level_index + 1))
 		var camera: Camera2D = game.get_node("Player_1/Camera2D")
 		_check(camera.limit_right == int(expected_sizes[level_index].x) and camera.limit_bottom == int(expected_sizes[level_index].y), "Mission %d camera follows its world bounds" % (level_index + 1))
+		if level_index == 0:
+			_check(get_nodes_in_group("battlefield_decorations").size() >= 20, "Emerald Approach has dense landmark dressing")
+			var layout := LevelLayouts.get_layout(0)
+			_check(layout["roads"].size() >= 4 and layout["bridges"].size() == 4, "Emerald Approach has branching routes and four bridge choices")
 
 		game.queue_free()
 		await process_frame

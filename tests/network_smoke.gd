@@ -73,7 +73,7 @@ func _run_server(expected_players: int) -> void:
 		if remote_player != null or _departed_positions.has(peer_id):
 			print("PASS: Host observed remote jeep %d." % peer_id)
 			var slot := int(remote_slots[peer_id])
-			var spawn_y := 2860.0 if slot < 2 else 2910.0
+			var spawn_y := float(LevelLayouts.get_layout(0)["spawns"][slot].y)
 			if authoritative_position.y >= spawn_y - 20.0:
 				all_remote_players_moved = false
 		else:

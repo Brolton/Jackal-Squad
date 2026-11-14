@@ -61,5 +61,5 @@ LAN/Tailscale sessions have not been tested yet.
 - [x] Lock the gameplay viewport when resizing/fullscreen and tighten camera framing.
 - [x] Move primary and secondary keyboard fire to J and K while retaining mouse controls.
 - [x] Replace procedural unit placeholders with production top-down sprites and visible weapon upgrades.
-- [ ] Rebuild Emerald Approach as a larger, denser, multi-route opening mission.
+- [x] Rebuild Emerald Approach as a larger, denser, multi-route opening mission.
 - [ ] Re-run solo/multiplayer validation and publish a refreshed Windows build.

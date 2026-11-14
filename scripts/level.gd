@@ -13,6 +13,7 @@ const FINAL_BASE_SCENE := preload("res://scenes/final_base.tscn")
 const GROUND_TEXTURE := preload("res://assets/art/jungle_ground.png")
 const MINE_HAZARD_SCENE := preload("res://scenes/mine_hazard.tscn")
 const PAUSE_MENU_SCENE := preload("res://scenes/pause_menu.tscn")
+const DECORATION_SCENE := preload("res://scenes/battlefield_decoration.tscn")
 
 var map_size := Vector2(1200.0, 3200.0)
 var _layout: Dictionary = {}
@@ -24,6 +25,7 @@ func _ready() -> void:
 	queue_redraw()
 	_create_map_collisions()
 	_create_obstacles()
+	_create_decorations()
 	_create_hazards()
 	_create_players_and_enemies()
 	_create_rescue_objects()
@@ -51,10 +53,13 @@ func _draw() -> void:
 		tint.a = 0.40
 		draw_circle(patch, rng.randf_range(5.0, 15.0), tint)
 
-	var road := PackedVector2Array(_layout["road"])
 	var road_width := float(_layout["road_width"])
-	draw_polyline(road, Color(0.32, 0.28, 0.22), road_width, true)
-	draw_polyline(road, Color(0.49, 0.41, 0.29), road_width - 34.0, true)
+	var road_paths: Array = _layout.get("roads", [_layout["road"]])
+	for road_points: Array in road_paths:
+		var road := PackedVector2Array(road_points)
+		draw_polyline(road, Color(0.25, 0.22, 0.18), road_width + 16.0, true)
+		draw_polyline(road, Color(0.49, 0.41, 0.29), road_width, true)
+		draw_polyline(road, Color(0.34, 0.29, 0.23, 0.45), 5.0, true)
 	for water_rect: Rect2 in _layout["water"]:
 		draw_rect(water_rect, Color(0.08, 0.27, 0.36))
 		for ripple_x in range(int(water_rect.position.x + 24.0), int(water_rect.end.x), 96):
@@ -97,6 +102,16 @@ func _create_hazards() -> void:
 		mine.name = "Mine%02d" % (index + 1)
 		mine.position = _layout["hazards"][index]
 		add_child(mine)
+
+func _create_decorations() -> void:
+	for index in range(_layout.get("decorations", []).size()):
+		var placement: Dictionary = _layout["decorations"][index]
+		var decoration := DECORATION_SCENE.instantiate()
+		decoration.name = "Decoration%02d_%s" % [index + 1, str(placement["kind"])]
+		decoration.configure(placement["kind"], float(placement.get("scale", 1.0)))
+		decoration.position = placement["position"]
+		decoration.rotation = float(placement.get("rotation", 0.0))
+		add_child(decoration)
 
 func _create_players_and_enemies() -> void:
 	var profiles := NetworkSession.players.duplicate(true)
