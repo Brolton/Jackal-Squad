@@ -6,6 +6,8 @@ const INFANTRY_SCENE := preload("res://scenes/infantry.tscn")
 const OBSTACLE_SCENE := preload("res://scenes/obstacle.tscn")
 const HUD_SCENE := preload("res://scenes/hud.tscn")
 const WEAPON_UPGRADE_SCENE := preload("res://scenes/weapon_upgrade.tscn")
+const RESCUE_BUILDING_SCENE := preload("res://scenes/rescue_building.tscn")
+const EXTRACTION_ZONE_SCENE := preload("res://scenes/extraction_zone.tscn")
 
 const INFANTRY_POSITIONS := [
 	Vector2(600.0, 2500.0),
@@ -37,6 +39,7 @@ func _ready() -> void:
 	_create_map_collisions()
 	_create_obstacles()
 	_create_players_and_enemies()
+	_create_rescue_objects()
 	NetworkSession.player_left.connect(_on_player_left)
 
 func _draw() -> void:
@@ -162,13 +165,35 @@ func _create_players_and_enemies() -> void:
 	if local_player != null:
 		local_player.connect(&"health_changed", Callable(hud, "update_health"))
 		local_player.connect(&"weapon_upgrades_changed", Callable(hud, "update_weapon_upgrades"))
+		local_player.connect(&"passenger_count_changed", Callable(hud, "update_passengers"))
 		hud.call("update_health", local_player.get("health"), local_player.get("maximum_health"))
 		hud.call(
 			"update_weapon_upgrades",
 			local_player.get("primary_upgrade_level"),
 			local_player.get("secondary_upgrade_level")
 		)
+		hud.call(
+			"update_passengers",
+			local_player.get("passenger_count"),
+			local_player.get("passenger_capacity")
+		)
+	NetworkSession.rescue_score_changed.connect(Callable(hud, "update_rescue_score"))
+	hud.call("update_rescue_score", NetworkSession.evacuated_passengers, NetworkSession.rescued_passengers)
 	_create_weapon_upgrades()
+
+func _create_rescue_objects() -> void:
+	var building_placements := [
+		{"name": "RescueBuilding01", "position": Vector2(470.0, 2330.0)},
+		{"name": "RescueBuilding02", "position": Vector2(760.0, 1150.0)},
+	]
+	for placement in building_placements:
+		var building := RESCUE_BUILDING_SCENE.instantiate()
+		building.name = placement["name"]
+		building.position = placement["position"]
+		add_child(building)
+	var extraction_zone := EXTRACTION_ZONE_SCENE.instantiate()
+	extraction_zone.position = Vector2(600.0, 220.0)
+	add_child(extraction_zone)
 
 func _create_weapon_upgrades() -> void:
 	var placements := [

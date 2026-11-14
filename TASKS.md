@@ -32,9 +32,9 @@ LAN/Tailscale sessions have not been tested yet.
 
 ## Milestone 4 — Rescue mechanics
 
-- [ ] Add destructible rescue buildings, passenger pickup, and six-person jeep capacity.
-- [ ] Implement automatic extraction unloading, stop-on-exit/resume-on-return, and helicopter collection.
-- [ ] Test simultaneous arrivals and host-authoritative score/state synchronization.
+- [x] Add destructible rescue buildings, passenger pickup, and six-person jeep capacity.
+- [x] Implement automatic extraction unloading, stop-on-exit/resume-on-return, and helicopter collection.
+- [x] Test simultaneous arrivals and host-authoritative score/state synchronization.
 
 ## Milestone 5 — Complete level
 

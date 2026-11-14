@@ -4,6 +4,7 @@ signal lobby_changed(players: Dictionary)
 signal status_changed(message: String)
 signal game_start_requested
 signal player_left(peer_id: int)
+signal rescue_score_changed(evacuated: int, rescued: int)
 
 const PORT := 24567
 const MAX_PLAYERS := 4
@@ -18,6 +19,8 @@ var is_networked := false
 var is_host := false
 var match_started := false
 var status_message := "Choose a game mode."
+var evacuated_passengers := 0
+var rescued_passengers := 0
 
 func _ready() -> void:
 	multiplayer.peer_connected.connect(_on_peer_connected)
@@ -28,6 +31,7 @@ func _ready() -> void:
 
 func start_solo(nickname: String) -> void:
 	_close_session()
+	_reset_rescue_score()
 	local_nickname = _clean_nickname(nickname)
 	players = {1: _make_profile(local_nickname, 0)}
 	match_started = true
@@ -47,6 +51,7 @@ func host_game(nickname: String) -> bool:
 	is_networked = true
 	is_host = true
 	match_started = false
+	_reset_rescue_score()
 	players = {1: _make_profile(local_nickname, 0)}
 	_publish_lobby()
 	_set_status("Hosting on UDP %d." % PORT)
@@ -69,6 +74,7 @@ func join_game(address: String, nickname: String) -> bool:
 	is_networked = true
 	is_host = false
 	match_started = false
+	_reset_rescue_score()
 	players.clear()
 	_set_status("Connecting to %s:%d..." % [host_address, PORT])
 	return true
@@ -86,8 +92,22 @@ func start_multiplayer_game() -> bool:
 func leave_lobby() -> void:
 	_close_session()
 	players.clear()
+	_reset_rescue_score()
 	lobby_changed.emit({})
 	_set_status("Choose a game mode.")
+
+func record_evacuated_passenger() -> void:
+	if is_networked and not is_host:
+		return
+	evacuated_passengers += 1
+	_publish_rescue_score()
+
+func collect_evacuated_passengers() -> void:
+	if is_networked and not is_host:
+		return
+	rescued_passengers += evacuated_passengers
+	evacuated_passengers = 0
+	_publish_rescue_score()
 
 func spawn_projectile_visual(
 	spawn_position: Vector2,
@@ -185,6 +205,14 @@ func rpc_remove_upgrade_pickup(pickup_name: String) -> void:
 	if pickup != null:
 		pickup.queue_free()
 
+@rpc("authority", "call_remote", "reliable")
+func rpc_receive_rescue_score(evacuated: int, rescued: int) -> void:
+	if is_host:
+		return
+	evacuated_passengers = evacuated
+	rescued_passengers = rescued
+	rescue_score_changed.emit(evacuated_passengers, rescued_passengers)
+
 func connected_peer_ids() -> Array[int]:
 	var connected_ids: Array[int] = []
 	if not is_host or multiplayer.multiplayer_peer == null:
@@ -222,6 +250,7 @@ func _on_connection_failed() -> void:
 	match_started = false
 	multiplayer.multiplayer_peer = null
 	players.clear()
+	_reset_rescue_score()
 	lobby_changed.emit({})
 	_set_status("Connection failed. Check the IP address and UDP port %d." % PORT)
 
@@ -233,6 +262,7 @@ func _on_server_disconnected() -> void:
 	match_started = false
 	multiplayer.multiplayer_peer = null
 	players.clear()
+	_reset_rescue_score()
 	lobby_changed.emit({})
 	_set_status("Disconnected from the host.")
 	if get_tree().current_scene != null and get_tree().current_scene.scene_file_path != MAIN_SCENE:
@@ -246,6 +276,18 @@ func _publish_lobby(excluded_peer_id: int = 0) -> void:
 			if peer_id == excluded_peer_id:
 				continue
 			rpc_id(peer_id, "rpc_receive_lobby", snapshot)
+
+func _publish_rescue_score() -> void:
+	rescue_score_changed.emit(evacuated_passengers, rescued_passengers)
+	if not is_host:
+		return
+	for peer_id in connected_peer_ids():
+		rpc_id(peer_id, "rpc_receive_rescue_score", evacuated_passengers, rescued_passengers)
+
+func _reset_rescue_score() -> void:
+	evacuated_passengers = 0
+	rescued_passengers = 0
+	rescue_score_changed.emit(evacuated_passengers, rescued_passengers)
 
 func _first_available_slot() -> int:
 	var used_slots: Array[int] = []

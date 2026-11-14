@@ -91,6 +91,10 @@ func _run_server(expected_players: int) -> void:
 		int(combat_target.get("health")) == health_before_host_damage - 1,
 		"Host applies authoritative damage to a remote player"
 	)
+	for enemy in get_tree().get_nodes_in_group("enemies"):
+		enemy.queue_free()
+	for projectile in get_tree().get_nodes_in_group("enemy_projectiles"):
+		projectile.queue_free()
 	var primary_pickup: Node2D = get_tree().current_scene.get_node("PrimaryUpgrade01")
 	var upgrade_owner: Node = get_tree().current_scene.get_node("Player_%d" % upgrade_owner_id)
 	upgrade_owner.global_position = primary_pickup.global_position
@@ -107,6 +111,64 @@ func _run_server(expected_players: int) -> void:
 	_check(
 		int(get_tree().current_scene.get_node("Player_1").get("primary_upgrade_level")) == 0,
 		"Weapon upgrades remain player-specific"
+	)
+
+	var rescue_building: Node2D = get_tree().current_scene.get_node("RescueBuilding01")
+	rescue_building.call("take_damage", 4)
+	deadline = Time.get_ticks_msec() + 2000
+	while (
+		get_tree().get_nodes_in_group("rescue_passengers").size() < 3
+		and Time.get_ticks_msec() < deadline
+	):
+		await get_tree().physics_frame
+	_check(
+		get_tree().get_nodes_in_group("rescue_passengers").size() == 3,
+		"Host destruction releases passengers authoritatively"
+	)
+	upgrade_owner.global_position = rescue_building.global_position
+	upgrade_owner.set("_received_movement", Vector2.ZERO)
+	upgrade_owner.set("velocity", Vector2.ZERO)
+	deadline = Time.get_ticks_msec() + 2000
+	while (
+		int(upgrade_owner.get("passenger_count")) < 3
+		and Time.get_ticks_msec() < deadline
+	):
+		await get_tree().physics_frame
+	_check(
+		int(upgrade_owner.get("passenger_count")) == 3,
+		"Host boards nearby passengers onto the closest jeep"
+	)
+	var host_player: Node = get_tree().current_scene.get_node("Player_1")
+	var extraction_zone: Node2D = get_tree().current_scene.get_node("ExtractionZone")
+	host_player.call("try_add_passenger")
+	host_player.call("try_add_passenger")
+	upgrade_owner.global_position = extraction_zone.global_position
+	upgrade_owner.set("velocity", Vector2.ZERO)
+	host_player.global_position = extraction_zone.global_position + Vector2(70.0, 0.0)
+	host_player.set("velocity", Vector2.ZERO)
+	deadline = Time.get_ticks_msec() + 2000
+	while (
+		(
+			int(upgrade_owner.get("passenger_count")) == 3
+			or int(host_player.get("passenger_count")) == 2
+		)
+		and Time.get_ticks_msec() < deadline
+	):
+		await get_tree().physics_frame
+	_check(
+		int(upgrade_owner.get("passenger_count")) == 2
+		and int(host_player.get("passenger_count")) == 1
+		and NetworkSession.evacuated_passengers == 2,
+		"Two jeeps unload concurrently inside extraction"
+	)
+	extraction_zone.set("helicopter_speed", 5000.0)
+	extraction_zone.call("_start_helicopter")
+	deadline = Time.get_ticks_msec() + 2000
+	while NetworkSession.rescued_passengers < 2 and Time.get_ticks_msec() < deadline:
+		await get_tree().physics_frame
+	_check(
+		NetworkSession.rescued_passengers == 2 and NetworkSession.evacuated_passengers == 0,
+		"Helicopter collects the shared evacuated passenger total"
 	)
 
 	deadline = Time.get_ticks_msec() + 7000
@@ -219,6 +281,39 @@ func _run_client() -> void:
 			int(local_player.get("health")) < int(local_player.get("maximum_health")),
 			"Host synchronizes damage to the targeted player"
 		)
+	var rescue_deadline := Time.get_ticks_msec() + 4000
+	while (
+		(
+			get_tree().current_scene.get_node_or_null("RescueBuilding01") != null
+			or not get_tree().get_nodes_in_group("rescue_passengers").is_empty()
+			or int(local_player.get("passenger_count")) != (2 if expected_slot == 1 else 0)
+			or NetworkSession.rescued_passengers < 2
+		)
+		and Time.get_ticks_msec() < rescue_deadline
+	):
+		await get_tree().process_frame
+	_check(
+		get_tree().current_scene.get_node_or_null("RescueBuilding01") == null,
+		"Host destruction removes the rescue building on clients"
+	)
+	_check(
+		get_tree().get_nodes_in_group("rescue_passengers").is_empty(),
+		"Rescued passengers are removed on clients"
+	)
+	var cargo_deadline := Time.get_ticks_msec() + 1500
+	while (
+		int(local_player.get("passenger_count")) != (2 if expected_slot == 1 else 0)
+		and Time.get_ticks_msec() < cargo_deadline
+	):
+		await get_tree().process_frame
+	_check(
+		int(local_player.get("passenger_count")) == (2 if expected_slot == 1 else 0),
+		"Host synchronizes passenger cargo to the correct jeep"
+	)
+	_check(
+		NetworkSession.evacuated_passengers == 0 and NetworkSession.rescued_passengers == 2,
+		"Host synchronizes helicopter rescue totals"
+	)
 	await get_tree().create_timer(float(expected_slot) * 0.75).timeout
 	NetworkSession.leave_lobby()
 	await get_tree().create_timer(0.2).timeout

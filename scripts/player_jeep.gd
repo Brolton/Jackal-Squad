@@ -2,6 +2,7 @@ extends CharacterBody2D
 
 signal health_changed(current: int, maximum: int)
 signal weapon_upgrades_changed(primary_level: int, secondary_level: int)
+signal passenger_count_changed(current: int, maximum: int)
 
 const PROJECTILE_SCENE := preload("res://scenes/projectile.tscn")
 const GRENADE_SCENE := preload("res://scenes/grenade.tscn")
@@ -12,6 +13,8 @@ const PLAYER_COLORS := [
 	Color(0.58, 0.31, 0.75),
 ]
 const MAX_WEAPON_UPGRADE_LEVEL := 3
+const MAX_PASSENGERS := 6
+const EXTRACTION_UNLOAD_INTERVAL := 0.75
 
 @export var acceleration := 850.0
 @export var maximum_speed := 220.0
@@ -26,6 +29,8 @@ var player_nickname := "Player"
 var color_slot := 0
 var primary_upgrade_level := 0
 var secondary_upgrade_level := 0
+var passenger_count := 0
+var passenger_capacity := MAX_PASSENGERS
 var _received_movement := Vector2.ZERO
 var _received_primary := false
 var _received_secondary := false
@@ -38,6 +43,8 @@ var authoritative_state_count := 0
 var last_authoritative_position := Vector2.ZERO
 var _primary_cooldown := 0.0
 var _secondary_cooldown := 0.0
+var _extraction_unload_timer := 0.0
+var _extraction_active := false
 var _respawning := false
 
 @onready var _collision_shape: CollisionShape2D = $CollisionShape2D
@@ -83,6 +90,8 @@ func _physics_process(delta: float) -> void:
 		_process_host_player(delta)
 	else:
 		_process_client_player(delta)
+	if not NetworkSession.is_networked or multiplayer.is_server():
+		_process_extraction(delta)
 
 func _process_host_player(delta: float) -> void:
 	var is_host_player := player_peer_id == 1
@@ -145,7 +154,8 @@ func rpc_receive_state(
 	current_health: int,
 	is_visible: bool,
 	received_primary_level: int,
-	received_secondary_level: int
+	received_secondary_level: int,
+	received_passengers: int
 ) -> void:
 	if not NetworkSession.is_networked or multiplayer.is_server():
 		return
@@ -167,6 +177,9 @@ func rpc_receive_state(
 		primary_upgrade_level = received_primary_level
 		secondary_upgrade_level = received_secondary_level
 		weapon_upgrades_changed.emit(primary_upgrade_level, secondary_upgrade_level)
+	if passenger_count != received_passengers:
+		passenger_count = received_passengers
+		passenger_count_changed.emit(passenger_count, passenger_capacity)
 
 func _broadcast_state(delta: float) -> void:
 	if not NetworkSession.is_host:
@@ -184,7 +197,8 @@ func _broadcast_state(delta: float) -> void:
 			health,
 			visible,
 			primary_upgrade_level,
-			secondary_upgrade_level
+			secondary_upgrade_level,
+			passenger_count
 		)
 
 func _read_movement() -> Vector2:
@@ -222,6 +236,36 @@ func apply_weapon_upgrade(upgrade_type: StringName) -> bool:
 			return false
 	weapon_upgrades_changed.emit(primary_upgrade_level, secondary_upgrade_level)
 	return true
+
+func try_add_passenger() -> bool:
+	if NetworkSession.is_networked and not multiplayer.is_server():
+		return false
+	if passenger_count >= passenger_capacity:
+		return false
+	passenger_count += 1
+	passenger_count_changed.emit(passenger_count, passenger_capacity)
+	return true
+
+func has_passenger_space() -> bool:
+	return passenger_count < passenger_capacity
+
+func set_extraction_active(active: bool) -> void:
+	if NetworkSession.is_networked and not multiplayer.is_server():
+		return
+	if active and not _extraction_active and _extraction_unload_timer <= 0.0:
+		_extraction_unload_timer = EXTRACTION_UNLOAD_INTERVAL
+	_extraction_active = active
+
+func _process_extraction(delta: float) -> void:
+	if not _extraction_active or passenger_count <= 0:
+		return
+	_extraction_unload_timer -= delta
+	if _extraction_unload_timer > 0.0:
+		return
+	passenger_count -= 1
+	passenger_count_changed.emit(passenger_count, MAX_PASSENGERS)
+	NetworkSession.record_evacuated_passenger()
+	_extraction_unload_timer = EXTRACTION_UNLOAD_INTERVAL
 
 func _fire_primary() -> void:
 	if _primary_cooldown > 0.0:
@@ -269,6 +313,7 @@ func _respawn() -> void:
 	if _respawning:
 		return
 	_respawning = true
+	_extraction_active = false
 	visible = false
 	_collision_shape.set_deferred("disabled", true)
 	await get_tree().create_timer(1.0).timeout

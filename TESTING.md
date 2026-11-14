@@ -45,6 +45,16 @@ godot --headless --path . --script res://tests/test_milestone3.gd
 
 The test passed on Godot 4.7.2. It checks infantry, turrets, tanks, and armed boats; enemy durability and projectile damage; pickup collection and removal; primary and grenade upgrade effects; and the maximum weapon level. The Milestone 1 regression test also passes with the expanded enemy roster.
 
+## Milestone 4 rescue and extraction
+
+```powershell
+godot --headless --path . --script res://tests/test_milestone4.gd
+```
+
+The test passed on Godot 4.7.2. It checks that destroying a rescue building releases three passengers, nearby passengers board a jeep, capacity stops at six, extraction unloads passengers one at a time, leaving pauses unloading, returning resumes it, and the helicopter transfers evacuated passengers into the rescued total. Enemy units are removed from this focused test scene so combat damage cannot trigger a respawn during extraction assertions.
+
+The multiplayer smoke test also passed with two and four total players. It checks host-authoritative building destruction and boarding, simultaneous unloading by two jeeps, cargo replication to the correct client, and synchronization of helicopter rescue totals. The four-player run also verified lobby registration, movement, damage, upgrades, camera ownership, and disconnect handling.
+
 ## Environment notes
 
 - Git and winget were found; the existing repository is initialized and already has Godot-specific ignore rules.
@@ -55,7 +65,6 @@ The test passed on Godot 4.7.2. It checks infantry, turrets, tanks, and armed bo
 
 ## Remaining gameplay and build checks
 
-- Test passenger pickup ownership, capacity, automatic boarding/unloading, immediate unload stop on zone exit, resume on return, helicopter collection, and score synchronization.
 - Test mission completion in solo mode and LAN/Tailscale connectivity when available.
 - Run windowed visual play and create/verify a Windows export.
 
