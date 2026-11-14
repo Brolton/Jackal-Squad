@@ -91,6 +91,14 @@ func _run_server(expected_players: int) -> void:
 		int(combat_target.get("health")) == health_before_host_damage - 1,
 		"Host applies authoritative damage to a remote player"
 	)
+	var enemy_target: Node = get_tree().get_nodes_in_group("enemies")[0]
+	enemy_target.call("take_damage", int(enemy_target.get("health")), upgrade_owner_id)
+	_check(NetworkSession.enemies_destroyed == 1, "Host records an enemy defeat")
+	var enemy_contribution: Dictionary = NetworkSession.player_contributions.get(upgrade_owner_id, {})
+	_check(
+		int(enemy_contribution.get("enemies_destroyed", 0)) == 1,
+		"Host credits enemy defeats to the firing player"
+	)
 	for enemy in get_tree().get_nodes_in_group("enemies"):
 		enemy.queue_free()
 	for projectile in get_tree().get_nodes_in_group("enemy_projectiles"):
@@ -170,8 +178,12 @@ func _run_server(expected_players: int) -> void:
 		NetworkSession.rescued_passengers == 2 and NetworkSession.evacuated_passengers == 0,
 		"Helicopter collects the shared evacuated passenger total"
 	)
+	var final_base: Node = get_tree().current_scene.get_node("FinalBase")
+	final_base.call("take_damage", int(final_base.get("health")), upgrade_owner_id)
+	_check(NetworkSession.final_base_destroyed, "Host records final base destruction")
+	_check(not NetworkSession.mission_completed, "The mission waits for all rescue objectives")
 
-	deadline = Time.get_ticks_msec() + 7000
+	deadline = Time.get_ticks_msec() + 12000
 	while NetworkSession.players.size() > 1 and Time.get_ticks_msec() < deadline:
 		await get_tree().process_frame
 	_check(NetworkSession.players.size() == 1, "Host removed a disconnected player")
@@ -281,7 +293,7 @@ func _run_client() -> void:
 			int(local_player.get("health")) < int(local_player.get("maximum_health")),
 			"Host synchronizes damage to the targeted player"
 		)
-	var rescue_deadline := Time.get_ticks_msec() + 4000
+	var rescue_deadline := Time.get_ticks_msec() + 6000
 	while (
 		(
 			get_tree().current_scene.get_node_or_null("RescueBuilding01") != null
@@ -300,7 +312,7 @@ func _run_client() -> void:
 		get_tree().get_nodes_in_group("rescue_passengers").is_empty(),
 		"Rescued passengers are removed on clients"
 	)
-	var cargo_deadline := Time.get_ticks_msec() + 1500
+	var cargo_deadline := Time.get_ticks_msec() + 2000
 	while (
 		int(local_player.get("passenger_count")) != (2 if expected_slot == 1 else 0)
 		and Time.get_ticks_msec() < cargo_deadline
@@ -314,6 +326,34 @@ func _run_client() -> void:
 		NetworkSession.evacuated_passengers == 0 and NetworkSession.rescued_passengers == 2,
 		"Host synchronizes helicopter rescue totals"
 	)
+	var mission_deadline := Time.get_ticks_msec() + 5000
+	var local_contribution: Dictionary = NetworkSession.player_contributions.get(local_peer_id, {})
+	while (
+		(
+			get_tree().current_scene.get_node_or_null("FinalBase") != null
+			or not NetworkSession.final_base_destroyed
+			or NetworkSession.enemies_destroyed != 1
+			or int(local_contribution.get("enemies_destroyed", 0)) != (1 if expected_slot == 1 else 0)
+			or int(local_contribution.get("passengers_rescued", 0)) != (1 if expected_slot == 1 else 0)
+			or int(local_contribution.get("final_bases_destroyed", 0)) != (1 if expected_slot == 1 else 0)
+		)
+		and Time.get_ticks_msec() < mission_deadline
+	):
+		await get_tree().process_frame
+		local_contribution = NetworkSession.player_contributions.get(local_peer_id, {})
+	_check(
+		get_tree().current_scene.get_node_or_null("FinalBase") == null
+		and NetworkSession.final_base_destroyed,
+		"Host synchronizes final base destruction"
+	)
+	_check(NetworkSession.enemies_destroyed == 1, "Host synchronizes mission enemy totals")
+	_check(
+		int(local_contribution.get("enemies_destroyed", 0)) == (1 if expected_slot == 1 else 0)
+		and int(local_contribution.get("passengers_rescued", 0)) == (1 if expected_slot == 1 else 0)
+		and int(local_contribution.get("final_bases_destroyed", 0)) == (1 if expected_slot == 1 else 0),
+		"Host synchronizes player contribution totals"
+	)
+	_check(not NetworkSession.mission_completed, "Incomplete rescue objectives prevent premature victory")
 	await get_tree().create_timer(float(expected_slot) * 0.75).timeout
 	NetworkSession.leave_lobby()
 	await get_tree().create_timer(0.2).timeout

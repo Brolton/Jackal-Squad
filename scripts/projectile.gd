@@ -45,7 +45,17 @@ func _on_body_entered(body: Node2D) -> void:
 	if visual_only or body == shooter:
 		return
 	if body.has_method("take_damage"):
-		body.call("take_damage", damage)
+		var attacker_peer_id := -1
+		if (
+			(body.is_in_group("enemies") or body.is_in_group("final_base"))
+			and shooter != null
+			and shooter.is_in_group("players")
+		):
+			attacker_peer_id = int(shooter.get("player_peer_id"))
+		if attacker_peer_id >= 0:
+			body.call("take_damage", damage, attacker_peer_id)
+		else:
+			body.call("take_damage", damage)
 	queue_free()
 
 func _draw() -> void:

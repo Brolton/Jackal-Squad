@@ -66,12 +66,21 @@ func _explode() -> void:
 	query.transform = Transform2D(0.0, global_position)
 	query.collision_mask = 5
 	query.collide_with_bodies = true
+	var attacker_peer_id := -1
+	if shooter != null and shooter.is_in_group("players"):
+		attacker_peer_id = int(shooter.get("player_peer_id"))
 	for result in get_world_2d().direct_space_state.intersect_shape(query, 64):
 		var body: Object = result["collider"]
 		if body == shooter or not body is Node2D or not body.has_method("take_damage"):
 			continue
 		var distance := global_position.distance_to((body as Node2D).global_position)
-		body.call("take_damage", 2 if distance <= blast_radius * 0.5 else 1)
+		var damage := 2 if distance <= blast_radius * 0.5 else 1
+		if attacker_peer_id >= 0 and (
+			body.is_in_group("enemies") or body.is_in_group("final_base")
+		):
+			body.call("take_damage", damage, attacker_peer_id)
+		else:
+			body.call("take_damage", damage)
 	queue_redraw()
 
 func _draw() -> void:

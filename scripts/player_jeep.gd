@@ -79,6 +79,9 @@ func _physics_process(delta: float) -> void:
 		if NetworkSession.is_networked and multiplayer.is_server():
 			_broadcast_state(delta)
 		return
+	if NetworkSession.mission_completed:
+		velocity = Vector2.ZERO
+		return
 	if _primary_cooldown > 0.0:
 		_primary_cooldown = maxf(0.0, _primary_cooldown - delta)
 	if _secondary_cooldown > 0.0:
@@ -264,7 +267,7 @@ func _process_extraction(delta: float) -> void:
 		return
 	passenger_count -= 1
 	passenger_count_changed.emit(passenger_count, MAX_PASSENGERS)
-	NetworkSession.record_evacuated_passenger()
+	NetworkSession.record_evacuated_passenger_for_player(player_peer_id)
 	_extraction_unload_timer = EXTRACTION_UNLOAD_INTERVAL
 
 func _fire_primary() -> void:

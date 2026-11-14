@@ -38,9 +38,9 @@ LAN/Tailscale sessions have not been tested yet.
 
 ## Milestone 5 — Complete level
 
-- [ ] Complete the battlefield, final base, mission progress, and victory screen.
-- [ ] Track mission time, enemies destroyed, passengers rescued, and player contributions.
-- [ ] Test that one player can complete every objective.
+- [x] Complete the battlefield, final base, mission progress, and victory screen.
+- [x] Track mission time, enemies destroyed, passengers rescued, and player contributions.
+- [x] Test that one player can complete every objective.
 
 ## Milestone 6 — Testing and Windows build
 

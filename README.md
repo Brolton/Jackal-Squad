@@ -28,8 +28,8 @@ Godot's Windows export templates for 4.7.2 are installed in the current user's p
 
 ## Current status
 
-Milestones 0 through 4 are complete. The prototype has a finite vertical battlefield, infantry, turrets, tanks, armed boats, health and respawning, player-specific machine-gun and grenade upgrades, destructible rescue buildings, and helicopter extraction. Up to four players can play solo or online by hosting/joining by IP; the host authoritatively simulates movement, combat, passenger cargo, and rescue scoring.
+Milestones 0 through 5 are complete. The prototype has a finite vertical battlefield, infantry, turrets, tanks, armed boats, health and respawning, player-specific machine-gun and grenade upgrades, destructible rescue buildings, helicopter extraction, and a final base. Rescue all six passengers and destroy the base to complete the mission; the HUD tracks mission time, enemy defeats, and player contributions, then shows a victory summary. Up to four players can play solo or online by hosting/joining by IP; the host authoritatively simulates movement, combat, passenger cargo, and mission progress.
 
-Automated solo and two-/four-player loopback tests pass. LAN/Tailscale play, windowed visual play, a Windows export, and the complete mission have not yet been verified.
+Automated solo and two-/four-player loopback tests pass. LAN/Tailscale play, windowed visual play, and a Windows export have not yet been verified.
 
 See [DESIGN.md](./DESIGN.md), [TASKS.md](./TASKS.md), and [TESTING.md](./TESTING.md) for scope and progress.

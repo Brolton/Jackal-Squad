@@ -70,6 +70,9 @@ func _physics_process(delta: float) -> void:
 			global_position = global_position.lerp(_target_position, weight)
 			rotation = lerp_angle(rotation, _target_rotation, weight)
 		return
+	if NetworkSession.mission_completed:
+		velocity = Vector2.ZERO
+		return
 
 	_fire_cooldown = maxf(0.0, _fire_cooldown - delta)
 	var target := _nearest_player()
@@ -92,7 +95,7 @@ func _physics_process(delta: float) -> void:
 		_fire_at(offset.normalized())
 	_broadcast_state(delta)
 
-func take_damage(amount: int) -> void:
+func take_damage(amount: int, attacker_peer_id: int = 0) -> void:
 	if amount <= 0 or not is_inside_tree():
 		return
 	if NetworkSession.is_networked and not multiplayer.is_server():
@@ -100,6 +103,7 @@ func take_damage(amount: int) -> void:
 	health = maxi(health - amount, 0)
 	queue_redraw()
 	if health == 0:
+		NetworkSession.record_enemy_destroyed(attacker_peer_id)
 		if NetworkSession.is_networked and multiplayer.is_server():
 			for peer_id in NetworkSession.connected_peer_ids():
 				rpc_id(peer_id, "rpc_enemy_destroyed")

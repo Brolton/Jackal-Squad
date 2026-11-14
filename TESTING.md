@@ -55,6 +55,14 @@ The test passed on Godot 4.7.2. It checks that destroying a rescue building rele
 
 The multiplayer smoke test also passed with two and four total players. It checks host-authoritative building destruction and boarding, simultaneous unloading by two jeeps, cargo replication to the correct client, and synchronization of helicopter rescue totals. The four-player run also verified lobby registration, movement, damage, upgrades, camera ownership, and disconnect handling.
 
+## Milestone 5 mission completion
+
+```powershell
+godot --headless --path . --script res://tests/test_milestone5.gd
+```
+
+The test passed on Godot 4.7.2. It defeats the enemy roster, destroys the final base, rescues all six passengers, and verifies that victory is gated on both objectives. It also checks elapsed time, per-player enemy and rescue credit, and the victory panel. The multiplayer smoke tests verify host replication of enemy totals, player contributions, and final-base destruction without premature victory.
+
 ## Environment notes
 
 - Git and winget were found; the existing repository is initialized and already has Godot-specific ignore rules.
@@ -65,7 +73,7 @@ The multiplayer smoke test also passed with two and four total players. It check
 
 ## Remaining gameplay and build checks
 
-- Test mission completion in solo mode and LAN/Tailscale connectivity when available.
+- Test LAN/Tailscale connectivity when available.
 - Run windowed visual play and create/verify a Windows export.
 
 Do not mark a check as passing unless it was actually run.

@@ -8,6 +8,7 @@ const HUD_SCENE := preload("res://scenes/hud.tscn")
 const WEAPON_UPGRADE_SCENE := preload("res://scenes/weapon_upgrade.tscn")
 const RESCUE_BUILDING_SCENE := preload("res://scenes/rescue_building.tscn")
 const EXTRACTION_ZONE_SCENE := preload("res://scenes/extraction_zone.tscn")
+const FINAL_BASE_SCENE := preload("res://scenes/final_base.tscn")
 
 const INFANTRY_POSITIONS := [
 	Vector2(600.0, 2500.0),
@@ -40,6 +41,7 @@ func _ready() -> void:
 	_create_obstacles()
 	_create_players_and_enemies()
 	_create_rescue_objects()
+	_create_final_base()
 	NetworkSession.player_left.connect(_on_player_left)
 
 func _draw() -> void:
@@ -179,6 +181,8 @@ func _create_players_and_enemies() -> void:
 		)
 	NetworkSession.rescue_score_changed.connect(Callable(hud, "update_rescue_score"))
 	hud.call("update_rescue_score", NetworkSession.evacuated_passengers, NetworkSession.rescued_passengers)
+	NetworkSession.mission_state_changed.connect(Callable(hud, "update_mission_state"))
+	hud.call("update_mission_state", NetworkSession.mission_state_snapshot())
 	_create_weapon_upgrades()
 
 func _create_rescue_objects() -> void:
@@ -194,6 +198,12 @@ func _create_rescue_objects() -> void:
 	var extraction_zone := EXTRACTION_ZONE_SCENE.instantiate()
 	extraction_zone.position = Vector2(600.0, 220.0)
 	add_child(extraction_zone)
+
+func _create_final_base() -> void:
+	var final_base := FINAL_BASE_SCENE.instantiate()
+	final_base.name = "FinalBase"
+	final_base.position = Vector2(600.0, 82.0)
+	add_child(final_base)
 
 func _create_weapon_upgrades() -> void:
 	var placements := [
