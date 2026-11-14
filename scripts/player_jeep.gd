@@ -54,6 +54,7 @@ var _camera_trauma := 0.0
 @onready var _collision_shape: CollisionShape2D = $CollisionShape2D
 @onready var _camera: Camera2D = $Camera2D
 @onready var _nickname_label: Label = $Nickname
+@onready var _trample_area: Area2D = $TrampleArea
 
 func configure(peer_id: int, nickname: String, slot: int) -> void:
 	player_peer_id = peer_id
@@ -79,7 +80,14 @@ func _ready() -> void:
 	_camera.limit_bottom = int(world_size.y)
 	if not NetworkSession.is_networked or player_peer_id == multiplayer.get_unique_id():
 		_camera.make_current()
+	_trample_area.body_entered.connect(_on_trample_body_entered)
 	health_changed.emit(health, maximum_health)
+
+func _on_trample_body_entered(body: Node2D) -> void:
+	if NetworkSession.is_networked and not multiplayer.is_server():
+		return
+	if body.has_method("can_be_trampled") and bool(body.call("can_be_trampled")):
+		body.call("take_damage", int(body.get("maximum_health")), player_peer_id)
 
 func _physics_process(delta: float) -> void:
 	_update_feedback(delta)
@@ -355,9 +363,10 @@ func _draw() -> void:
 	var texture_tint := Color(1.0, 0.94, 0.76) if _hit_flash > 0.0 else Color.WHITE
 	draw_texture_rect(PLAYER_JEEP_TEXTURE, Rect2(-19.0, -29.0, 38.0, 57.0), false, texture_tint)
 	var player_color: Color = PLAYER_COLORS[color_slot]
-	draw_line(Vector2(-15, 13), Vector2(-15, 25), player_color.lightened(0.18), 4.0)
-	draw_line(Vector2(15, 13), Vector2(15, 25), player_color.lightened(0.18), 4.0)
-	draw_line(Vector2(-13, 27), Vector2(13, 27), player_color, 3.0)
+	draw_line(Vector2(-5, -10), Vector2(-5, 10), player_color.darkened(0.20), 3.0)
+	draw_line(Vector2(0, -11), Vector2(0, 11), player_color, 3.0)
+	draw_line(Vector2(5, -10), Vector2(5, 10), player_color.lightened(0.18), 3.0)
+	draw_circle(Vector2(0, 20), 2.2, player_color.lightened(0.22))
 	_draw_weapon_upgrades()
 
 func _draw_weapon_upgrades() -> void:
@@ -372,7 +381,8 @@ func _draw_weapon_upgrades() -> void:
 		var side := -1.0 if pod_index % 2 == 0 else 1.0
 		var row := int(pod_index / 2)
 		var pod_center := Vector2(side * 17.0, -3.0 + row * 9.0)
-		draw_rect(Rect2(pod_center - Vector2(4, 7), Vector2(8, 14)), Color(0.18, 0.22, 0.19))
+		draw_rect(Rect2(pod_center - Vector2(3.5, 6), Vector2(7, 12)), Color(0.16, 0.20, 0.18), true)
+		draw_rect(Rect2(pod_center - Vector2(3.5, 6), Vector2(7, 12)), Color(0.44, 0.50, 0.42), false, 1.0)
 		for tube_y in [-4.0, 0.0, 4.0]:
 			draw_circle(pod_center + Vector2(0, tube_y), 1.6, Color(0.82, 0.38, 0.16))
 	for pip in range(primary_upgrade_level):

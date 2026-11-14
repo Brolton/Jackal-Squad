@@ -29,7 +29,7 @@ func configure(
 	visual_only = cosmetic_only
 	blast_radius = blast_range
 	collision_layer = 0
-	collision_mask = 0 if visual_only else 5
+	collision_mask = 0 if visual_only else 69
 
 func _physics_process(delta: float) -> void:
 	if _exploded:
@@ -64,7 +64,7 @@ func _explode() -> void:
 	var query := PhysicsShapeQueryParameters2D.new()
 	query.shape = blast_shape
 	query.transform = Transform2D(0.0, global_position)
-	query.collision_mask = 5
+	query.collision_mask = 69
 	query.collide_with_bodies = true
 	var attacker_peer_id := -1
 	if shooter != null and shooter.is_in_group("players"):

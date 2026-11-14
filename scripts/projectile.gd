@@ -31,7 +31,7 @@ func configure(
 	damage = attack_damage
 	speed = travel_speed
 	collision_layer = (16 if hostile else 8) if authoritative else 0
-	collision_mask = (3 if hostile else 5) if authoritative else 0
+	collision_mask = (3 if hostile else 69) if authoritative else 0
 	_projectile_color = Color(1.0, 0.34, 0.22) if hostile else Color(1.0, 0.83, 0.40)
 	rotation = direction.angle() + PI * 0.5
 

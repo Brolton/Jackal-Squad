@@ -68,7 +68,7 @@ LAN/Tailscale sessions have not been tested yet.
 ## Presentation and atmosphere pass
 
 - [x] Rebalance camera framing, vehicle scale, HUD footprint, and menu fit.
-- [ ] Add infantry ramming and replace temporary upgrade markers.
+- [x] Add infantry ramming and replace temporary upgrade markers.
 - [ ] Replace flat roads and water rectangles with richer battlefield rendering.
 - [ ] Add original music and gameplay sound effects.
 - [ ] Run regression and multiplayer validation, then publish a refreshed build.

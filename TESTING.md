@@ -169,3 +169,7 @@ Interactive windowed play and LAN/Tailscale connectivity still require a real pl
 ## Presentation pass — framing and interface
 
 The parser/import check, `test_controls_camera.gd`, and `test_visual_presentation.gd` passed after changing the gameplay camera from 1.3× to 0.9×. The camera now exposes roughly 1067×600 world units while the fixed 16:9 viewport still prevents fullscreen resizing from revealing additional terrain. Automated layout checks verify that the HUD backdrop is no taller than 64 virtual pixels and the complete main-menu panel fits within the 960×540 base viewport. Player jeeps were reduced and heavy enemies enlarged for a more coherent vehicle scale.
+
+## Presentation pass — vehicle combat
+
+The parser/import check, `test_milestone3.gd`, and `test_visual_presentation.gd` passed after separating infantry onto a non-blocking trample physics layer. The focused combat test places a soldier under the jeep and verifies that the authoritative ramming sensor defeats it, while heavy enemies remain solid. Player-color rectangles at the rear of the jeep were replaced by an inset body stripe, and upgrade pods now use compact bordered hardware shapes.

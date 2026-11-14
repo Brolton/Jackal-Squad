@@ -64,6 +64,7 @@ func _run_tests() -> void:
 	var upgraded_signature: Dictionary = player.call("weapon_visual_signature")
 	_check(int(upgraded_signature["barrels"]) > int(base_signature["barrels"]), "Primary upgrades add visible gun barrels")
 	_check(int(upgraded_signature["rocket_pods"]) > int(base_signature["rocket_pods"]), "Secondary upgrades add visible rocket pods")
+	_check(player.get_node_or_null("TrampleArea") != null, "Jeep has a dedicated infantry trample sensor")
 	game.queue_free()
 	await process_frame
 

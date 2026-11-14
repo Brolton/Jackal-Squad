@@ -31,6 +31,14 @@ func _run_tests() -> void:
 	_check(int(enemy_shots[-1].get("damage")) == 2, "Heavy enemies fire stronger projectiles")
 
 	var player: Node = game.get_node("Player_1")
+	var infantry: Node2D = game.get_node("Infantry01")
+	_check(int(infantry.collision_layer) == 64, "Infantry uses a non-blocking trample layer")
+	infantry.set("move_speed", 0.0)
+	infantry.global_position = (player as Node2D).global_position
+	await physics_frame
+	await physics_frame
+	await process_frame
+	_check(not is_instance_valid(infantry), "Driving over infantry defeats it instead of stopping the jeep")
 	player.call("_fire_primary")
 	var primary_shots := get_nodes_in_group("player_projectiles")
 	var base_shot_speed := float(primary_shots[-1].get("speed"))

@@ -26,6 +26,8 @@ var _has_authoritative_state := false
 var coop_player_count := 1
 var _hit_flash := 0.0
 
+@onready var _collision_shape: CollisionShape2D = $CollisionShape2D
+
 func configure_enemy(kind: int) -> void:
 	enemy_type = clampi(kind, EnemyType.INFANTRY, EnemyType.BOAT)
 	match enemy_type:
@@ -71,10 +73,20 @@ func apply_coop_scaling(player_count: int) -> void:
 
 func _ready() -> void:
 	motion_mode = CharacterBody2D.MOTION_MODE_FLOATING
-	collision_layer = 4
-	collision_mask = 35
+	_collision_shape.shape = _collision_shape.shape.duplicate()
+	if enemy_type == EnemyType.INFANTRY:
+		collision_layer = 64
+		collision_mask = 33
+		(_collision_shape.shape as CircleShape2D).radius = 9.0
+	else:
+		collision_layer = 4
+		collision_mask = 35
+		(_collision_shape.shape as CircleShape2D).radius = 24.0 if enemy_type != EnemyType.TURRET else 21.0
 	health = maximum_health
 	add_to_group("enemies")
+
+func can_be_trampled() -> bool:
+	return enemy_type == EnemyType.INFANTRY
 
 func _physics_process(delta: float) -> void:
 	if _hit_flash > 0.0:
