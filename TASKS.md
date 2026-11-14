@@ -78,4 +78,4 @@ LAN/Tailscale sessions have not been tested yet.
 - [x] Widen the tactical camera and bias the view toward the driving direction.
 - [x] Replace the mission loop with a faster original 1990s-style action chiptune.
 - [x] Add a synchronized infantry death cry.
-- [ ] Run regression, multiplayer validation, and publish a refreshed build.
+- [x] Run regression, multiplayer validation, and publish a refreshed build.

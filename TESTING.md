@@ -202,3 +202,14 @@ The gameplay camera now uses 0.78× zoom, exposing roughly 1231×692 world units
 ## Action pass — music and infantry death audio
 
 The original mission loop now runs at 148 BPM for sixteen beats, with a 32-step lead phrase, syncopated pulse/triangle bass, offbeat action stabs, marching kick/snare/hi-hat layers, and a closing tom fill. It intentionally evokes the general energy of a 1990s jungle action film without copying an existing score. Infantry deaths trigger a separate descending, formant-shaped 8-bit cry on the authority and remote clients. `test_audio_presentation.gd` verifies loop duration, tempo, effect coverage, live weapon triggers, engine audio, and the death-cry trigger.
+
+## Action pass — final validation
+
+Final validation completed on Godot `4.7.2.stable.official.ed1daf0bf`:
+
+- All ten focused and regression suites passed in one run.
+- Two-player ENet loopback passed on both host and client.
+- Four-player ENet loopback passed on the host and all three clients.
+- The refreshed Windows release at `builds\JackalSquad.exe` is 122,892,896 bytes.
+- The exported executable started headlessly and exited successfully after three seconds.
+- SHA-256: `CE67E396ADA1004751E2F90C63CD454C279C47B26F3219F313FBEF516094F13C`.
