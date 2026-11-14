@@ -138,3 +138,7 @@ Final validation completed on Godot `4.7.2.stable.official.ed1daf0bf`:
 - The exported executable started headlessly and exited successfully after three seconds.
 
 Interactive windowed QA could not be automated because Windows UI control did not permit launching the newly built local executable. The generated source art was visually inspected, and its real project wiring, dimensions, scene composition, and UI styles are covered by `test_visual_presentation.gd`. LAN/Tailscale connectivity still requires target machines and is not represented as tested.
+
+## Player feedback pass — camera and controls
+
+`test_controls_camera.gd` verifies fixed `canvas_items` stretching with `keep` aspect, the tighter 1.3× gameplay camera, J/K bindings, both mouse alternatives, and removal of the Space/Ctrl requirement. The Milestone 1 gameplay and campaign suites passed again after the input and viewport changes.

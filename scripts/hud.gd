@@ -67,7 +67,7 @@ func _refresh() -> void:
 		"MISSION %d / %d: %s  |  HEALTH: %d / %d  |  PASSENGERS: %d / 6\n"
 		+ "MACHINE GUN: Lv. %d  |  GRENADE: Lv. %d\nEVACUATED: %d  |  RESCUED: %d\n"
 		+ "OBJECTIVE: RESCUE %d / %d  |  FINAL BASE: %s\nTIME: %s  |  ENEMIES: %d\n"
-		+ "WASD / ARROWS: DRIVE     SPACE / LMB: FIRE     CTRL / RMB: GRENADE"
+		+ "WASD / ARROWS: DRIVE     J / LMB: FIRE     K / RMB: GRENADE"
 	) % [
 		_campaign_level_index + 1,
 		_campaign_level_count,

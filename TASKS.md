@@ -55,3 +55,11 @@ LAN/Tailscale sessions have not been tested yet.
 - [x] Stage 3: replace prototype presentation with a cohesive original 2D art direction and redesigned UI.
 - [x] Stage 4: add gameplay feedback, cooperative balance, and complete campaign flow.
 - [x] Stage 5: run final regression, multiplayer, export, and release validation.
+
+## Player feedback pass
+
+- [x] Lock the gameplay viewport when resizing/fullscreen and tighten camera framing.
+- [x] Move primary and secondary keyboard fire to J and K while retaining mouse controls.
+- [ ] Replace procedural unit placeholders with production top-down sprites and visible weapon upgrades.
+- [ ] Rebuild Emerald Approach as a larger, denser, multi-route opening mission.
+- [ ] Re-run solo/multiplayer validation and publish a refreshed Windows build.

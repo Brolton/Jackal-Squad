@@ -27,8 +27,8 @@ godot --headless --path . --export-release "Windows Desktop" builds\JackalSquad.
 ## Controls
 
 - WASD or arrow keys: drive
-- Space or left mouse button: machine gun
-- Ctrl or right mouse button: grenade
+- J or left mouse button: machine gun
+- K or right mouse button: grenade
 - Escape: pause, restart the current mission, or return to command
 
 ## Current status

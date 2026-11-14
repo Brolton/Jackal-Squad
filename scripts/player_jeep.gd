@@ -218,7 +218,7 @@ func _primary_pressed() -> bool:
 	return Input.is_action_pressed("fire_primary")
 
 func _secondary_pressed() -> bool:
-	return Input.is_action_pressed("fire_secondary") or Input.is_key_pressed(KEY_CTRL)
+	return Input.is_action_pressed("fire_secondary")
 
 func take_damage(amount: int) -> void:
 	if amount <= 0 or _respawning:
@@ -391,16 +391,22 @@ static func _install_input_actions() -> void:
 	_add_key_action("move_down", [KEY_S, KEY_DOWN])
 	_add_key_action("move_left", [KEY_A, KEY_LEFT])
 	_add_key_action("move_right", [KEY_D, KEY_RIGHT])
-	_add_key_action("fire_primary", [KEY_SPACE])
+	_add_key_action("fire_primary", [KEY_J])
+	_add_key_action("fire_secondary", [KEY_K])
 	_add_mouse_action("fire_primary", MOUSE_BUTTON_LEFT)
 	_add_mouse_action("fire_secondary", MOUSE_BUTTON_RIGHT)
 
 static func _add_key_action(action_name: StringName, key_codes: Array[int]) -> void:
 	if not InputMap.has_action(action_name):
 		InputMap.add_action(action_name)
-	if not InputMap.action_get_events(action_name).is_empty():
-		return
 	for key_code in key_codes:
+		var already_bound := false
+		for existing_event in InputMap.action_get_events(action_name):
+			if existing_event is InputEventKey and existing_event.physical_keycode == key_code:
+				already_bound = true
+				break
+		if already_bound:
+			continue
 		var event := InputEventKey.new()
 		event.physical_keycode = key_code
 		InputMap.action_add_event(action_name, event)
