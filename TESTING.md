@@ -97,3 +97,12 @@ godot --headless --path . --script res://tests/test_campaign.gd
 ```
 
 The focused campaign test verifies three distinct loadable mission scene entry points, selected-mission startup, synchronized level metadata, campaign advancement, and finale detection. The Milestone 1, 3, 4, and 5 regression suites are run again before the stage commit.
+
+## Production stage 2 — large mission layouts
+
+```powershell
+godot --headless --editor --path . --quit
+godot --headless --path . --script res://tests/test_level_layouts.gd
+```
+
+The layout test instantiates all three campaign missions and verifies their distinct 1200×3200, 1400×3600, and 1600×4000 world bounds; matching camera limits; encounter rosters; rescue sites; extraction zones; and command bases. Campaign and Milestone 1, 3, 4, and 5 regression suites all passed after the data-driven level refactor.

@@ -2,7 +2,6 @@ extends Node2D
 
 @export_range(0, 2) var level_index := 0
 
-const MAP_SIZE := Vector2(1200.0, 3200.0)
 const PLAYER_SCENE := preload("res://scenes/player_jeep.tscn")
 const INFANTRY_SCENE := preload("res://scenes/infantry.tscn")
 const OBSTACLE_SCENE := preload("res://scenes/obstacle.tscn")
@@ -12,32 +11,12 @@ const RESCUE_BUILDING_SCENE := preload("res://scenes/rescue_building.tscn")
 const EXTRACTION_ZONE_SCENE := preload("res://scenes/extraction_zone.tscn")
 const FINAL_BASE_SCENE := preload("res://scenes/final_base.tscn")
 
-const INFANTRY_POSITIONS := [
-	Vector2(600.0, 2500.0),
-	Vector2(420.0, 2180.0),
-	Vector2(800.0, 1850.0),
-	Vector2(580.0, 1640.0),
-	Vector2(670.0, 1270.0),
-	Vector2(390.0, 930.0),
-	Vector2(830.0, 560.0),
-	Vector2(550.0, 300.0),
-]
-const ADDITIONAL_ENEMY_PLACEMENTS := [
-	{"name": "Turret01", "type": 1, "position": Vector2(330.0, 2050.0)},
-	{"name": "Tank01", "type": 2, "position": Vector2(760.0, 1740.0)},
-	{"name": "Boat01", "type": 3, "position": Vector2(430.0, 1510.0)},
-	{"name": "Boat02", "type": 3, "position": Vector2(770.0, 1510.0)},
-	{"name": "Tank02", "type": 2, "position": Vector2(850.0, 600.0)},
-	{"name": "Turret02", "type": 1, "position": Vector2(340.0, 350.0)},
-]
-const PLAYER_SPAWN_POSITIONS := [
-	Vector2(600.0, 2860.0),
-	Vector2(640.0, 2860.0),
-	Vector2(600.0, 2910.0),
-	Vector2(640.0, 2910.0),
-]
+var map_size := Vector2(1200.0, 3200.0)
+var _layout: Dictionary = {}
 
 func _ready() -> void:
+	_layout = LevelLayouts.get_layout(level_index)
+	map_size = _layout["map_size"]
 	NetworkSession.set_loaded_level(level_index)
 	queue_redraw()
 	_create_map_collisions()
@@ -48,55 +27,43 @@ func _ready() -> void:
 	NetworkSession.player_left.connect(_on_player_left)
 
 func _draw() -> void:
-	draw_rect(Rect2(Vector2.ZERO, MAP_SIZE), Color(0.20, 0.31, 0.20))
-	draw_rect(Rect2(0.0, 0.0, MAP_SIZE.x, 700.0), Color(0.22, 0.33, 0.21))
-	draw_rect(Rect2(0.0, 700.0, MAP_SIZE.x, 800.0), Color(0.19, 0.29, 0.19))
-	draw_rect(Rect2(0.0, 1620.0, MAP_SIZE.x, 780.0), Color(0.20, 0.30, 0.19))
-	draw_rect(Rect2(0.0, 2400.0, MAP_SIZE.x, 800.0), Color(0.22, 0.32, 0.20))
+	var palette: Array = _layout["palette"]
+	draw_rect(Rect2(Vector2.ZERO, map_size), palette[0])
+	for band in range(5):
+		var band_height := map_size.y / 5.0
+		var band_color: Color = palette[0].lightened(0.025) if band % 2 == 0 else palette[0].darkened(0.025)
+		draw_rect(Rect2(0.0, band * band_height, map_size.x, band_height), band_color)
 
 	var rng := RandomNumberGenerator.new()
-	rng.seed = 24681357
-	for index in range(240):
+	rng.seed = int(_layout["seed"])
+	for index in range(int(map_size.y / 12.0)):
 		var patch := Vector2(
-			rng.randf_range(24.0, MAP_SIZE.x - 24.0),
-			rng.randf_range(24.0, MAP_SIZE.y - 24.0)
+			rng.randf_range(24.0, map_size.x - 24.0),
+			rng.randf_range(24.0, map_size.y - 24.0)
 		)
-		var tint := Color(0.28, 0.39, 0.24, 0.42) if index % 2 == 0 else Color(0.13, 0.24, 0.16, 0.36)
+		var tint: Color = palette[1] if index % 2 == 0 else palette[2]
+		tint.a = 0.40
 		draw_circle(patch, rng.randf_range(5.0, 15.0), tint)
 
-	var road := PackedVector2Array([
-		Vector2(600.0, 3200.0),
-		Vector2(560.0, 2780.0),
-		Vector2(650.0, 2320.0),
-		Vector2(520.0, 1950.0),
-		Vector2(600.0, 1620.0),
-		Vector2(600.0, 1380.0),
-		Vector2(690.0, 1040.0),
-		Vector2(570.0, 700.0),
-		Vector2(630.0, 350.0),
-		Vector2(600.0, 0.0),
-	])
-	draw_polyline(road, Color(0.43, 0.36, 0.25), 250.0, true)
-	draw_polyline(road, Color(0.48, 0.40, 0.28), 212.0, true)
-
-	draw_rect(Rect2(0.0, 1420.0, MAP_SIZE.x, 200.0), Color(0.12, 0.30, 0.37))
-	for ripple_x in range(24, int(MAP_SIZE.x), 96):
-		draw_line(
-			Vector2(ripple_x, 1460.0 + float(ripple_x % 5) * 13.0),
-			Vector2(ripple_x + 38.0, 1460.0 + float(ripple_x % 5) * 13.0),
-			Color(0.30, 0.53, 0.55, 0.62),
-			2.0
-		)
-	draw_rect(Rect2(510.0, 1380.0, 180.0, 280.0), Color(0.49, 0.39, 0.27))
-	draw_rect(Rect2(522.0, 1390.0, 156.0, 260.0), Color(0.59, 0.48, 0.33))
+	var road := PackedVector2Array(_layout["road"])
+	var road_width := float(_layout["road_width"])
+	draw_polyline(road, Color(0.32, 0.28, 0.22), road_width, true)
+	draw_polyline(road, Color(0.49, 0.41, 0.29), road_width - 34.0, true)
+	for water_rect: Rect2 in _layout["water"]:
+		draw_rect(water_rect, Color(0.08, 0.27, 0.36))
+		for ripple_x in range(int(water_rect.position.x + 24.0), int(water_rect.end.x), 96):
+			draw_line(Vector2(ripple_x, water_rect.position.y + 42.0), Vector2(ripple_x + 38.0, water_rect.position.y + 42.0), Color(0.30, 0.58, 0.64, 0.62), 2.0)
+	for bridge_rect: Rect2 in _layout["bridges"]:
+		draw_rect(bridge_rect, Color(0.39, 0.30, 0.21))
+		draw_rect(bridge_rect.grow(-12.0), Color(0.61, 0.49, 0.32))
 
 func _create_map_collisions() -> void:
-	_add_wall("WestBoundary", Vector2(-16.0, MAP_SIZE.y * 0.5), Vector2(32.0, MAP_SIZE.y + 64.0))
-	_add_wall("EastBoundary", Vector2(MAP_SIZE.x + 16.0, MAP_SIZE.y * 0.5), Vector2(32.0, MAP_SIZE.y + 64.0))
-	_add_wall("NorthBoundary", Vector2(MAP_SIZE.x * 0.5, -16.0), Vector2(MAP_SIZE.x, 32.0))
-	_add_wall("SouthBoundary", Vector2(MAP_SIZE.x * 0.5, MAP_SIZE.y + 16.0), Vector2(MAP_SIZE.x, 32.0))
-	_add_wall("WestRiverbank", Vector2(255.0, 1520.0), Vector2(510.0, 200.0))
-	_add_wall("EastRiverbank", Vector2(945.0, 1520.0), Vector2(510.0, 200.0))
+	_add_wall("WestBoundary", Vector2(-16.0, map_size.y * 0.5), Vector2(32.0, map_size.y + 64.0))
+	_add_wall("EastBoundary", Vector2(map_size.x + 16.0, map_size.y * 0.5), Vector2(32.0, map_size.y + 64.0))
+	_add_wall("NorthBoundary", Vector2(map_size.x * 0.5, -16.0), Vector2(map_size.x, 32.0))
+	_add_wall("SouthBoundary", Vector2(map_size.x * 0.5, map_size.y + 16.0), Vector2(map_size.x, 32.0))
+	for barrier: Dictionary in _layout["barriers"]:
+		_add_wall(barrier["name"], barrier["center"], barrier["size"])
 
 func _add_wall(wall_name: String, center: Vector2, dimensions: Vector2) -> void:
 	var wall := StaticBody2D.new()
@@ -112,24 +79,7 @@ func _add_wall(wall_name: String, center: Vector2, dimensions: Vector2) -> void:
 	add_child(wall)
 
 func _create_obstacles() -> void:
-	var placements := [
-		{"position": Vector2(260.0, 2600.0), "kind": &"tree", "radius": 27.0},
-		{"position": Vector2(900.0, 2700.0), "kind": &"tree", "radius": 30.0},
-		{"position": Vector2(350.0, 2360.0), "kind": &"rock", "radius": 20.0},
-		{"position": Vector2(820.0, 2200.0), "kind": &"tree", "radius": 26.0},
-		{"position": Vector2(250.0, 1990.0), "kind": &"tree", "radius": 32.0},
-		{"position": Vector2(930.0, 1900.0), "kind": &"rock", "radius": 24.0},
-		{"position": Vector2(300.0, 1740.0), "kind": &"crate", "radius": 24.0},
-		{"position": Vector2(890.0, 1690.0), "kind": &"tree", "radius": 30.0},
-		{"position": Vector2(250.0, 1260.0), "kind": &"tree", "radius": 29.0},
-		{"position": Vector2(930.0, 1120.0), "kind": &"rock", "radius": 23.0},
-		{"position": Vector2(330.0, 870.0), "kind": &"crate", "radius": 26.0},
-		{"position": Vector2(870.0, 760.0), "kind": &"tree", "radius": 32.0},
-		{"position": Vector2(270.0, 510.0), "kind": &"rock", "radius": 24.0},
-		{"position": Vector2(950.0, 390.0), "kind": &"tree", "radius": 29.0},
-		{"position": Vector2(340.0, 180.0), "kind": &"tree", "radius": 28.0},
-	]
-	for placement in placements:
+	for placement: Dictionary in _layout["obstacles"]:
 		var obstacle := OBSTACLE_SCENE.instantiate()
 		obstacle.configure(placement["kind"], placement["radius"])
 		obstacle.position = placement["position"]
@@ -148,17 +98,19 @@ func _create_players_and_enemies() -> void:
 		var player := PLAYER_SCENE.instantiate()
 		player.name = "Player_%d" % int(peer_id)
 		player.configure(int(peer_id), str(profile["nickname"]), slot)
-		player.position = PLAYER_SPAWN_POSITIONS[slot]
+		player.configure_world_bounds(map_size)
+		player.position = _layout["spawns"][slot]
 		add_child(player)
 		if not NetworkSession.is_networked or int(peer_id) == multiplayer.get_unique_id():
 			local_player = player
 
-	for index in range(INFANTRY_POSITIONS.size()):
+	var infantry_positions: Array = _layout["infantry"]
+	for index in range(infantry_positions.size()):
 		var enemy := INFANTRY_SCENE.instantiate()
 		enemy.name = "Infantry%02d" % (index + 1)
-		enemy.position = INFANTRY_POSITIONS[index]
+		enemy.position = infantry_positions[index]
 		add_child(enemy)
-	for placement in ADDITIONAL_ENEMY_PLACEMENTS:
+	for placement: Dictionary in _layout["heavy_enemies"]:
 		var enemy := INFANTRY_SCENE.instantiate()
 		enemy.name = placement["name"]
 		enemy.configure_enemy(int(placement["type"]))
@@ -189,33 +141,29 @@ func _create_players_and_enemies() -> void:
 	_create_weapon_upgrades()
 
 func _create_rescue_objects() -> void:
-	var building_placements := [
-		{"name": "RescueBuilding01", "position": Vector2(470.0, 2330.0)},
-		{"name": "RescueBuilding02", "position": Vector2(760.0, 1150.0)},
-	]
-	for placement in building_placements:
+	var rescue_positions: Array = _layout["rescues"]
+	for index in range(rescue_positions.size()):
 		var building := RESCUE_BUILDING_SCENE.instantiate()
-		building.name = placement["name"]
-		building.position = placement["position"]
+		building.name = "RescueBuilding%02d" % (index + 1)
+		building.position = rescue_positions[index]
 		add_child(building)
 	var extraction_zone := EXTRACTION_ZONE_SCENE.instantiate()
-	extraction_zone.position = Vector2(600.0, 220.0)
+	extraction_zone.position = _layout["extraction"]
 	add_child(extraction_zone)
 
 func _create_final_base() -> void:
 	var final_base := FINAL_BASE_SCENE.instantiate()
 	final_base.name = "FinalBase"
-	final_base.position = Vector2(600.0, 82.0)
+	final_base.position = _layout["base"]
 	add_child(final_base)
 
 func _create_weapon_upgrades() -> void:
-	var placements := [
-		{"name": "PrimaryUpgrade01", "type": &"primary", "position": Vector2(500.0, 2700.0)},
-		{"name": "SecondaryUpgrade01", "type": &"secondary", "position": Vector2(700.0, 2700.0)},
-	]
-	for placement in placements:
+	var type_counts := {&"primary": 0, &"secondary": 0}
+	for placement: Dictionary in _layout["upgrades"]:
 		var pickup := WEAPON_UPGRADE_SCENE.instantiate()
-		pickup.name = placement["name"]
+		var upgrade_type: StringName = placement["type"]
+		type_counts[upgrade_type] = int(type_counts[upgrade_type]) + 1
+		pickup.name = "%sUpgrade%02d" % ["Primary" if upgrade_type == &"primary" else "Secondary", type_counts[upgrade_type]]
 		pickup.configure(placement["type"])
 		pickup.position = placement["position"]
 		add_child(pickup)

@@ -32,7 +32,7 @@ godot --headless --path . --export-release "Windows Desktop" builds\JackalSquad.
 
 ## Current status
 
-Milestones 0 through 5 are complete. The prototype has a finite vertical battlefield, infantry, turrets, tanks, armed boats, health and respawning, player-specific machine-gun and grenade upgrades, destructible rescue buildings, helicopter extraction, and a final base. Rescue all six passengers and destroy the base to complete the mission; the HUD tracks mission time, enemy defeats, and player contributions, then shows a victory summary. Up to four players can play solo or online by hosting/joining by IP; the host authoritatively simulates movement, combat, passenger cargo, and mission progress.
+The game now has a three-mission campaign foundation with distinct large battlefields: Emerald Approach, Flooded Delta, and Iron Highlands. The maps grow from 1200×3200 to 1600×4000 and use different routes, bridges, water barriers, fortified passes, enemy rosters, rescue sites, upgrades, extraction points, and command bases. Infantry, turrets, tanks, armed boats, health and respawning, player-specific weapon upgrades, rescue buildings, helicopter extraction, and host-authoritative multiplayer remain fully integrated.
 
 Automated solo and two-/four-player loopback tests pass. The Windows release export was built and its headless startup check passed. Windowed visual play and connectivity outside loopback remain unverified.
 

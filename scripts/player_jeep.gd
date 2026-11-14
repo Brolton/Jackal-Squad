@@ -31,6 +31,7 @@ var primary_upgrade_level := 0
 var secondary_upgrade_level := 0
 var passenger_count := 0
 var passenger_capacity := MAX_PASSENGERS
+var world_size := Vector2(1200.0, 3200.0)
 var _received_movement := Vector2.ZERO
 var _received_primary := false
 var _received_secondary := false
@@ -56,6 +57,9 @@ func configure(peer_id: int, nickname: String, slot: int) -> void:
 	player_nickname = nickname
 	color_slot = clampi(slot, 0, PLAYER_COLORS.size() - 1)
 
+func configure_world_bounds(bounds: Vector2) -> void:
+	world_size = bounds
+
 func _ready() -> void:
 	motion_mode = CharacterBody2D.MOTION_MODE_FLOATING
 	collision_layer = 2
@@ -68,8 +72,8 @@ func _ready() -> void:
 	_nickname_label.add_theme_color_override("font_color", PLAYER_COLORS[color_slot])
 	_camera.limit_left = 0
 	_camera.limit_top = 0
-	_camera.limit_right = 1200
-	_camera.limit_bottom = 3200
+	_camera.limit_right = int(world_size.x)
+	_camera.limit_bottom = int(world_size.y)
 	if not NetworkSession.is_networked or player_peer_id == multiplayer.get_unique_id():
 		_camera.make_current()
 	health_changed.emit(health, maximum_health)
