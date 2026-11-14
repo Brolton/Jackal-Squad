@@ -63,4 +63,4 @@ LAN/Tailscale sessions have not been tested yet.
 - [x] Allow projectiles to cross rivers while keeping vehicles bridge-bound.
 - [x] Replace procedural unit placeholders with production top-down sprites and visible weapon upgrades.
 - [x] Rebuild Emerald Approach as a larger, denser, multi-route opening mission.
-- [ ] Re-run solo/multiplayer validation and publish a refreshed Windows build.
+- [x] Re-run solo/multiplayer validation and publish a refreshed Windows build.

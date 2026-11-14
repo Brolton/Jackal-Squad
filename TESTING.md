@@ -152,3 +152,16 @@ Interactive windowed QA could not be automated because Windows UI control did no
 The opening mission is now a 1500×4200 battlefield with four branching road paths, two water barriers, four usable bridges, 30 enemies, 10 mine hazards, 64 blocking terrain objects, two rescue camps, four upgrades, and 22 landmark decorations. `test_level_layouts.gd` verifies the new bounds, encounter roster, landmarks, branches, bridge count, camera bounds, rescue objectives, extraction, and base. Milestone 1, 3, 4, 5, and gameplay-polish suites all passed against the rebuilt geometry.
 
 River banks now use a vehicle/AI-only physics layer. The Milestone 1 test directly verifies that a jeep is stopped by a non-bridge river segment while a projectile crosses the same barrier.
+
+## Player feedback pass — final validation
+
+Final validation completed on Godot `4.7.2.stable.official.ed1daf0bf`:
+
+- `test_controls_camera.gd`, `test_campaign.gd`, `test_level_layouts.gd`, `test_visual_presentation.gd`, `test_gameplay_polish.gd`, and Milestone 1, 3, 4, and 5 all passed in one regression run.
+- Two-player ENet loopback passed on both host and client processes.
+- Four-player ENet loopback passed on the host and all three client processes.
+- The refreshed Windows release export was written to `builds\JackalSquad.exe` (121,480,648 bytes).
+- The exported executable started headlessly and exited successfully after three seconds.
+- SHA-256: `0AC87B755FAF60283D6439859CB364FCEBC306E143248F7B6C23A106DED23049`.
+
+Interactive windowed play and LAN/Tailscale connectivity still require a real player session and are not represented as tested.
