@@ -59,6 +59,18 @@ func _run_tests() -> void:
 	_check(hud.get_node_or_null("TopBackdrop") != null, "HUD has a readable tactical backdrop")
 	var backdrop := hud.get_node("TopBackdrop") as Control
 	_check(backdrop.size.y <= 64.0, "Tactical HUD stays compact and does not obscure the battlefield")
+	var backdrop_rect: Rect2 = backdrop.get_global_rect()
+	var viewport_width: float = hud.get_viewport().get_visible_rect().size.x
+	_check(
+		backdrop_rect.position.x > viewport_width * 0.5
+		and is_equal_approx(viewport_width - backdrop_rect.end.x, 12.0),
+		"Tactical HUD is aligned to the top-right with a small edge margin"
+	)
+	var backdrop_style := backdrop.get_theme_stylebox("panel") as StyleBoxFlat
+	_check(
+		backdrop_style != null and backdrop_style.bg_color.a > 0.0 and backdrop_style.bg_color.a < 0.7,
+		"Tactical HUD panel background is translucent"
+	)
 	_check(hud.get_node_or_null("ControlsHint") != null, "Control help uses a separate temporary hint")
 	hud.call("update_health", 3, 5)
 	hud.call("update_passengers", 2, 6)

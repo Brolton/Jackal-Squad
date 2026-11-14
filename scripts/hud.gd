@@ -28,7 +28,7 @@ var _controls_hint_time := 7.0
 var _auto_advance_started := false
 
 func _ready() -> void:
-	var hud_style := VisualTheme.panel_style(0.88, 12)
+	var hud_style := VisualTheme.panel_style(0.55, 12)
 	hud_style.content_margin_left = 10.0
 	hud_style.content_margin_right = 10.0
 	hud_style.content_margin_top = 5.0
