@@ -57,15 +57,42 @@ func _run_tests() -> void:
 	root.add_child(hud)
 	await process_frame
 	_check(hud.get_node_or_null("TopBackdrop") != null, "HUD has a readable tactical backdrop")
-	var backdrop := hud.get_node("TopBackdrop") as ColorRect
+	var backdrop := hud.get_node("TopBackdrop") as Control
 	_check(backdrop.size.y <= 64.0, "Tactical HUD stays compact and does not obscure the battlefield")
 	_check(hud.get_node_or_null("ControlsHint") != null, "Control help uses a separate temporary hint")
+	hud.call("update_health", 3, 5)
+	hud.call("update_passengers", 2, 6)
+	hud.call("update_weapon_upgrades", 0, 1)
+	_check(
+		(hud.get_node("TopBackdrop/Row/HealthDisplay/HealthCount") as Label).text == "3/5",
+		"HUD displays the current health count"
+	)
+	_check(
+		(hud.get_node("TopBackdrop/Row/PassengerDisplay") as Control).visible
+		and (hud.get_node("TopBackdrop/Row/PassengerDisplay/PassengerCount") as Label).text == "x2",
+		"HUD shows a passenger icon and count only when passengers are aboard"
+	)
+	_check(
+		str(hud.get_node("TopBackdrop/Row/SecondaryWeapon").get("icon_kind")) == "rocket",
+		"HUD switches the secondary weapon icon to a rocket after an upgrade"
+	)
+	var session: Node = root.get_node("NetworkSession")
+	session.set("mission_elapsed", 125.0)
+	await process_frame
+	_check(
+		(hud.get_node("TopBackdrop/Row/ClockDisplay/MissionTime") as Label).text == "02:05",
+		"HUD displays the synchronized mission time"
+	)
+	hud.call("update_passengers", 0, 6)
+	_check(
+		not (hud.get_node("TopBackdrop/Row/PassengerDisplay") as Control).visible,
+		"HUD hides the passenger indicator when the jeep is empty"
+	)
 	var continue_button := hud.get_node("VictoryPanel/VBoxContainer/ContinueButton") as Button
 	_check(continue_button != null and continue_button.get_theme_stylebox("normal") is StyleBoxFlat, "Mission result panel has a styled campaign action")
 	hud.queue_free()
 	await process_frame
 
-	var session: Node = root.get_node("NetworkSession")
 	session.call("start_solo", "VisualTester", 0)
 	var game: Node = load("res://scenes/level_01.tscn").instantiate()
 	root.add_child(game)

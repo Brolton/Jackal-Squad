@@ -1,6 +1,13 @@
 extends CanvasLayer
 
-@onready var _status: Label = $Status
+@onready var _top_backdrop: PanelContainer = $TopBackdrop
+@onready var _health_display: HBoxContainer = $TopBackdrop/Row/HealthDisplay
+@onready var _health_count: Label = $TopBackdrop/Row/HealthDisplay/HealthCount
+@onready var _passenger_display: HBoxContainer = $TopBackdrop/Row/PassengerDisplay
+@onready var _passenger_count_label: Label = $TopBackdrop/Row/PassengerDisplay/PassengerCount
+@onready var _primary_weapon: Control = $TopBackdrop/Row/PrimaryWeapon
+@onready var _secondary_weapon: Control = $TopBackdrop/Row/SecondaryWeapon
+@onready var _mission_time: Label = $TopBackdrop/Row/ClockDisplay/MissionTime
 @onready var _controls_hint: Label = $ControlsHint
 @onready var _victory_panel: Control = $VictoryPanel
 @onready var _victory_title: Label = $VictoryPanel/VBoxContainer/Title
@@ -11,88 +18,77 @@ var _current_health := 0
 var _maximum_health := 0
 var _primary_upgrade_level := 0
 var _secondary_upgrade_level := 0
-var _passenger_count := 0
-var _evacuated_passengers := 0
 var _rescued_passengers := 0
-var _rescue_objective_total := 6
 var _mission_elapsed := 0.0
 var _enemies_destroyed := 0
-var _final_base_destroyed := false
 var _mission_completed := false
 var _player_contributions: Dictionary = {}
-var _level_name := "EMERALD APPROACH"
 var _campaign_level_index := 0
-var _campaign_level_count := 3
 var _controls_hint_time := 7.0
 var _auto_advance_started := false
 
 func _ready() -> void:
+	var hud_style := VisualTheme.panel_style(0.88, 12)
+	hud_style.content_margin_left = 10.0
+	hud_style.content_margin_right = 10.0
+	hud_style.content_margin_top = 5.0
+	hud_style.content_margin_bottom = 5.0
+	_top_backdrop.add_theme_stylebox_override("panel", hud_style)
 	_victory_panel.add_theme_stylebox_override("panel", VisualTheme.panel_style(0.97, 14))
 	VisualTheme.decorate_button(_continue_button, true)
 	_continue_button.pressed.connect(_on_continue_pressed)
+	_refresh_health()
+	_refresh_weapons()
 
 func _process(delta: float) -> void:
-	if _controls_hint_time <= 0.0:
-		return
-	_controls_hint_time = maxf(0.0, _controls_hint_time - delta)
-	if _controls_hint_time <= 0.0:
-		_controls_hint.hide()
+	if _controls_hint_time > 0.0:
+		_controls_hint_time = maxf(0.0, _controls_hint_time - delta)
+		if _controls_hint_time <= 0.0:
+			_controls_hint.hide()
+	_mission_elapsed = NetworkSession.mission_elapsed
+	var formatted_time := _format_time(_mission_elapsed)
+	if _mission_time.text != formatted_time:
+		_mission_time.text = formatted_time
 
 func update_health(current: int, maximum: int) -> void:
 	_current_health = current
 	_maximum_health = maximum
-	_refresh()
+	_refresh_health()
 
 func update_weapon_upgrades(primary_level: int, secondary_level: int) -> void:
 	_primary_upgrade_level = primary_level
 	_secondary_upgrade_level = secondary_level
-	_refresh()
+	_refresh_weapons()
 
 func update_passengers(current: int, _maximum: int) -> void:
-	_passenger_count = current
-	_refresh()
+	_passenger_display.visible = current > 0
+	_passenger_count_label.text = "x%d" % current
 
-func update_rescue_score(evacuated: int, rescued: int) -> void:
-	_evacuated_passengers = evacuated
+func update_rescue_score(_evacuated: int, rescued: int) -> void:
 	_rescued_passengers = rescued
-	_refresh()
 
 func update_mission_state(state: Dictionary) -> void:
 	_mission_elapsed = float(state.get("mission_elapsed", 0.0))
 	_enemies_destroyed = int(state.get("enemies_destroyed", 0))
-	_rescue_objective_total = int(state.get("rescue_objective_total", 6))
-	_final_base_destroyed = bool(state.get("final_base_destroyed", false))
 	_mission_completed = bool(state.get("mission_completed", false))
-	_evacuated_passengers = int(state.get("evacuated_passengers", 0))
 	_rescued_passengers = int(state.get("rescued_passengers", 0))
 	_player_contributions = state.get("player_contributions", {}).duplicate(true)
-	_level_name = str(state.get("level_name", _level_name))
 	_campaign_level_index = int(state.get("campaign_level_index", 0))
-	_campaign_level_count = int(state.get("campaign_level_count", CampaignCatalog.count()))
-	_refresh()
 	_refresh_victory_panel()
 
-func _refresh() -> void:
-	var secondary_label := "GRENADE" if _secondary_upgrade_level == 0 else "ROCKET Lv.%d" % _secondary_upgrade_level
-	_status.text = (
-		"MISSION %d/%d  %s     HP %d/%d     PASSENGERS %d/6     MG Lv.%d     %s\n"
-		+ "GOAL: DESTROY BOSS [%s]     BONUS RESCUES %d/%d     EVAC %d     TIME %s     KILLS %d"
-	) % [
-		_campaign_level_index + 1,
-		_campaign_level_count,
-		_level_name,
-		_current_health,
-		_maximum_health,
-		_passenger_count,
-		_primary_upgrade_level + 1,
-		secondary_label,
-		"DESTROYED" if _final_base_destroyed else "ACTIVE",
-		_rescued_passengers,
-		_rescue_objective_total,
-		_evacuated_passengers,
-		_format_time(_mission_elapsed),
-		_enemies_destroyed,
-	]
+func _refresh_health() -> void:
+	_health_count.text = "%d/%d" % [_current_health, _maximum_health]
+	_health_display.tooltip_text = "Health: %d of %d" % [_current_health, _maximum_health]
+
+func _refresh_weapons() -> void:
+	_primary_weapon.tooltip_text = "Machine gun - Lv.%d" % (_primary_upgrade_level + 1)
+	if _secondary_upgrade_level == 0:
+		_secondary_weapon.set("icon_kind", &"grenade")
+		_secondary_weapon.tooltip_text = "Grenade"
+	else:
+		_secondary_weapon.set("icon_kind", &"rocket")
+		_secondary_weapon.tooltip_text = "Rocket - Lv.%d" % _secondary_upgrade_level
+	_secondary_weapon.queue_redraw()
 
 func _refresh_victory_panel() -> void:
 	_victory_panel.visible = _mission_completed
