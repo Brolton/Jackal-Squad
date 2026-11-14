@@ -71,4 +71,4 @@ LAN/Tailscale sessions have not been tested yet.
 - [x] Add infantry ramming and replace temporary upgrade markers.
 - [x] Replace flat roads and water rectangles with richer battlefield rendering.
 - [x] Add original music and gameplay sound effects.
-- [ ] Run regression and multiplayer validation, then publish a refreshed build.
+- [x] Run regression and multiplayer validation, then publish a refreshed build.

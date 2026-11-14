@@ -169,6 +169,11 @@ func _run_server(expected_players: int) -> void:
 		and NetworkSession.evacuated_passengers == 2,
 		"Two jeeps unload concurrently inside extraction"
 	)
+	# Freeze the intended one-passenger-per-jeep snapshot before clients assert cargo ownership.
+	upgrade_owner.call("set_extraction_active", false)
+	host_player.call("set_extraction_active", false)
+	upgrade_owner.global_position = extraction_zone.global_position + Vector2(-260.0, 0.0)
+	host_player.global_position = extraction_zone.global_position + Vector2(260.0, 0.0)
 	extraction_zone.set("helicopter_speed", 5000.0)
 	extraction_zone.call("_start_helicopter")
 	deadline = Time.get_ticks_msec() + 2000
@@ -300,6 +305,7 @@ func _run_client() -> void:
 			or not get_tree().get_nodes_in_group("rescue_passengers").is_empty()
 			or int(local_player.get("passenger_count")) != (2 if expected_slot == 1 else 0)
 			or NetworkSession.rescued_passengers < 2
+			or NetworkSession.evacuated_passengers != 0
 		)
 		and Time.get_ticks_msec() < rescue_deadline
 	):

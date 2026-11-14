@@ -42,7 +42,8 @@ func _run_tests() -> void:
 	_check(player.global_position.y > 3040.0, "The lower river blocks jeeps away from its two bridges")
 
 	var river_shot: Area2D = load("res://scenes/projectile.tscn").instantiate()
-	river_shot.configure(Vector2(730.0, 3070.0), Vector2.UP, player, false, 1, 700.0)
+	# Use an open bank segment so the check measures the river layer, not a boat hit.
+	river_shot.configure(Vector2(850.0, 3070.0), Vector2.UP, player, false, 1, 700.0)
 	game.add_child(river_shot)
 	for _frame in range(25):
 		await physics_frame

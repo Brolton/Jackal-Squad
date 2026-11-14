@@ -181,3 +181,16 @@ The parser/import check, `test_visual_presentation.gd`, and `test_level_layouts.
 ## Presentation pass — original audio
 
 `test_audio_presentation.gd` and the Milestone 3 regression passed after adding runtime-synthesized 16 kHz PCM. The focused test verifies a four-second looping chiptune, a responsive looping engine waveform, seven gameplay effect types, level music startup, and live machine-gun/grenade triggers. Mission teardown stops and frees active audio voices so scene changes do not retain playback nodes.
+
+## Presentation and atmosphere pass — final validation
+
+Final validation completed on Godot `4.7.2.stable.official.ed1daf0bf`:
+
+- Controls/camera, campaign, level layouts, visual presentation, audio presentation, gameplay polish, and Milestone 1, 3, 4, and 5 suites passed.
+- Two-player ENet loopback passed on the host and client.
+- Four-player ENet loopback passed on the host and all three clients after making the cargo/rescue snapshot test deterministic.
+- The Windows release export was refreshed at `builds\JackalSquad.exe` (122,891,568 bytes).
+- The exported executable started headlessly and exited successfully after three seconds.
+- SHA-256: `7F410442F1A082D286C211C137454DD8BE1B821A31901E1DE832BF70EA800D77`.
+
+Windows window capture did not grant automation access to the local QA executable, so final interactive visual judgment remains a manual check. Automated tests directly cover base-viewport menu fit, compact HUD dimensions, fixed fullscreen framing, vehicle scale contracts, terrain assets/rendering layers, and audio wiring.
