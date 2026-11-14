@@ -41,6 +41,16 @@ func _run_tests() -> void:
 	Input.action_release("move_up")
 	_check(player.global_position.y > 3040.0, "The lower river blocks jeeps away from its two bridges")
 
+	var river_shot: Area2D = load("res://scenes/projectile.tscn").instantiate()
+	river_shot.configure(Vector2(730.0, 3070.0), Vector2.UP, player, false, 1, 700.0)
+	game.add_child(river_shot)
+	for _frame in range(25):
+		await physics_frame
+	_check(
+		is_instance_valid(river_shot) and river_shot.global_position.y < 2840.0,
+		"Projectiles fly across river barriers while jeeps remain bridge-bound"
+	)
+
 	player.global_position = Vector2(60.0, 1050.0)
 	player.velocity = Vector2.ZERO
 	Input.action_press("move_left")

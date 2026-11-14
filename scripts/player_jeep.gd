@@ -66,7 +66,7 @@ func configure_world_bounds(bounds: Vector2) -> void:
 func _ready() -> void:
 	motion_mode = CharacterBody2D.MOTION_MODE_FLOATING
 	collision_layer = 2
-	collision_mask = 5
+	collision_mask = 37
 	add_to_group("players")
 	health = maximum_health
 	spawn_position = global_position

@@ -72,7 +72,7 @@ func apply_coop_scaling(player_count: int) -> void:
 func _ready() -> void:
 	motion_mode = CharacterBody2D.MOTION_MODE_FLOATING
 	collision_layer = 4
-	collision_mask = 3
+	collision_mask = 35
 	health = maximum_health
 	add_to_group("enemies")
 

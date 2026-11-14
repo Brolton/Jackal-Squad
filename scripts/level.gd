@@ -74,12 +74,12 @@ func _create_map_collisions() -> void:
 	_add_wall("NorthBoundary", Vector2(map_size.x * 0.5, -16.0), Vector2(map_size.x, 32.0))
 	_add_wall("SouthBoundary", Vector2(map_size.x * 0.5, map_size.y + 16.0), Vector2(map_size.x, 32.0))
 	for barrier: Dictionary in _layout["barriers"]:
-		_add_wall(barrier["name"], barrier["center"], barrier["size"])
+		_add_wall(barrier["name"], barrier["center"], barrier["size"], 32)
 
-func _add_wall(wall_name: String, center: Vector2, dimensions: Vector2) -> void:
+func _add_wall(wall_name: String, center: Vector2, dimensions: Vector2, physics_layer: int = 1) -> void:
 	var wall := StaticBody2D.new()
 	wall.name = wall_name
-	wall.collision_layer = 1
+	wall.collision_layer = physics_layer
 	wall.collision_mask = 0
 	var collision := CollisionShape2D.new()
 	var shape := RectangleShape2D.new()

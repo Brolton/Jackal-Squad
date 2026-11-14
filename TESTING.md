@@ -150,3 +150,5 @@ Interactive windowed QA could not be automated because Windows UI control did no
 ## Player feedback pass — rebuilt Emerald Approach
 
 The opening mission is now a 1500×4200 battlefield with four branching road paths, two water barriers, four usable bridges, 30 enemies, 10 mine hazards, 64 blocking terrain objects, two rescue camps, four upgrades, and 22 landmark decorations. `test_level_layouts.gd` verifies the new bounds, encounter roster, landmarks, branches, bridge count, camera bounds, rescue objectives, extraction, and base. Milestone 1, 3, 4, 5, and gameplay-polish suites all passed against the rebuilt geometry.
+
+River banks now use a vehicle/AI-only physics layer. The Milestone 1 test directly verifies that a jeep is stopped by a non-bridge river segment while a projectile crosses the same barrier.
