@@ -45,11 +45,14 @@ Automated solo and two-/four-player loopback tests pass. The Windows release exp
 
 ## Playing with friends
 
-1. Run `builds\JackalSquad.exe` on each Windows PC. The exported build embeds its game data in the executable.
-2. The host chooses **Host Game**. Friends choose **Join Game**, enter the host address, and wait in the lobby; the host then chooses **Start Game**. The host counts toward the four-player maximum.
-3. On the same LAN, friends can use the host PC's private IPv4 address. Allow inbound UDP port `24567` through Windows Firewall; router port forwarding is not needed for devices on the same LAN.
-4. Over the public internet, either use Tailscale or forward UDP `24567` on the router to the host PC's private address and share the host's public IPv4 address. With Tailscale, join using the host's Tailscale IPv4 address; no router port forwarding is needed, but the host firewall must allow UDP `24567` on the Tailscale interface.
+The ready-to-copy Windows package is `builds\JackalSquad-LAN.zip`. Extract the same package on both PCs.
 
-Use the same game build on all PCs. LAN, Tailscale, and public-internet sessions have not yet been tested; only local loopback multiplayer has been verified.
+1. Put `JackalSquad.exe` and `Allow-JackalSquad-Firewall.cmd` in the same folder on each Windows PC. If Windows does not show its own network-access prompt, run the firewall helper once as administrator.
+2. The host chooses **Host Game**. The lobby displays the host's real Wi-Fi IPv4 address and advertises the room over the LAN.
+3. On another PC, the room appears automatically in the LAN game selector. Select it, choose **Join Game**, and wait for the host to choose **Start Game**. The host counts toward the four-player maximum.
+4. If discovery is blocked, enter the LAN address shown on the host manually. Both PCs must use the same normal home network, not an isolated guest Wi-Fi. Router port forwarding is not needed on a LAN.
+5. Over the public internet, either use Tailscale or forward UDP `24567` on the router to the host PC's private address and share the host's public IPv4 address. With Tailscale, join using the host's Tailscale IPv4 address.
+
+Use the same game build on all PCs. Gameplay uses UDP `24567`; automatic LAN discovery uses UDP `24568`. Cross-process LAN discovery and two-/four-player loopback are verified. A session between two physical PCs, Tailscale, and public-internet play still require target machines for final verification.
 
 See [DESIGN.md](./DESIGN.md), [TASKS.md](./TASKS.md), and [TESTING.md](./TESTING.md) for scope and progress.

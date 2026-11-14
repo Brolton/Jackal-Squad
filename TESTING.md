@@ -242,3 +242,21 @@ Final validation completed on Godot `4.7.2.stable.official.ed1daf0bf`:
 - SHA-256: `57AEAF49AB41CEC3F9C9E20AEA341E3CA31F1D8C0780C840C118C507AC5A548F`.
 
 The campaign transition regression specifically verifies that a boss victory changes the active scene instead of only incrementing the mission index. Interactive windowed play and LAN/Tailscale connectivity still require real player sessions and are not represented as tested.
+
+## Home LAN discovery pass
+
+The old join screen defaulted to `127.0.0.1`, which always points back to the client PC and cannot reach a different laptop. It also had no server browser despite presenting Join as though a room could be found. The replacement uses a small UDP query/offer protocol on port `24568`; game traffic remains on ENet UDP `24567`.
+
+`lan_discovery_smoke.gd` was run as separate host and browser processes. The browser found the advertised lobby, nickname, player count, capacity, and physical Wi-Fi address. Virtual WSL/Hyper-V addresses are filtered from both offers and the host-facing address list. The visual-presentation test verifies that the server picker exists and that the expanded menu still fits the 960×540 base viewport. The complete two-player ENet smoke test passed again after discovery was integrated into Host/Join.
+
+Direct probes against the devices visible from this PC did not find the already-running older build on UDP `24567`. That is consistent with either the host's Windows Firewall blocking the executable or access-point client isolation. The release therefore includes `Allow-JackalSquad-Firewall.cmd` and explicit in-game diagnostics; a real two-laptop run must use the refreshed build on both PCs.
+
+Final LAN-release validation on Godot `4.7.2.stable.official.ed1daf0bf`:
+
+- All 12 gameplay/presentation regression suites passed.
+- The separate-process LAN discovery host and browser passed and selected `192.168.0.77`, not the WSL virtual address.
+- The two-player ENet smoke test passed on host and client after discovery integration.
+- The four-player ENet smoke test passed on the host and all three clients.
+- The packaged executable started headlessly and exited with code 0.
+- `builds\JackalSquad-LAN\JackalSquad.exe`: 122,923,920 bytes, SHA-256 `613290C006C6928CA089DF2983340AA41996F7FD132AB0F5EC2B7AAB3137BE5F`.
+- `builds\JackalSquad-LAN.zip`: 51,762,517 bytes, SHA-256 `A050639E0079E7CCD577160A7383CCECB619B519BDF0C0306D12437AA635F42D`.

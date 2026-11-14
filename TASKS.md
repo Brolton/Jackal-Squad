@@ -87,3 +87,11 @@ LAN/Tailscale sessions have not been tested yet.
 - [x] Clarify the extraction helicopter and mission objective presentation.
 - [x] Redesign upgrade pickups and make every upgrade level visibly and audibly distinct.
 - [x] Run regression, multiplayer validation, and publish a refreshed build.
+
+## Home LAN multiplayer pass
+
+- [x] Replace the localhost default with automatic LAN lobby discovery.
+- [x] Show the host's physical Wi-Fi address and filter virtual WSL/Hyper-V interfaces.
+- [x] Return failed clients to the join screen with actionable firewall diagnostics.
+- [x] Add an administrator helper for UDP `24567` and discovery UDP `24568`.
+- [x] Verify discovery in separate processes and re-run the ENet multiplayer smoke test.

@@ -22,5 +22,10 @@ mono_crash.*.json
 # Export outputs
 *.exe
 builds/network-qa-*/
+builds/lan-discovery-*/
+builds/JackalSquad-LAN/
+builds/*.zip
+builds/*.out
+builds/*.err
 # Uncomment if your project does not version PCK files as runtime dependencies.
 # *.pck
