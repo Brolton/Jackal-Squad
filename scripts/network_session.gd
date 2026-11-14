@@ -78,7 +78,13 @@ func host_game(nickname: String) -> bool:
 	_reset_rescue_score()
 	players = {1: _make_profile(local_nickname, 0)}
 	_publish_lobby()
-	_set_status("Hosting on UDP %d." % PORT)
+	var discovery_ready := LanDiscovery.start_host(local_nickname, players.size(), MAX_PLAYERS)
+	var addresses := LanDiscovery.local_ipv4_addresses()
+	var address_text := ", ".join(addresses) if not addresses.is_empty() else "unavailable"
+	_set_status(
+		"Hosting at %s:%d. LAN discovery %s."
+		% [address_text, PORT, "is active" if discovery_ready else "could not start"]
+	)
 	return true
 
 func join_game(address: String, nickname: String) -> bool:
@@ -106,6 +112,7 @@ func join_game(address: String, nickname: String) -> bool:
 func start_multiplayer_game() -> bool:
 	if not is_host or match_started or players.is_empty():
 		return false
+	LanDiscovery.stop()
 	match_started = true
 	_start_mission()
 	_set_status("Mission started.")
@@ -390,7 +397,10 @@ func _on_connection_failed() -> void:
 	players.clear()
 	_reset_rescue_score()
 	lobby_changed.emit({})
-	_set_status("Connection failed. Check the IP address and UDP port %d." % PORT)
+	_set_status(
+		"Host unreachable. Use the LAN address shown on the host and allow JackalSquad.exe through Windows Firewall (UDP %d/%d)."
+		% [PORT, LanDiscovery.DISCOVERY_PORT]
+	)
 
 func _on_server_disconnected() -> void:
 	if not is_networked or is_host:
@@ -410,6 +420,7 @@ func _publish_lobby(excluded_peer_id: int = 0) -> void:
 	var snapshot := players.duplicate(true)
 	lobby_changed.emit(snapshot)
 	if is_host:
+		LanDiscovery.update_host_lobby(players.size(), MAX_PLAYERS)
 		for peer_id in connected_peer_ids():
 			if peer_id == excluded_peer_id:
 				continue
@@ -536,6 +547,7 @@ func _set_status(message: String) -> void:
 	status_changed.emit(message)
 
 func _close_session() -> void:
+	LanDiscovery.stop()
 	is_networked = false
 	is_host = false
 	match_started = false

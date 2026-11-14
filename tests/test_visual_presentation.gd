@@ -36,8 +36,10 @@ func _run_tests() -> void:
 	_check(background != null and background.texture == key_art, "Main menu displays the generated campaign artwork")
 	_check(panel != null and panel.get_theme_stylebox("panel") is StyleBoxFlat, "Main menu uses the production panel theme")
 	_check(panel != null and panel.size.y <= 504.0, "Main menu fits completely inside the 960x540 base viewport")
-	var mission_options := menu.find_children("*", "OptionButton", true, false)
+	var mission_options := menu.find_children("MissionSelector", "OptionButton", true, false)
 	_check(mission_options.size() == 1 and (mission_options[0] as OptionButton).item_count == 3, "Styled menu exposes all three mission briefings")
+	var lan_picker := menu.find_child("LanServerPicker", true, false) as OptionButton
+	_check(lan_picker != null, "Main menu exposes automatic LAN game discovery")
 	menu.queue_free()
 	await process_frame
 

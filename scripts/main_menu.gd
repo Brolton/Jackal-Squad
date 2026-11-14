@@ -5,6 +5,7 @@ const KEY_ART := preload("res://assets/art/campaign_key_art.png")
 
 var _nickname_input: LineEdit
 var _address_input: LineEdit
+var _lan_server_picker: OptionButton
 var _main_view: VBoxContainer
 var _lobby_view: VBoxContainer
 var _players_label: Label
@@ -13,6 +14,7 @@ var _start_button: Button
 var _status_label: Label
 var _mission_selector: OptionButton
 var _briefing_label: Label
+var _lan_servers: Array = []
 
 func _ready() -> void:
 	AudioDirector.stop_music()
@@ -20,7 +22,9 @@ func _ready() -> void:
 	NetworkSession.lobby_changed.connect(_on_lobby_changed)
 	NetworkSession.status_changed.connect(_on_status_changed)
 	NetworkSession.game_start_requested.connect(_on_game_start_requested)
+	LanDiscovery.servers_changed.connect(_on_lan_servers_changed)
 	_status_label.text = NetworkSession.status_message
+	_start_lan_search()
 
 func _build_ui() -> void:
 	var background := TextureRect.new()
@@ -100,6 +104,7 @@ func _build_ui() -> void:
 	content.add_child(mission_label)
 
 	_mission_selector = OptionButton.new()
+	_mission_selector.name = "MissionSelector"
 	for index in range(CampaignCatalog.count()):
 		_mission_selector.add_item(
 			"Mission %d: %s" % [index + 1, CampaignCatalog.display_name(index)],
@@ -128,9 +133,24 @@ func _build_ui() -> void:
 	host_button.pressed.connect(_on_host_pressed)
 	_main_view.add_child(host_button)
 
+	var lan_row := HBoxContainer.new()
+	lan_row.add_theme_constant_override("separation", 6)
+	_lan_server_picker = OptionButton.new()
+	_lan_server_picker.name = "LanServerPicker"
+	_lan_server_picker.add_item("SEARCHING FOR LAN GAMES...")
+	_lan_server_picker.disabled = true
+	_lan_server_picker.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_lan_server_picker.item_selected.connect(_on_lan_server_selected)
+	lan_row.add_child(_lan_server_picker)
+	var refresh_button := _make_button("Refresh")
+	refresh_button.custom_minimum_size.x = 92.0
+	refresh_button.pressed.connect(_start_lan_search)
+	lan_row.add_child(refresh_button)
+	_main_view.add_child(lan_row)
+
 	_address_input = LineEdit.new()
-	_address_input.text = "127.0.0.1"
-	_address_input.placeholder_text = "Host IP address"
+	_address_input.text = ""
+	_address_input.placeholder_text = "Manual host IP (optional)"
 	var join_row := HBoxContainer.new()
 	join_row.add_theme_constant_override("separation", 6)
 	_address_input.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -201,6 +221,8 @@ func _on_host_pressed() -> void:
 		_refresh_lobby()
 
 func _on_join_pressed() -> void:
+	if _address_input.text.strip_edges().is_empty() and not _lan_servers.is_empty():
+		_on_lan_server_selected(_lan_server_picker.selected)
 	if NetworkSession.join_game(_address_input.text, _nickname_input.text):
 		_show_lobby()
 		_refresh_lobby()
@@ -213,6 +235,8 @@ func _on_back_pressed() -> void:
 	NetworkSession.leave_lobby()
 	_main_view.visible = true
 	_lobby_view.visible = false
+	_nickname_input.editable = true
+	_start_lan_search()
 
 func _on_lobby_changed(_players: Dictionary) -> void:
 	if NetworkSession.is_networked:
@@ -221,6 +245,43 @@ func _on_lobby_changed(_players: Dictionary) -> void:
 
 func _on_status_changed(message: String) -> void:
 	_status_label.text = message
+	if message.begins_with("Host unreachable"):
+		_main_view.visible = true
+		_lobby_view.visible = false
+		_nickname_input.editable = true
+		_start_lan_search()
+
+func _start_lan_search() -> void:
+	_lan_servers.clear()
+	if _lan_server_picker != null:
+		_lan_server_picker.clear()
+		_lan_server_picker.add_item("SEARCHING FOR LAN GAMES...")
+		_lan_server_picker.disabled = true
+	if not LanDiscovery.start_browser():
+		_status_label.text = "LAN search could not start. Enter the host's LAN IPv4 address manually."
+
+func _on_lan_servers_changed(servers: Array) -> void:
+	_lan_servers = servers.duplicate(true)
+	_lan_server_picker.clear()
+	if _lan_servers.is_empty():
+		_lan_server_picker.add_item("NO LAN GAMES YET — SEARCHING...")
+		_lan_server_picker.disabled = true
+		return
+	_lan_server_picker.disabled = false
+	for server_variant in _lan_servers:
+		var server: Dictionary = server_variant
+		_lan_server_picker.add_item(
+			"%s  •  %d/%d  •  %s"
+			% [server["nickname"], server["players"], server["capacity"], server["address"]]
+		)
+	if _address_input.text.strip_edges().is_empty():
+		_on_lan_server_selected(0)
+	_status_label.text = "LAN game found. Select it and press Join Game."
+
+func _on_lan_server_selected(index: int) -> void:
+	if index < 0 or index >= _lan_servers.size():
+		return
+	_address_input.text = str((_lan_servers[index] as Dictionary).get("address", ""))
 
 func _on_game_start_requested() -> void:
 	get_tree().change_scene_to_file(NetworkSession.current_level_scene())
@@ -231,6 +292,15 @@ func _show_lobby() -> void:
 	_nickname_input.editable = false
 	_start_button.visible = NetworkSession.is_host
 	_waiting_label.visible = not NetworkSession.is_host
+	if NetworkSession.is_host:
+		var addresses := LanDiscovery.local_ipv4_addresses()
+		_waiting_label.visible = true
+		_waiting_label.text = (
+			"LAN ADDRESS: %s:%d\nIf no game appears, allow JackalSquad.exe in Windows Firewall."
+			% [", ".join(addresses), NetworkSession.PORT]
+		)
+	else:
+		_waiting_label.text = "Connected — waiting for the host to start."
 
 func _refresh_lobby() -> void:
 	var peer_ids: Array = NetworkSession.players.keys()
