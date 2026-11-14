@@ -13,6 +13,7 @@ config/features=PackedStringArray("4.7", "GL Compatibility")
 
 NetworkSession="*res://scripts/network_session.gd"
 AudioDirector="*res://scripts/audio_director.gd"
+LanDiscovery="*res://scripts/lan_discovery.gd"
 
 [display]
 
