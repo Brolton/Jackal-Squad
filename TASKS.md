@@ -44,6 +44,6 @@ LAN/Tailscale sessions have not been tested yet.
 
 ## Milestone 6 — Testing and Windows build
 
-- [ ] Run automated, parser, solo, and multiplayer checks; resolve failures.
-- [ ] Create and verify a Windows export.
-- [ ] Document LAN/Tailscale setup and friend distribution.
+- [x] Run automated, parser, solo, and multiplayer checks; resolve failures.
+- [x] Create and verify a Windows export.
+- [x] Document LAN/Tailscale setup and friend distribution.

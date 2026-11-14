@@ -69,11 +69,22 @@ The test passed on Godot 4.7.2. It defeats the enemy roster, destroys the final 
 - Godot Engine 4.7.2 was installed through winget.
 - The Godot command alias may require reopening the terminal before it is available on `PATH`.
 - Godot 4.7.2 Windows export templates were installed in `%APPDATA%\Godot\export_templates\4.7.2.stable` after approval. The package SHA-256 matched the official GitHub release digest.
-- The Windows x86-64 debug and release templates and `version.txt` were verified in the installed template directory. A Windows build has not been exported yet.
+- The Windows x86-64 debug and release templates and `version.txt` were verified in the installed template directory.
 
 ## Remaining gameplay and build checks
 
 - Test LAN/Tailscale connectivity when available.
-- Run windowed visual play and create/verify a Windows export.
+- Run windowed visual play.
+
+## Milestone 6 Windows export
+
+```powershell
+godot --headless --path . --export-release "Windows Desktop" builds\JackalSquad.exe
+builds\JackalSquad.exe --headless --quit-after 3
+```
+
+The Godot 4.7.2 Windows x86-64 release export completed successfully. The self-contained executable was 109,236,944 bytes, and its headless startup check exited with code 0. The export preset embeds project data, so the executable can be shared as a single file. Windowed visual play has not been verified.
+
+See `README.md` for the tested build command and LAN/Tailscale connection setup. Network instructions are documented but have not been tested outside loopback.
 
 Do not mark a check as passing unless it was actually run.
