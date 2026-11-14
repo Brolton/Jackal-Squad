@@ -28,6 +28,9 @@ func _run_tests() -> void:
 			_check(get_nodes_in_group("battlefield_decorations").size() >= 20, "Emerald Approach has dense landmark dressing")
 			var layout := LevelLayouts.get_layout(0)
 			_check(layout["roads"].size() >= 4 and layout["bridges"].size() == 4, "Emerald Approach has branching routes and four bridge choices")
+		elif level_index == 2:
+			var terrain_signature: Dictionary = game.call("terrain_render_signature")
+			_check(int(terrain_signature["visible_collision_barriers"]) == 3, "Iron Highlands renders every blocking cliff pass")
 
 		game.queue_free()
 		await process_frame

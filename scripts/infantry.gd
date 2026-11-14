@@ -12,6 +12,7 @@ enum EnemyType { INFANTRY, TURRET, TANK, BOAT }
 @export var attack_range := 430.0
 @export var maximum_health := 1
 @export var fire_interval := 1.55
+@export var detection_range := 520.0
 
 var enemy_type: EnemyType = EnemyType.INFANTRY
 var health := 2
@@ -43,6 +44,7 @@ func configure_enemy(kind: int) -> void:
 			preferred_range = 0.0
 			projectile_damage = 1
 			projectile_speed = 350.0
+			detection_range = 620.0
 		EnemyType.TANK:
 			move_speed = 24.0
 			attack_range = 560.0
@@ -51,6 +53,7 @@ func configure_enemy(kind: int) -> void:
 			preferred_range = 175.0
 			projectile_damage = 2
 			projectile_speed = 280.0
+			detection_range = 610.0
 		EnemyType.BOAT:
 			move_speed = 0.0
 			attack_range = 700.0
@@ -59,6 +62,7 @@ func configure_enemy(kind: int) -> void:
 			preferred_range = 0.0
 			projectile_damage = 2
 			projectile_speed = 330.0
+			detection_range = 700.0
 		_:
 			move_speed = 48.0
 			attack_range = 430.0
@@ -67,6 +71,7 @@ func configure_enemy(kind: int) -> void:
 			preferred_range = 92.0
 			projectile_damage = 1
 			projectile_speed = 300.0
+			detection_range = 520.0
 
 func apply_coop_scaling(player_count: int) -> void:
 	coop_player_count = clampi(player_count, 1, 4)
@@ -186,6 +191,8 @@ func _nearest_player() -> Node2D:
 		if not candidate is Node2D or not candidate.visible:
 			continue
 		var distance := global_position.distance_squared_to(candidate.global_position)
+		if distance > detection_range * detection_range:
+			continue
 		if distance < nearest_distance:
 			nearest = candidate
 			nearest_distance = distance
@@ -252,4 +259,6 @@ func infantry_visual_signature() -> Dictionary:
 		"walk_phase": _walk_phase,
 		"texture_width": INFANTRY_TEXTURE.get_width(),
 		"has_alpha": INFANTRY_TEXTURE.get_image().detect_alpha() != Image.ALPHA_NONE,
+		"detection_range": detection_range,
+		"global_map_tracking": false,
 	}

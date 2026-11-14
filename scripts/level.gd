@@ -59,6 +59,9 @@ func _draw() -> void:
 		_draw_river(water_rect)
 	for bridge_rect: Rect2 in _layout["bridges"]:
 		_draw_bridge(bridge_rect)
+	for barrier: Dictionary in _layout["barriers"]:
+		if str(barrier["name"]).begins_with("CliffPass"):
+			_draw_cliff_barrier(barrier["center"], barrier["size"])
 
 func _draw_road(points: PackedVector2Array, width: float) -> void:
 	if points.size() < 2:
@@ -130,12 +133,38 @@ func _draw_bridge(bridge_rect: Rect2) -> void:
 		draw_line(Vector2(deck.position.x + 8, y), Vector2(deck.end.x - 8, y), Color(0.28, 0.20, 0.13, 0.85), 2.0)
 		draw_line(Vector2(deck.position.x + 10, y + 2), Vector2(deck.end.x - 10, y + 2), Color(0.69, 0.51, 0.28, 0.38), 1.0)
 
+func _draw_cliff_barrier(center: Vector2, dimensions: Vector2) -> void:
+	var barrier_rect := Rect2(center - dimensions * 0.5, dimensions)
+	draw_rect(barrier_rect.grow(8.0), Color(0.08, 0.09, 0.07, 0.48))
+	draw_rect(barrier_rect, Color(0.31, 0.32, 0.26))
+	draw_line(barrier_rect.position, Vector2(barrier_rect.end.x, barrier_rect.position.y), Color(0.62, 0.59, 0.42), 5.0)
+	draw_line(Vector2(barrier_rect.position.x, barrier_rect.end.y), barrier_rect.end, Color(0.14, 0.16, 0.13), 6.0)
+	var rock_count := maxi(3, int(dimensions.x / 38.0))
+	for index in range(rock_count):
+		var ratio := (float(index) + 0.5) / float(rock_count)
+		var x := lerpf(barrier_rect.position.x, barrier_rect.end.x, ratio)
+		var y := center.y + sin(float(index) * 2.31) * dimensions.y * 0.18
+		var radius := 13.0 + float(index % 3) * 3.0
+		draw_colored_polygon(PackedVector2Array([
+			Vector2(x - radius, y + radius * 0.45),
+			Vector2(x - radius * 0.58, y - radius * 0.72),
+			Vector2(x + radius * 0.18, y - radius),
+			Vector2(x + radius, y - radius * 0.12),
+			Vector2(x + radius * 0.64, y + radius * 0.72),
+		]), Color(0.43, 0.43, 0.34))
+		draw_line(Vector2(x - radius * 0.42, y - radius * 0.34), Vector2(x + radius * 0.25, y - radius * 0.60), Color(0.66, 0.63, 0.48), 2.0)
+
 func terrain_render_signature() -> Dictionary:
+	var visible_barriers := 0
+	for barrier: Dictionary in _layout.get("barriers", []):
+		if str(barrier["name"]).begins_with("CliffPass"):
+			visible_barriers += 1
 	return {
 		"road_layers": 6,
 		"textured_water": RIVER_TEXTURE != null,
 		"bank_layers": 3,
 		"bridge_planks": true,
+		"visible_collision_barriers": visible_barriers,
 	}
 
 func passenger_ground_path(from_position: Vector2, target_position: Vector2) -> PackedVector2Array:

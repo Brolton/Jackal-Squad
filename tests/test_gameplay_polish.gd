@@ -30,6 +30,20 @@ func _run_tests() -> void:
 	_check(float(enemy.get("fire_interval")) < 1.8, "Co-op scaling also increases enemy pressure")
 	enemy.free()
 
+	for existing_enemy in get_nodes_in_group("enemies"):
+		existing_enemy.set_physics_process(false)
+	var sentry: CharacterBody2D = load("res://scenes/infantry.tscn").instantiate()
+	sentry.position = Vector2(220.0, 220.0)
+	game.add_child(sentry)
+	player.global_position = Vector2(1200.0, 3200.0)
+	var sentry_start := sentry.global_position
+	sentry.call("_physics_process", 0.5)
+	_check(sentry.global_position == sentry_start, "Enemies remain at their posts while every player is outside detection range")
+	player.global_position = sentry_start + Vector2(0.0, 180.0)
+	sentry.call("_physics_process", 0.5)
+	_check(sentry.global_position.distance_to(sentry_start) > 1.0, "Enemies engage after a player enters their detection radius")
+	sentry.queue_free()
+
 	var pause_menu: CanvasLayer = game.get_node("PauseMenu")
 	_check(pause_menu.find_child("ResumeButton", true, false) != null, "Pause menu offers resume")
 	_check(pause_menu.find_child("RestartButton", true, false) != null, "Pause menu offers mission restart")
