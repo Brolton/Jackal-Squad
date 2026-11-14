@@ -6,13 +6,23 @@ Run from the repository root in PowerShell. Godot 4.7.2 was invoked directly fro
 
 ```powershell
 godot --headless --editor --path . --quit
-godot --headless --path . --quit-after 2
+godot --headless --path . --quit-after 3
 ```
 
 Both checks passed with exit code 0 on Godot `4.7.2.stable.official.ed1daf0bf`:
 
 - `--headless --editor --path . --quit` — project scan/editor initialization passed.
-- `--headless --path . --quit-after 2` — configured main scene startup passed.
+- `--headless --path . --quit-after 3` — configured main scene startup passed.
+
+## Milestone 1 gameplay checks
+
+```powershell
+godot --headless --path . --script res://tests/test_milestone1.gd
+```
+
+The test script passed three consecutive runs. It checks camera activation and map limits, enemy presence and pursuit, movement, river and map-edge collisions, simultaneous movement and fire, facing-directed shots, grenade creation and area damage, projectile damage, and player respawning. The main scene also started headlessly with exit code 0.
+
+Windowed visual play has not been manually verified.
 
 ## Environment notes
 

@@ -37,6 +37,8 @@ Use original, simple pixel art or procedural placeholders with a compact HUD. Pl
 5. Rescue, passenger boarding/unloading, helicopter extraction, and scoring.
 6. Complete level, final base, victory flow, testing, Windows export, and distribution instructions.
 
-## Initial scope limits
+## Current implementation
 
-Only Milestone 0 is authorized for the current phase. Do not start gameplay implementation until the project scaffold has been verified and the user confirms the next milestone.
+Milestones 0 and 1 are complete. The single-player prototype uses a generated 1200-by-3200 battlefield with a road, river crossing, blocking terrain, and original procedural placeholder graphics. It has arcade jeep movement, a map-clamped camera, machine-gun projectiles, grenade area damage, chasing/shooting infantry, a compact HUD, health, and respawning. Multiplayer, weapon progression, rescue, extraction, and mission completion are not implemented yet.
+
+Continue with later milestones only after the user confirms the next phase.

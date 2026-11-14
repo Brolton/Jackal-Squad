@@ -1,12 +1,6 @@
-[gd_scene format=3]
+[gd_scene load_steps=2 format=3]
 
-[node name="Main" type="Node2D"]
+[ext_resource type="Script" path="res://scripts/level.gd" id="1_level"]
 
-[node name="CanvasLayer" type="CanvasLayer" parent="."]
-
-[node name="Status" type="Label" parent="CanvasLayer"]
-offset_left = 24.0
-offset_top = 24.0
-theme_override_colors/font_color = Color(0.82, 0.88, 0.76, 1)
-theme_override_font_sizes/font_size = 24
-text = "Jackal Squad\nMilestone 0: project setup"
+[node name="Level" type="Node2D"]
+script = ExtResource("1_level")

@@ -13,9 +13,9 @@
 
 ## Milestone 1 — Single-player core
 
-- [ ] Build a finite map with a jeep, collision, and an independent camera.
-- [ ] Add arcade movement, machine gun, grenades, and basic enemies.
-- [ ] Test movement, aiming, firing, damage, and map bounds.
+- [x] Build a finite map with a jeep, collision, and an independent camera.
+- [x] Add arcade movement, machine gun, grenades, and basic enemies.
+- [x] Test movement, aiming, firing, damage, and map bounds.
 
 ## Milestone 2 — Multiplayer
 
