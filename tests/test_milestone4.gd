@@ -48,12 +48,18 @@ func _run_tests() -> void:
 	)
 	var passenger: Node = get_nodes_in_group("rescue_passengers")[0]
 	var passenger_signature: Dictionary = passenger.call("passenger_visual_signature")
+	var idle_walk_phase := float(passenger_signature["walk_phase"])
+	passenger.call("_update_walk_animation", true, 0.2)
+	passenger_signature = passenger.call("passenger_visual_signature")
 	_check(
 		int(passenger_signature["texture_width"]) >= 1000
 		and bool(passenger_signature["has_alpha"])
 		and not bool(passenger_signature["armed"])
-		and bool(passenger_signature["uses_ground_path"]),
-		"Rescued prisoners use a transparent unarmed character sprite and ground navigation"
+		and bool(passenger_signature["uses_ground_path"])
+		and str(passenger_signature["camera"]) == "orthographic_top_down"
+		and bool(passenger_signature["walk_animation"])
+		and float(passenger_signature["walk_phase"]) != idle_walk_phase,
+		"Rescued prisoners use a true-overhead unarmed sprite, walking gait, and ground navigation"
 	)
 	var lower_river: Rect2 = LevelLayouts.get_layout(0)["water"][0]
 	var crossed_lower_river := false

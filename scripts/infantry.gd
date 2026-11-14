@@ -1,7 +1,7 @@
 extends CharacterBody2D
 
 const PROJECTILE_SCENE := preload("res://scenes/projectile.tscn")
-const INFANTRY_TEXTURE := preload("res://assets/art/enemy_infantry.png")
+const INFANTRY_TEXTURE := preload("res://assets/art/enemy_infantry_v2.png")
 const TURRET_TEXTURE := preload("res://assets/art/enemy_turret.png")
 const TANK_TEXTURE := preload("res://assets/art/enemy_tank.png")
 const BOAT_TEXTURE := preload("res://assets/art/enemy_boat.png")
@@ -25,6 +25,10 @@ var _target_rotation := 0.0
 var _has_authoritative_state := false
 var coop_player_count := 1
 var _hit_flash := 0.0
+var _walk_phase := 0.0
+var _walk_strength := 0.0
+var _visual_moving := false
+var _infantry_region := Rect2()
 
 @onready var _collision_shape: CollisionShape2D = $CollisionShape2D
 
@@ -79,6 +83,7 @@ func _ready() -> void:
 		collision_layer = 64
 		collision_mask = 33
 		(_collision_shape.shape as CircleShape2D).radius = 9.0
+		_infantry_region = Rect2(INFANTRY_TEXTURE.get_image().get_used_rect())
 	else:
 		collision_layer = 4
 		collision_mask = 35
@@ -95,18 +100,22 @@ func _physics_process(delta: float) -> void:
 		queue_redraw()
 	if NetworkSession.is_networked and not multiplayer.is_server():
 		if _has_authoritative_state:
+			var previous_position := global_position
 			var weight := minf(1.0, delta * 12.0)
 			global_position = global_position.lerp(_target_position, weight)
 			rotation = lerp_angle(rotation, _target_rotation, weight)
+			_update_walk_animation(global_position.distance_squared_to(previous_position) > 0.0025, delta)
 		return
 	if NetworkSession.mission_completed:
 		velocity = Vector2.ZERO
+		_update_walk_animation(false, delta)
 		return
 
 	_fire_cooldown = maxf(0.0, _fire_cooldown - delta)
 	var target := _nearest_player()
 	if target == null:
 		velocity = Vector2.ZERO
+		_update_walk_animation(false, delta)
 		_broadcast_state(delta)
 		return
 
@@ -117,6 +126,7 @@ func _physics_process(delta: float) -> void:
 	else:
 		velocity = Vector2.ZERO
 	move_and_slide()
+	_update_walk_animation(velocity.length_squared() > 1.0, delta)
 
 	if distance > 0.0:
 		rotation = offset.angle() + PI * 0.5
@@ -202,6 +212,13 @@ func _fire_at(direction: Vector2) -> void:
 		projectile_speed
 	)
 
+func _update_walk_animation(moving: bool, delta: float) -> void:
+	_visual_moving = moving and enemy_type == EnemyType.INFANTRY
+	_walk_strength = move_toward(_walk_strength, 1.0 if _visual_moving else 0.0, delta * 8.0)
+	if _visual_moving:
+		_walk_phase = fposmod(_walk_phase + delta * 11.0, TAU)
+	queue_redraw()
+
 func _draw() -> void:
 	if _hit_flash > 0.0:
 		draw_circle(Vector2.ZERO, 25.0, Color(1.0, 0.84, 0.45, 0.38))
@@ -214,4 +231,25 @@ func _draw() -> void:
 		EnemyType.BOAT:
 			draw_texture_rect(BOAT_TEXTURE, Rect2(-28, -45, 56, 90), false, texture_tint)
 		_:
-			draw_texture_rect(INFANTRY_TEXTURE, Rect2(-16, -25, 32, 47), false, texture_tint)
+			var stride := sin(_walk_phase) * _walk_strength
+			var bob := absf(sin(_walk_phase * 2.0)) * -1.2 * _walk_strength
+			var sway := stride * 0.9
+			var squash := 1.0 - absf(stride) * 0.025
+			draw_ellipse_shadow(Vector2(1.0, 6.5), Vector2(10.5 + absf(stride), 7.0), Color(0.0, 0.0, 0.0, 0.28))
+			draw_set_transform(Vector2(sway, bob), stride * 0.025, Vector2(1.0 / squash, squash))
+			draw_texture_rect_region(INFANTRY_TEXTURE, Rect2(-15.0, -21.0, 30.0, 42.0), _infantry_region, texture_tint)
+			draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+
+func draw_ellipse_shadow(center: Vector2, radii: Vector2, color: Color) -> void:
+	draw_set_transform(center, 0.0, radii)
+	draw_circle(Vector2.ZERO, 1.0, color)
+	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+
+func infantry_visual_signature() -> Dictionary:
+	return {
+		"camera": "orthographic_top_down",
+		"walk_animation": true,
+		"walk_phase": _walk_phase,
+		"texture_width": INFANTRY_TEXTURE.get_width(),
+		"has_alpha": INFANTRY_TEXTURE.get_image().detect_alpha() != Image.ALPHA_NONE,
+	}

@@ -14,11 +14,11 @@ func _run_tests() -> void:
 	_check(river_art != null and river_art.get_width() >= 1000 and river_art.get_height() >= 1000, "River uses a high-resolution painted water texture")
 	for sprite_path in [
 		"res://assets/art/player_jeep_v2.png",
-		"res://assets/art/enemy_infantry.png",
+		"res://assets/art/enemy_infantry_v2.png",
 		"res://assets/art/enemy_turret.png",
 		"res://assets/art/enemy_tank.png",
 		"res://assets/art/enemy_boat.png",
-		"res://assets/art/rescue_prisoner.png",
+		"res://assets/art/rescue_prisoner_v2.png",
 	]:
 		var sprite_texture: Texture2D = load(sprite_path)
 		_check(

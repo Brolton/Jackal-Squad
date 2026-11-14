@@ -36,6 +36,17 @@ func _run_tests() -> void:
 
 	var player: Node = game.get_node("Player_1")
 	var infantry: Node2D = game.get_node("Infantry01")
+	var infantry_signature: Dictionary = infantry.call("infantry_visual_signature")
+	var idle_walk_phase := float(infantry_signature["walk_phase"])
+	infantry.call("_update_walk_animation", true, 0.2)
+	infantry_signature = infantry.call("infantry_visual_signature")
+	_check(
+		str(infantry_signature["camera"]) == "orthographic_top_down"
+		and bool(infantry_signature["walk_animation"])
+		and bool(infantry_signature["has_alpha"])
+		and float(infantry_signature["walk_phase"]) != idle_walk_phase,
+		"Infantry uses a transparent true-overhead sprite with an active walking gait"
+	)
 	_check(int(infantry.collision_layer) == 64, "Infantry uses a non-blocking trample layer")
 	infantry.set("move_speed", 0.0)
 	infantry.global_position = (player as Node2D).global_position
