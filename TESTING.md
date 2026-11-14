@@ -221,3 +221,7 @@ Infantry maximum health is fixed at one in solo and co-op, while heavy-unit dura
 ## Boss pass — scalable final encounters
 
 Final bases are shielded boss cores surrounded by independently destructible, independently aiming gun turrets. Turret-count scaling is `1/1/2/2` on mission 1, `1/2/3/3` on mission 2, and `1/2/3/4` on mission 3 for one through four players. Each turret is assigned a player target by its index, has mission-scaled health, rate of fire, projectile speed, and damage, and must be destroyed before the core accepts damage. `test_boss_scaling.gd` verifies the complete count matrix, shield gating, sequential turret destruction, and core exposure.
+
+## Boss pass — extraction clarity
+
+The extraction zone is labeled as an optional rescue/repair bonus. Its former abstract fly-by has been replaced with a larger recognizable helicopter silhouette including cockpit, fuselage, tail boom, landing gear, main rotor, and tail rotor. Empty periodic fly-bys were removed: the helicopter now appears only when evacuated passengers are waiting. Milestone 4 directly verifies that no helicopter launches with an empty rescue queue and that a real flight still transfers waiting passengers.

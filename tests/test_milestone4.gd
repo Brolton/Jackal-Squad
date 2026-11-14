@@ -19,6 +19,10 @@ func _run_tests() -> void:
 
 	session.set("evacuated_passengers", 0)
 	session.set("rescued_passengers", 0)
+	var extraction_zone: Node2D = game.get_node("ExtractionZone")
+	extraction_zone.set("_helicopter_timer", 0.0)
+	extraction_zone.call("_physics_process", 0.1)
+	_check(not bool(extraction_zone.get("_helicopter_active")), "The rescue helicopter does not fly when nobody is waiting")
 	var player: Node = game.get_node("Player_1")
 	var building: Node2D = game.get_node("RescueBuilding01")
 	var building_position := building.global_position
@@ -39,7 +43,6 @@ func _run_tests() -> void:
 	_check(int(player.get("passenger_count")) == 6, "Passenger capacity is capped at six")
 
 	player.set("passenger_count", 2)
-	var extraction_zone: Node2D = game.get_node("ExtractionZone")
 	extraction_zone.set("helicopter_interval", 60.0)
 	extraction_zone.set("_helicopter_timer", 60.0)
 	extraction_zone.set("helicopter_speed", 5000.0)
