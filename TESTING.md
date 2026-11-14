@@ -125,3 +125,16 @@ godot --headless --path . --script res://tests/test_gameplay_polish.gd
 ```
 
 The gameplay-polish test verifies designed minefields and authoritative mine damage, explosion state, player hit flash and camera trauma, four-player enemy durability/fire-pressure scaling, the complete pause menu, solo pause/resume, and current-mission restart semantics. The presentation, level-layout, campaign, and Milestone 1, 3, 4, and 5 suites all passed after these additions.
+
+## Production stage 5 — final validation
+
+Final validation completed on Godot `4.7.2.stable.official.ed1daf0bf`:
+
+- Headless editor import/parser check passed.
+- Campaign, level-layout, visual-presentation, gameplay-polish, and Milestone 1, 3, 4, and 5 tests all passed in one final gate.
+- Two-player ENet loopback passed on both the host and client processes.
+- Four-player ENet loopback passed on the host and all three client processes, including unique slots, independent cameras, authoritative movement/damage, upgrades, rescue cargo, extraction, mission totals, and disconnect cleanup.
+- Windows release export completed at `builds\JackalSquad.exe` (113,456,472 bytes).
+- The exported executable started headlessly and exited successfully after three seconds.
+
+Interactive windowed QA could not be automated because Windows UI control did not permit launching the newly built local executable. The generated source art was visually inspected, and its real project wiring, dimensions, scene composition, and UI styles are covered by `test_visual_presentation.gd`. LAN/Tailscale connectivity still requires target machines and is not represented as tested.
