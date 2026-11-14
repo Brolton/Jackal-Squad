@@ -8,8 +8,9 @@ func _initialize() -> void:
 func _run_tests() -> void:
 	var audio: Node = root.get_node("AudioDirector")
 	var manifest: Dictionary = audio.call("audio_manifest")
-	_check(float(manifest["music_seconds"]) >= 4.0, "Mission music has a reusable multi-beat loop")
-	_check((manifest["sfx"] as Array).size() >= 7, "Combat, impact, pickup, and vehicle sounds are covered")
+	_check(float(manifest["music_seconds"]) >= 6.0, "Mission music has a developed multi-phrase action loop")
+	_check(int(manifest["tempo_bpm"]) >= 145, "Mission music uses a fast action tempo")
+	_check((manifest["sfx"] as Array).size() >= 8, "Combat, death, impact, pickup, and vehicle sounds are covered")
 	var engine: AudioStreamWAV = audio.call("engine_stream")
 	_check(engine != null and engine.loop_mode == AudioStreamWAV.LOOP_FORWARD and engine.data.size() > 10000, "Jeep engine uses a generated looping waveform")
 
@@ -28,6 +29,9 @@ func _run_tests() -> void:
 	player.set("_secondary_cooldown", 0.0)
 	player.call("_fire_secondary")
 	_check(audio.get_node_or_null("SFX_grenade_throw") != null, "Grenade launch triggers its sound effect")
+	var soldier: Node = game.get_node("Infantry01")
+	soldier.call("take_damage", int(soldier.get("maximum_health")), 1)
+	_check(audio.get_node_or_null("SFX_soldier_death") != null, "Infantry death triggers a distinct synthesized cry")
 
 	game.queue_free()
 	await process_frame

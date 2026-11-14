@@ -198,3 +198,7 @@ Windows window capture did not grant automation access to the local QA executabl
 ## Action pass — wider tactical camera
 
 The gameplay camera now uses 0.78× zoom, exposing roughly 1231×692 world units instead of 1067×600, while fixed 16:9 stretching still prevents window resizing from revealing additional terrain. A 70-unit forward offset gives the player more reaction space in the driving direction. `test_controls_camera.gd` directly verifies the zoom, look-ahead, world-visibility ceiling, aspect behavior, and combat bindings.
+
+## Action pass — music and infantry death audio
+
+The original mission loop now runs at 148 BPM for sixteen beats, with a 32-step lead phrase, syncopated pulse/triangle bass, offbeat action stabs, marching kick/snare/hi-hat layers, and a closing tom fill. It intentionally evokes the general energy of a 1990s jungle action film without copying an existing score. Infantry deaths trigger a separate descending, formant-shaped 8-bit cry on the authority and remote clients. `test_audio_presentation.gd` verifies loop duration, tempo, effect coverage, live weapon triggers, engine audio, and the death-cry trigger.

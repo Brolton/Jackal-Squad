@@ -1,7 +1,8 @@
 extends Node
 
 const SAMPLE_RATE := 16000
-const BEAT_SECONDS := 0.5
+const BEAT_SECONDS := 60.0 / 148.0
+const MUSIC_BEATS := 16
 
 var _music_player: AudioStreamPlayer
 var _music_stream: AudioStreamWAV
@@ -12,7 +13,7 @@ func start_music(level_index: int = 0) -> void:
 	if _music_player == null:
 		_music_player = AudioStreamPlayer.new()
 		_music_player.name = "MissionMusic"
-		_music_player.volume_db = -18.0
+		_music_player.volume_db = -15.0
 		add_child(_music_player)
 	if _music_stream == null:
 		_music_stream = _build_music()
@@ -61,32 +62,52 @@ func engine_stream() -> AudioStreamWAV:
 
 func audio_manifest() -> Dictionary:
 	return {
-		"music_seconds": 8.0 * BEAT_SECONDS,
-		"music_samples": int(8.0 * BEAT_SECONDS * SAMPLE_RATE),
-		"sfx": [&"shot", &"enemy_shot", &"grenade_throw", &"explosion", &"pickup", &"hit", &"trample"],
+		"music_seconds": float(MUSIC_BEATS) * BEAT_SECONDS,
+		"music_samples": int(float(MUSIC_BEATS) * BEAT_SECONDS * SAMPLE_RATE),
+		"tempo_bpm": 148,
+		"sfx": [&"shot", &"enemy_shot", &"grenade_throw", &"explosion", &"pickup", &"hit", &"trample", &"soldier_death"],
 		"engine_loop": true,
 	}
 
 func _build_music() -> AudioStreamWAV:
-	var sample_count := int(8.0 * BEAT_SECONDS * SAMPLE_RATE)
+	var sample_count := int(float(MUSIC_BEATS) * BEAT_SECONDS * SAMPLE_RATE)
 	var bytes := PackedByteArray()
 	bytes.resize(sample_count * 2)
-	var melody: Array[int] = [76, 79, 81, 79, 74, 76, 72, 74]
-	var bass: Array[int] = [40, 40, 43, 43, 38, 38, 35, 35]
+	var melody: Array[int] = [
+		76, 79, 81, 83, 81, 79, 76, 74,
+		76, 79, 83, 86, 83, 81, 79, 76,
+		74, 76, 79, 81, 79, 76, 74, 71,
+		74, 76, 79, 83, 81, 79, 76, 74,
+	]
+	var bass: Array[int] = [40, 40, 43, 43, 38, 38, 45, 45, 40, 43, 38, 45, 40, 38, 35, 47]
 	for index in range(sample_count):
 		var time := float(index) / SAMPLE_RATE
 		var beat_position := time / BEAT_SECONDS
-		var beat_index := int(floor(beat_position)) % melody.size()
+		var beat_index := int(floor(beat_position)) % MUSIC_BEATS
+		var eighth_index := int(floor(beat_position * 2.0)) % melody.size()
 		var beat_phase := fposmod(time, BEAT_SECONDS)
-		var envelope := minf(1.0, beat_phase * 24.0) * minf(1.0, (BEAT_SECONDS - beat_phase) * 8.0)
-		var lead_frequency := _midi_frequency(melody[beat_index])
-		var lead := _square(time, lead_frequency, 0.25) * envelope
-		var bass_wave := _triangle(time, _midi_frequency(bass[beat_index]))
-		var kick_phase := beat_phase
-		var kick := sin(TAU * (72.0 - kick_phase * 54.0) * kick_phase) * exp(-11.0 * kick_phase)
+		var eighth_seconds := BEAT_SECONDS * 0.5
+		var eighth_phase := fposmod(time, eighth_seconds)
+		var lead_envelope := minf(1.0, eighth_phase * 38.0) * pow(maxf(0.0, 1.0 - eighth_phase / eighth_seconds), 0.55)
+		var lead_frequency := _midi_frequency(melody[eighth_index])
+		var lead := _square(time, lead_frequency, 0.28) * lead_envelope
+		lead += _square(time, lead_frequency * 0.5, 0.18) * lead_envelope * 0.24
+		var bass_frequency := _midi_frequency(bass[beat_index])
+		var bass_wave := _triangle(time, bass_frequency) * 0.72 + _square(time, bass_frequency, 0.44) * 0.28
+		var offbeat_envelope := 0.0
+		if eighth_index % 2 == 1:
+			offbeat_envelope = pow(maxf(0.0, 1.0 - eighth_phase / eighth_seconds), 2.2)
+		var action_stab := _square(time, bass_frequency * 4.0, 0.20) * offbeat_envelope
+		var kick := sin(TAU * (86.0 - beat_phase * 88.0) * beat_phase) * exp(-15.0 * beat_phase)
 		var noise := _noise(index, 19)
-		var snare := noise * exp(-20.0 * kick_phase) if beat_index % 2 == 1 else 0.0
-		var sample := lead * 0.18 + bass_wave * 0.10 + kick * 0.13 + snare * 0.055
+		var snare := noise * exp(-22.0 * beat_phase) if beat_index % 4 in [1, 3] else 0.0
+		var hi_hat := noise * exp(-55.0 * eighth_phase)
+		var tom := 0.0
+		if beat_index >= 14:
+			var tom_frequency := 145.0 if eighth_index % 2 == 0 else 104.0
+			tom = sin(TAU * tom_frequency * eighth_phase) * exp(-13.0 * eighth_phase)
+		var sample := lead * 0.21 + bass_wave * 0.13 + action_stab * 0.055
+		sample += kick * 0.17 + snare * 0.105 + hi_hat * 0.035 + tom * 0.10
 		_write_sample(bytes, index, sample)
 	return _wav_from_bytes(bytes, true)
 
@@ -111,6 +132,7 @@ func _build_sfx(kind: StringName) -> AudioStreamWAV:
 		&"pickup": 0.36,
 		&"hit": 0.16,
 		&"trample": 0.22,
+		&"soldier_death": 0.44,
 	}.get(kind, 0.20))
 	var sample_count := int(duration * SAMPLE_RATE)
 	var bytes := PackedByteArray()
@@ -138,6 +160,12 @@ func _build_sfx(kind: StringName) -> AudioStreamWAV:
 				sample = noise * 0.35 + _square(time, 120.0, 0.5) * 0.18
 			&"trample":
 				sample = noise * 0.34 + _triangle(time, lerpf(130.0, 55.0, progress)) * 0.20
+			&"soldier_death":
+				var cry_frequency := lerpf(340.0, 520.0, progress / 0.18) if progress < 0.18 else lerpf(520.0, 135.0, (progress - 0.18) / 0.82)
+				var vibrato := sin(TAU * 22.0 * time) * 24.0
+				var voice := _square(time, cry_frequency + vibrato, 0.46) * 0.24
+				var formant := sin(TAU * (cry_frequency * 2.15) * time) * 0.16
+				sample = voice + formant + noise * 0.075
 			_:
 				sample = noise * 0.2
 		_write_sample(bytes, index, sample * envelope)
@@ -181,4 +209,5 @@ func _default_volume(kind: StringName) -> float:
 		&"pickup": return -8.0
 		&"hit": return -9.0
 		&"trample": return -11.0
+		&"soldier_death": return -7.0
 		_: return -12.0

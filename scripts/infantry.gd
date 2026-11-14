@@ -132,6 +132,8 @@ func take_damage(amount: int, attacker_peer_id: int = 0) -> void:
 	_hit_flash = 0.10
 	queue_redraw()
 	if health == 0:
+		if enemy_type == EnemyType.INFANTRY:
+			AudioDirector.play_sfx(&"soldier_death")
 		NetworkSession.record_enemy_destroyed(attacker_peer_id)
 		if NetworkSession.is_networked and multiplayer.is_server():
 			for peer_id in NetworkSession.connected_peer_ids():
@@ -152,6 +154,8 @@ func rpc_receive_state(world_position: Vector2, world_rotation: float, current_h
 @rpc("authority", "call_remote", "reliable")
 func rpc_enemy_destroyed() -> void:
 	if not multiplayer.is_server():
+		if enemy_type == EnemyType.INFANTRY:
+			AudioDirector.play_sfx(&"soldier_death")
 		queue_free()
 
 func _broadcast_state(delta: float) -> void:
