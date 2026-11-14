@@ -335,6 +335,7 @@ func _respawn() -> void:
 	health_changed.emit(health, maximum_health)
 
 func _draw() -> void:
+	draw_ellipse_shadow(Vector2(0.0, 5.0), Vector2(19.0, 25.0), Color(0.0, 0.0, 0.0, 0.32))
 	var wheel := Color(0.09, 0.10, 0.09)
 	var body: Color = PLAYER_COLORS[color_slot]
 	draw_rect(Rect2(-16.0, -13.0, 6.0, 13.0), wheel)
@@ -352,9 +353,21 @@ func _draw() -> void:
 		]),
 		body
 	)
-	draw_rect(Rect2(-7.0, -7.0, 14.0, 11.0), Color(0.25, 0.42, 0.43))
+	draw_colored_polygon(PackedVector2Array([Vector2(-7, -16), Vector2(7, -16), Vector2(10, -7), Vector2(-10, -7)]), body.lightened(0.22))
+	draw_rect(Rect2(-7.0, -7.0, 14.0, 11.0), Color(0.12, 0.30, 0.34))
+	draw_line(Vector2(-6, -5), Vector2(5, -5), Color(0.67, 0.88, 0.86, 0.55), 2.0)
 	draw_line(Vector2(-9.0, 7.0), Vector2(9.0, 7.0), Color(0.83, 0.65, 0.35), 2.0)
 	draw_circle(Vector2.ZERO, 3.0, Color(0.86, 0.76, 0.52))
+	draw_circle(Vector2(-7, -16), 2.5, Color(1.0, 0.88, 0.55, 0.95))
+	draw_circle(Vector2(7, -16), 2.5, Color(1.0, 0.88, 0.55, 0.95))
+	draw_line(Vector2(-10, 15), Vector2(10, 15), body.darkened(0.35), 2.0)
+
+func draw_ellipse_shadow(center: Vector2, size: Vector2, color: Color) -> void:
+	var points := PackedVector2Array()
+	for index in range(24):
+		var angle := TAU * float(index) / 24.0
+		points.append(center + Vector2(cos(angle) * size.x, sin(angle) * size.y))
+	draw_colored_polygon(points, color)
 
 static func _install_input_actions() -> void:
 	_add_key_action("move_up", [KEY_W, KEY_UP])

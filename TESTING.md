@@ -106,3 +106,13 @@ godot --headless --path . --script res://tests/test_level_layouts.gd
 ```
 
 The layout test instantiates all three campaign missions and verifies their distinct 1200×3200, 1400×3600, and 1600×4000 world bounds; matching camera limits; encounter rosters; rescue sites; extraction zones; and command bases. Campaign and Milestone 1, 3, 4, and 5 regression suites all passed after the data-driven level refactor.
+
+## Production stage 3 — 2D art and presentation
+
+```powershell
+godot --headless --editor --path . --quit
+godot --headless --path . --script res://tests/test_visual_presentation.gd
+godot --headless --path . --export-debug "Windows Desktop" builds\JackalSquad-visual-qa.exe
+```
+
+The focused presentation test verifies that both high-resolution generated art assets import and load, the main menu actually uses the campaign key art and production panel theme, all three mission briefings are exposed, and the tactical HUD/result panel use the new theme and campaign action. The level-layout, campaign, and Milestone 1, 3, 4, and 5 suites all passed after the visual refactor. A Windows debug export also completed successfully. The generated source images were visually inspected, but automated Windows UI control was not permitted to launch the fresh QA executable, so interactive windowed QA remains part of the final validation stage.

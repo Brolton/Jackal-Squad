@@ -4,6 +4,7 @@ extends CanvasLayer
 @onready var _victory_panel: Control = $VictoryPanel
 @onready var _victory_title: Label = $VictoryPanel/VBoxContainer/Title
 @onready var _victory_details: Label = $VictoryPanel/VBoxContainer/Details
+@onready var _continue_button: Button = $VictoryPanel/VBoxContainer/ContinueButton
 
 var _current_health := 0
 var _maximum_health := 0
@@ -21,6 +22,11 @@ var _player_contributions: Dictionary = {}
 var _level_name := "EMERALD APPROACH"
 var _campaign_level_index := 0
 var _campaign_level_count := 3
+
+func _ready() -> void:
+	_victory_panel.add_theme_stylebox_override("panel", VisualTheme.panel_style(0.97, 14))
+	VisualTheme.decorate_button(_continue_button, true)
+	_continue_button.pressed.connect(_on_continue_pressed)
 
 func update_health(current: int, maximum: int) -> void:
 	_current_health = current
@@ -109,6 +115,18 @@ func _refresh_victory_panel() -> void:
 			]
 		)
 	_victory_details.text = "\n".join(summary)
+	var is_finale := CampaignCatalog.is_last(_campaign_level_index)
+	_continue_button.text = "RETURN TO COMMAND" if is_finale else "NEXT MISSION"
+	_continue_button.disabled = NetworkSession.is_networked and not NetworkSession.is_host
+	if _continue_button.disabled:
+		_continue_button.text = "WAITING FOR HOST"
+
+func _on_continue_pressed() -> void:
+	if CampaignCatalog.is_last(_campaign_level_index):
+		NetworkSession.leave_lobby()
+		get_tree().change_scene_to_file(NetworkSession.MAIN_SCENE)
+	else:
+		NetworkSession.advance_campaign()
 
 func _format_time(seconds: float) -> String:
 	var total_seconds := maxi(0, int(seconds))

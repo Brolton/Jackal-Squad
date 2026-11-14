@@ -48,8 +48,12 @@ func _spawn_passengers() -> void:
 func _draw() -> void:
 	var damage_ratio := float(health) / float(MAX_HEALTH)
 	var wall_color := Color(0.40, 0.37, 0.26).lerp(Color(0.48, 0.24, 0.17), 1.0 - damage_ratio)
+	draw_rect(Rect2(-28.0, -16.0, 56.0, 43.0), Color(0.0, 0.0, 0.0, 0.28))
 	draw_rect(Rect2(-24.0, -20.0, 48.0, 40.0), Color(0.13, 0.15, 0.12))
 	draw_rect(Rect2(-19.0, -16.0, 38.0, 32.0), wall_color)
 	draw_rect(Rect2(-8.0, -8.0, 16.0, 16.0), Color(0.20, 0.25, 0.22))
 	draw_line(Vector2(-20.0, -20.0), Vector2(0.0, -29.0), Color(0.57, 0.31, 0.23), 5.0)
 	draw_line(Vector2(0.0, -29.0), Vector2(20.0, -20.0), Color(0.57, 0.31, 0.23), 5.0)
+	draw_rect(Rect2(-17, -13, 8, 8), Color(0.92, 0.67, 0.28, 0.78))
+	draw_rect(Rect2(9, -13, 8, 8), Color(0.92, 0.67, 0.28, 0.78))
+	draw_line(Vector2(-16, 11), Vector2(16, 11), Color(0.66, 0.58, 0.36), 2.0)

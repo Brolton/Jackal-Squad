@@ -85,7 +85,9 @@ func _explode() -> void:
 
 func _draw() -> void:
 	if _exploded:
-		draw_circle(Vector2.ZERO, blast_radius, Color(1.0, 0.58, 0.17, 0.42))
+		draw_circle(Vector2.ZERO, blast_radius, Color(0.82, 0.16, 0.05, 0.22))
+		draw_circle(Vector2.ZERO, blast_radius * 0.68, Color(1.0, 0.48, 0.10, 0.38))
+		draw_circle(Vector2.ZERO, blast_radius * 0.34, Color(1.0, 0.88, 0.42, 0.72))
 		draw_arc(Vector2.ZERO, blast_radius, 0.0, TAU, 48, Color(1.0, 0.79, 0.36, 0.9), 4.0)
 	else:
 		draw_circle(Vector2.ZERO, 7.0, Color(0.48, 0.54, 0.25))

@@ -5,14 +5,22 @@
 [node name="HUD" type="CanvasLayer"]
 script = ExtResource("1_hud")
 
+[node name="TopBackdrop" type="ColorRect" parent="."]
+offset_left = 10.0
+offset_top = 10.0
+offset_right = 790.0
+offset_bottom = 176.0
+color = Color(0.02, 0.08, 0.085, 0.86)
+mouse_filter = 2
+
 [node name="Status" type="Label" parent="."]
 offset_left = 20.0
 offset_top = 18.0
 offset_right = 760.0
 offset_bottom = 180.0
 theme_override_colors/font_color = Color(0.92, 0.94, 0.82, 1)
-theme_override_colors/font_outline_color = Color(0.04, 0.07, 0.06, 1)
-theme_override_constants/outline_size = 4
+theme_override_colors/font_outline_color = Color(0.04, 0.07, 0.06, 0.75)
+theme_override_constants/outline_size = 2
 theme_override_font_sizes/font_size = 16
 
 [node name="VictoryPanel" type="PanelContainer" parent="."]
@@ -26,7 +34,7 @@ anchor_bottom = 0.5
 offset_left = -250.0
 offset_top = -170.0
 offset_right = 250.0
-offset_bottom = 170.0
+offset_bottom = 205.0
 grow_horizontal = 2
 grow_vertical = 2
 
@@ -42,10 +50,15 @@ text = "MISSION COMPLETE"
 horizontal_alignment = 1
 
 [node name="Details" type="Label" parent="VictoryPanel/VBoxContainer"]
-custom_minimum_size = Vector2(460, 220)
+custom_minimum_size = Vector2(460, 225)
 layout_mode = 2
 theme_override_font_sizes/font_size = 16
 text = ""
 horizontal_alignment = 1
 vertical_alignment = 1
 autowrap_mode = 2
+
+[node name="ContinueButton" type="Button" parent="VictoryPanel/VBoxContainer"]
+custom_minimum_size = Vector2(0, 48)
+layout_mode = 2
+text = "NEXT MISSION"

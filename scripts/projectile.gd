@@ -59,5 +59,7 @@ func _on_body_entered(body: Node2D) -> void:
 	queue_free()
 
 func _draw() -> void:
+	draw_circle(Vector2.ZERO, 7.0, Color(_projectile_color.r, _projectile_color.g, _projectile_color.b, 0.18))
 	draw_circle(Vector2.ZERO, 4.0, _projectile_color)
-	draw_line(Vector2(0.0, 3.0), Vector2(0.0, 9.0), _projectile_color.lightened(0.18), 2.0)
+	draw_circle(Vector2(-1.0, -1.0), 1.5, Color.WHITE)
+	draw_line(Vector2(0.0, 3.0), Vector2(0.0, 13.0), Color(_projectile_color.r, _projectile_color.g, _projectile_color.b, 0.45), 3.0)

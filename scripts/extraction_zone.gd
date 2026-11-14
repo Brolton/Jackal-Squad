@@ -60,7 +60,7 @@ func _on_body_exited(body: Node2D) -> void:
 	body.call("set_extraction_active", false)
 
 func _draw() -> void:
-	draw_rect(Rect2(-220.0, -90.0, 440.0, 180.0), Color(0.12, 0.40, 0.47, 0.25))
+	draw_circle(Vector2.ZERO, 88.0, Color(0.12, 0.45, 0.49, 0.20))
 	draw_rect(Rect2(-220.0, -90.0, 440.0, 180.0), Color(0.54, 0.77, 0.69, 0.8), false, 3.0)
 	for x in range(-200, 201, 40):
 		draw_line(Vector2(x, -82.0), Vector2(x, 82.0), Color(0.59, 0.76, 0.65, 0.30), 2.0)
@@ -79,3 +79,4 @@ func _draw() -> void:
 			body_color,
 			3.0
 		)
+		draw_circle(Vector2(_helicopter_x, -115.0), 16.0, Color(0.8, 0.9, 0.62, 0.10))

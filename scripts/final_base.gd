@@ -46,11 +46,16 @@ func _destroy(attacker_peer_id: int) -> void:
 	queue_free()
 
 func _draw() -> void:
+	draw_rect(Rect2(-86.0, -32.0, 172.0, 82.0), Color(0.0, 0.0, 0.0, 0.30))
 	draw_rect(Rect2(-78.0, -38.0, 156.0, 76.0), Color(0.13, 0.17, 0.15))
 	draw_rect(Rect2(-68.0, -31.0, 136.0, 62.0), Color(0.36, 0.40, 0.30))
 	draw_rect(Rect2(-40.0, -18.0, 80.0, 45.0), Color(0.25, 0.29, 0.23))
 	draw_rect(Rect2(-17.0, -7.0, 34.0, 34.0), Color(0.15, 0.19, 0.18))
 	draw_rect(Rect2(-4.0, -27.0, 8.0, 28.0), Color(0.17, 0.20, 0.16))
+	for window_x in [-54.0, -34.0, 34.0, 54.0]:
+		draw_rect(Rect2(window_x - 5.0, -18.0, 10.0, 8.0), Color(0.92, 0.63, 0.24, 0.88))
+	draw_circle(Vector2(0, -32), 10.0, Color(0.19, 0.25, 0.22))
+	draw_line(Vector2(-13, -32), Vector2(13, -32), Color(0.72, 0.75, 0.57), 2.0)
 	draw_line(Vector2(-84.0, -40.0), Vector2(84.0, -40.0), Color(0.71, 0.63, 0.38), 3.0)
 	draw_rect(Rect2(-70.0, -54.0, 140.0, 7.0), Color(0.10, 0.11, 0.10))
 	draw_rect(

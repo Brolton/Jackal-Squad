@@ -1,6 +1,7 @@
 extends Control
 
 const PLAYER_COLOR_NAMES := ["Red", "Blue", "Yellow", "Purple"]
+const KEY_ART := preload("res://assets/art/campaign_key_art.png")
 
 var _nickname_input: LineEdit
 var _address_input: LineEdit
@@ -11,6 +12,7 @@ var _waiting_label: Label
 var _start_button: Button
 var _status_label: Label
 var _mission_selector: OptionButton
+var _briefing_label: Label
 
 func _ready() -> void:
 	_build_ui()
@@ -20,25 +22,47 @@ func _ready() -> void:
 	_status_label.text = NetworkSession.status_message
 
 func _build_ui() -> void:
-	var background := ColorRect.new()
-	background.color = Color(0.055, 0.075, 0.067)
+	var background := TextureRect.new()
+	background.name = "CampaignKeyArt"
+	background.texture = KEY_ART
+	background.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	background.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
 	background.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	background.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	add_child(background)
 
-	var center := CenterContainer.new()
-	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	add_child(center)
+	var shade := ColorRect.new()
+	shade.name = "MenuShade"
+	shade.color = Color(0.01, 0.045, 0.05, 0.32)
+	shade.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	shade.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	add_child(shade)
+
+	var outer_margin := MarginContainer.new()
+	outer_margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	outer_margin.add_theme_constant_override("margin_left", 54)
+	outer_margin.add_theme_constant_override("margin_top", 44)
+	outer_margin.add_theme_constant_override("margin_right", 54)
+	outer_margin.add_theme_constant_override("margin_bottom", 44)
+	add_child(outer_margin)
+
+	var row := HBoxContainer.new()
+	outer_margin.add_child(row)
 
 	var panel := PanelContainer.new()
-	panel.custom_minimum_size = Vector2(560.0, 560.0)
-	center.add_child(panel)
+	panel.name = "MenuPanel"
+	panel.custom_minimum_size = Vector2(460.0, 0.0)
+	panel.add_theme_stylebox_override("panel", VisualTheme.panel_style(0.93, 16))
+	row.add_child(panel)
+	var spacer := Control.new()
+	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	row.add_child(spacer)
 
 	var margin := MarginContainer.new()
-	margin.add_theme_constant_override("margin_left", 28)
-	margin.add_theme_constant_override("margin_top", 24)
-	margin.add_theme_constant_override("margin_right", 28)
-	margin.add_theme_constant_override("margin_bottom", 24)
+	margin.add_theme_constant_override("margin_left", 8)
+	margin.add_theme_constant_override("margin_top", 4)
+	margin.add_theme_constant_override("margin_right", 8)
+	margin.add_theme_constant_override("margin_bottom", 4)
 	panel.add_child(margin)
 
 	var content := VBoxContainer.new()
@@ -48,9 +72,19 @@ func _build_ui() -> void:
 	var title := Label.new()
 	title.text = "JACKAL SQUAD"
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	title.add_theme_font_size_override("font_size", 32)
-	title.add_theme_color_override("font_color", Color(0.85, 0.78, 0.48))
+	title.add_theme_font_size_override("font_size", 38)
+	title.add_theme_color_override("font_color", VisualTheme.GOLD)
+	title.add_theme_color_override("font_shadow_color", Color(0, 0, 0, 0.8))
+	title.add_theme_constant_override("shadow_offset_x", 3)
+	title.add_theme_constant_override("shadow_offset_y", 3)
 	content.add_child(title)
+
+	var subtitle := Label.new()
+	subtitle.text = "COOPERATIVE STRIKE CAMPAIGN"
+	subtitle.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	subtitle.add_theme_font_size_override("font_size", 13)
+	subtitle.add_theme_color_override("font_color", Color(0.62, 0.78, 0.67))
+	content.add_child(subtitle)
 
 	_nickname_input = LineEdit.new()
 	_nickname_input.placeholder_text = "Nickname"
@@ -63,7 +97,15 @@ func _build_ui() -> void:
 			"Mission %d: %s" % [index + 1, CampaignCatalog.display_name(index)],
 			index
 		)
+	_mission_selector.item_selected.connect(_on_mission_selected)
 	content.add_child(_mission_selector)
+
+	_briefing_label = Label.new()
+	_briefing_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_briefing_label.custom_minimum_size = Vector2(0, 58)
+	_briefing_label.add_theme_color_override("font_color", Color(0.78, 0.84, 0.73))
+	content.add_child(_briefing_label)
+	_on_mission_selected(0)
 
 	_main_view = VBoxContainer.new()
 	_main_view.add_theme_constant_override("separation", 10)
@@ -128,7 +170,12 @@ func _make_button(text: String) -> Button:
 	var button := Button.new()
 	button.text = text
 	button.custom_minimum_size = Vector2(0.0, 42.0)
+	VisualTheme.decorate_button(button, text in ["Play Solo", "Start Game"])
 	return button
+
+func _on_mission_selected(index: int) -> void:
+	var level := CampaignCatalog.get_level(index)
+	_briefing_label.text = str(level["briefing"])
 
 func _on_solo_pressed() -> void:
 	NetworkSession.start_solo(_nickname_input.text, _mission_selector.get_selected_id())

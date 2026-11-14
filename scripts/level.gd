@@ -10,6 +10,7 @@ const WEAPON_UPGRADE_SCENE := preload("res://scenes/weapon_upgrade.tscn")
 const RESCUE_BUILDING_SCENE := preload("res://scenes/rescue_building.tscn")
 const EXTRACTION_ZONE_SCENE := preload("res://scenes/extraction_zone.tscn")
 const FINAL_BASE_SCENE := preload("res://scenes/final_base.tscn")
+const GROUND_TEXTURE := preload("res://assets/art/jungle_ground.png")
 
 var map_size := Vector2(1200.0, 3200.0)
 var _layout: Dictionary = {}
@@ -33,6 +34,7 @@ func _draw() -> void:
 		var band_height := map_size.y / 5.0
 		var band_color: Color = palette[0].lightened(0.025) if band % 2 == 0 else palette[0].darkened(0.025)
 		draw_rect(Rect2(0.0, band * band_height, map_size.x, band_height), band_color)
+	draw_texture_rect(GROUND_TEXTURE, Rect2(Vector2.ZERO, map_size), true, Color(0.72, 0.78, 0.66, 0.23))
 
 	var rng := RandomNumberGenerator.new()
 	rng.seed = int(_layout["seed"])

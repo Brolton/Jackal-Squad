@@ -23,12 +23,14 @@ func _ready() -> void:
 	queue_redraw()
 
 func _draw() -> void:
+	draw_circle(Vector2(5.0, 9.0), radius * 0.86, Color(0.0, 0.0, 0.0, 0.24))
 	match kind:
 		&"tree":
 			draw_circle(Vector2(0.0, 7.0), radius * 0.7, Color(0.14, 0.22, 0.14))
 			draw_circle(Vector2.ZERO, radius, Color(0.20, 0.37, 0.20))
 			draw_circle(Vector2(-radius * 0.22, -radius * 0.2), radius * 0.49, Color(0.29, 0.46, 0.24))
 			draw_circle(Vector2(radius * 0.24, radius * 0.13), radius * 0.38, Color(0.17, 0.31, 0.18))
+			draw_circle(Vector2(-radius * 0.28, -radius * 0.30), radius * 0.18, Color(0.46, 0.63, 0.30, 0.85))
 		&"rock":
 			draw_colored_polygon(
 				PackedVector2Array([
@@ -41,7 +43,9 @@ func _draw() -> void:
 				Color(0.39, 0.41, 0.34)
 			)
 			draw_line(Vector2(-radius * 0.42, -radius * 0.3), Vector2(radius * 0.25, -radius * 0.62), Color(0.58, 0.59, 0.49), 3.0)
+			draw_line(Vector2(-radius * 0.15, radius * 0.22), Vector2(radius * 0.56, radius * 0.10), Color(0.25, 0.27, 0.23), 2.0)
 		&"crate":
 			draw_rect(Rect2(-radius * 0.8, -radius * 0.8, radius * 1.6, radius * 1.6), Color(0.42, 0.29, 0.17))
 			draw_rect(Rect2(-radius * 0.58, -radius * 0.58, radius * 1.16, radius * 1.16), Color(0.56, 0.39, 0.22), false, 3.0)
 			draw_line(Vector2(-radius * 0.55, -radius * 0.55), Vector2(radius * 0.55, radius * 0.55), Color(0.36, 0.24, 0.14), 3.0)
+			draw_line(Vector2(radius * 0.55, -radius * 0.55), Vector2(-radius * 0.55, radius * 0.55), Color(0.65, 0.46, 0.25), 2.0)

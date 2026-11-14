@@ -52,6 +52,6 @@ LAN/Tailscale sessions have not been tested yet.
 
 - [x] Stage 1: add a three-mission campaign catalog, mission selection, synchronized progress, and level transitions.
 - [x] Stage 2: build three distinct large mission layouts and encounters.
-- [ ] Stage 3: replace prototype presentation with a cohesive original 2D art direction and redesigned UI.
+- [x] Stage 3: replace prototype presentation with a cohesive original 2D art direction and redesigned UI.
 - [ ] Stage 4: add gameplay feedback, cooperative balance, and complete campaign flow.
 - [ ] Stage 5: run final regression, multiplayer, export, and release validation.

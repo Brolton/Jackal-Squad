@@ -34,6 +34,8 @@ godot --headless --path . --export-release "Windows Desktop" builds\JackalSquad.
 
 The game now has a three-mission campaign foundation with distinct large battlefields: Emerald Approach, Flooded Delta, and Iron Highlands. The maps grow from 1200×3200 to 1600×4000 and use different routes, bridges, water barriers, fortified passes, enemy rosters, rescue sites, upgrades, extraction points, and command bases. Infantry, turrets, tanks, armed boats, health and respawning, player-specific weapon upgrades, rescue buildings, helicopter extraction, and host-authoritative multiplayer remain fully integrated.
 
+The presentation uses original project-specific 2D key art and a painted jungle ground texture, supported by detailed procedural vehicle, enemy, structure, foliage, projectile, and explosion rendering. The menu, mission briefings, tactical HUD, and mission-result flow share a cohesive teal, jungle-green, and warm-gold visual language.
+
 Automated solo and two-/four-player loopback tests pass. The Windows release export was built and its headless startup check passed. Windowed visual play and connectivity outside loopback remain unverified.
 
 ## Playing with friends
