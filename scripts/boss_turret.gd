@@ -103,6 +103,12 @@ func _assigned_target() -> Node2D:
 	)
 	if candidates.is_empty():
 		return null
+	var available_targets: Array[Node2D] = []
+	for candidate in candidates:
+		if global_position.distance_to(candidate.global_position) <= attack_range:
+			available_targets.append(candidate)
+	if not available_targets.is_empty():
+		return available_targets[turret_index % available_targets.size()]
 	return candidates[turret_index % candidates.size()]
 
 func _fire_at(direction: Vector2) -> void:

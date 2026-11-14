@@ -2,6 +2,9 @@ extends SceneTree
 
 var _failures := 0
 
+class MockPlayer extends Node2D:
+	var player_peer_id := 1
+
 func _initialize() -> void:
 	call_deferred("_run_tests")
 
@@ -41,6 +44,35 @@ func _run_tests() -> void:
 	boss.call("take_damage", 3, 1)
 	_check(int(boss.get("health")) == health_before - 3, "Exposed boss core takes damage")
 	boss.queue_free()
+	await process_frame
+
+	var turret_scene: PackedScene = load("res://scenes/boss_turret.tscn")
+	var first_turret: Node2D = turret_scene.instantiate()
+	first_turret.call("configure", 0, 0)
+	root.add_child(first_turret)
+	var second_turret: Node2D = turret_scene.instantiate()
+	second_turret.call("configure", 1, 0)
+	root.add_child(second_turret)
+	var near_player := MockPlayer.new()
+	near_player.player_peer_id = 1
+	near_player.position = Vector2(100, 0)
+	near_player.add_to_group("players")
+	root.add_child(near_player)
+	var far_player := MockPlayer.new()
+	far_player.player_peer_id = 2
+	far_player.position = Vector2(1600, 0)
+	far_player.add_to_group("players")
+	root.add_child(far_player)
+	await process_frame
+	_check(first_turret.call("_assigned_target") == near_player, "First turret targets the only player in attack range")
+	_check(second_turret.call("_assigned_target") == near_player, "Every turret focuses the only available player")
+	far_player.position = Vector2(140, 0)
+	_check(first_turret.call("_assigned_target") == near_player, "First turret keeps the first available squad target")
+	_check(second_turret.call("_assigned_target") == far_player, "Turrets split targets when several players are available")
+	first_turret.queue_free()
+	second_turret.queue_free()
+	near_player.queue_free()
+	far_player.queue_free()
 	await process_frame
 
 	if _failures == 0:
