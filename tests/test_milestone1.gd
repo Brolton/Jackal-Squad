@@ -6,12 +6,12 @@ func _initialize() -> void:
 	call_deferred("_run_tests")
 
 func _run_tests() -> void:
-	var game: Node = load("res://scenes/main.tscn").instantiate()
+	var game: Node = load("res://scenes/level_01.tscn").instantiate()
 	root.add_child(game)
 	current_scene = game
 	await process_frame
 
-	var player: CharacterBody2D = game.get_node("Player1")
+	var player: CharacterBody2D = game.get_node("Player_1")
 	var camera: Camera2D = player.get_node("Camera2D")
 	_check(camera.enabled, "Player camera is enabled")
 	_check(camera.limit_right == 1200 and camera.limit_bottom == 3200, "Camera limits match the finite map")

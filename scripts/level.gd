@@ -16,12 +16,19 @@ const INFANTRY_POSITIONS := [
 	Vector2(830.0, 560.0),
 	Vector2(550.0, 300.0),
 ]
+const PLAYER_SPAWN_POSITIONS := [
+	Vector2(600.0, 2860.0),
+	Vector2(640.0, 2860.0),
+	Vector2(600.0, 2910.0),
+	Vector2(640.0, 2910.0),
+]
 
 func _ready() -> void:
 	queue_redraw()
 	_create_map_collisions()
 	_create_obstacles()
 	_create_players_and_enemies()
+	NetworkSession.player_left.connect(_on_player_left)
 
 func _draw() -> void:
 	draw_rect(Rect2(Vector2.ZERO, MAP_SIZE), Color(0.20, 0.31, 0.20))
@@ -112,10 +119,22 @@ func _create_obstacles() -> void:
 		add_child(obstacle)
 
 func _create_players_and_enemies() -> void:
-	var player := PLAYER_SCENE.instantiate()
-	player.name = "Player1"
-	player.position = Vector2(600.0, 2860.0)
-	add_child(player)
+	var profiles := NetworkSession.players.duplicate(true)
+	if profiles.is_empty():
+		profiles[1] = {"nickname": NetworkSession.local_nickname, "slot": 0}
+	var peer_ids: Array = profiles.keys()
+	peer_ids.sort()
+	var local_player: Node
+	for peer_id in peer_ids:
+		var profile: Dictionary = profiles[peer_id]
+		var slot := int(profile["slot"])
+		var player := PLAYER_SCENE.instantiate()
+		player.name = "Player_%d" % int(peer_id)
+		player.configure(int(peer_id), str(profile["nickname"]), slot)
+		player.position = PLAYER_SPAWN_POSITIONS[slot]
+		add_child(player)
+		if not NetworkSession.is_networked or int(peer_id) == multiplayer.get_unique_id():
+			local_player = player
 
 	for index in range(INFANTRY_POSITIONS.size()):
 		var enemy := INFANTRY_SCENE.instantiate()
@@ -125,5 +144,11 @@ func _create_players_and_enemies() -> void:
 
 	var hud := HUD_SCENE.instantiate()
 	add_child(hud)
-	player.connect(&"health_changed", Callable(hud, "update_health"))
-	hud.call("update_health", player.get("health"), player.get("maximum_health"))
+	if local_player != null:
+		local_player.connect(&"health_changed", Callable(hud, "update_health"))
+		hud.call("update_health", local_player.get("health"), local_player.get("maximum_health"))
+
+func _on_player_left(peer_id: int) -> void:
+	var player := get_node_or_null("Player_%d" % peer_id)
+	if player != null:
+		player.queue_free()

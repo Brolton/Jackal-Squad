@@ -19,9 +19,11 @@
 
 ## Milestone 2 — Multiplayer
 
-- [ ] Add solo, host, join-by-IP, lobby, nicknames, and slot-based jeep colors.
-- [ ] Synchronize remote movement and give each player an independent camera.
-- [ ] Test LAN sessions, disconnects, and one-to-four player slots.
+- [x] Add solo, host, join-by-IP, lobby, nicknames, and slot-based jeep colors.
+- [x] Synchronize remote movement and give each player an independent camera.
+- [x] Test two- and four-player loopback sessions, disconnects, and one-to-four player slots.
+
+LAN/Tailscale sessions have not been tested yet.
 
 ## Milestone 3 — Combat and upgrades
 

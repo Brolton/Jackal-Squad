@@ -5,6 +5,7 @@ var shooter: Node2D
 var damage := 1
 var speed := 600.0
 var hostile := false
+var visual_only := false
 var _remaining_lifetime := 2.4
 var _projectile_color := Color(1.0, 0.83, 0.40)
 
@@ -19,16 +20,18 @@ func configure(
 	source: Node2D,
 	is_hostile: bool,
 	attack_damage: int,
-	travel_speed: float
+	travel_speed: float,
+	authoritative: bool = true
 ) -> void:
 	position = spawn_position
 	direction = travel_direction.normalized()
 	shooter = source
 	hostile = is_hostile
+	visual_only = not authoritative
 	damage = attack_damage
 	speed = travel_speed
-	collision_layer = 16 if hostile else 8
-	collision_mask = 3 if hostile else 5
+	collision_layer = (16 if hostile else 8) if authoritative else 0
+	collision_mask = (3 if hostile else 5) if authoritative else 0
 	_projectile_color = Color(1.0, 0.34, 0.22) if hostile else Color(1.0, 0.83, 0.40)
 	rotation = direction.angle() + PI * 0.5
 
@@ -39,7 +42,7 @@ func _physics_process(delta: float) -> void:
 		queue_free()
 
 func _on_body_entered(body: Node2D) -> void:
-	if body == shooter:
+	if visual_only or body == shooter:
 		return
 	if body.has_method("take_damage"):
 		body.call("take_damage", damage)

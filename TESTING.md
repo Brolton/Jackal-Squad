@@ -24,6 +24,19 @@ The test script passed three consecutive runs. It checks camera activation and m
 
 Windowed visual play has not been manually verified.
 
+## Milestone 2 multiplayer checks
+
+The automated ENet loopback smoke test uses separate Godot processes. Run the host and client commands in separate PowerShell windows:
+
+```powershell
+godot --headless --path . res://tests/network_smoke.tscn -- --server
+godot --headless --path . res://tests/network_smoke.tscn -- --client
+```
+
+For four players, run one host with `--server4` and three clients with `--client`, `--client2`, and `--client3`, each in its own process. Godot 4.7.2 loopback checks passed for both two and four total players. They verify lobby registration, nicknames and color slots, host-started scene loading, per-player camera selection, client movement, authoritative host snapshots, and removal of disconnected players.
+
+LAN/Tailscale connectivity and windowed play have not been manually verified.
+
 ## Environment notes
 
 - Git and winget were found; the existing repository is initialized and already has Godot-specific ignore rules.
@@ -32,11 +45,10 @@ Windowed visual play has not been manually verified.
 - Godot 4.7.2 Windows export templates were installed in `%APPDATA%\Godot\export_templates\4.7.2.stable` after approval. The package SHA-256 matched the official GitHub release digest.
 - The Windows x86-64 debug and release templates and `version.txt` were verified in the installed template directory. A Windows build has not been exported yet.
 
-## Future gameplay and multiplayer checks
+## Remaining gameplay and build checks
 
-- Test solo movement, map bounds, independent camera behavior, firing, damage, and respawn.
-- Test two- and four-player host sessions, player colors/nicknames, remote movement, disconnects, and separate cameras.
 - Test pickup ownership, passenger capacity, automatic boarding/unloading, immediate unload stop on zone exit, resume on return, helicopter collection, and score synchronization.
 - Test mission completion in solo mode and LAN/Tailscale connectivity when available.
+- Run windowed visual play and create/verify a Windows export.
 
 Do not mark a check as passing unless it was actually run.

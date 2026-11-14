@@ -30,15 +30,16 @@ Use original, simple pixel art or procedural placeholders with a compact HUD. Pl
 
 ## Milestones
 
-1. Environment and project setup.
-2. Single-player movement, map, camera, weapons, basic enemies, and collision.
-3. Host/join, lobby, player identity, synchronization, and independent cameras.
-4. Enemy variety, combat, upgrades, and respawning.
-5. Rescue, passenger boarding/unloading, helicopter extraction, and scoring.
-6. Complete level, final base, victory flow, testing, Windows export, and distribution instructions.
+0. Environment and project setup.
+1. Single-player movement, map, camera, weapons, basic enemies, and collision.
+2. Host/join, lobby, player identity, synchronization, and independent cameras.
+3. Enemy variety, combat, upgrades, and respawning.
+4. Rescue, passenger boarding/unloading, helicopter extraction, and scoring.
+5. Complete level, final base, and victory flow.
+6. Testing, Windows export, and distribution instructions.
 
 ## Current implementation
 
-Milestones 0 and 1 are complete. The single-player prototype uses a generated 1200-by-3200 battlefield with a road, river crossing, blocking terrain, and original procedural placeholder graphics. It has arcade jeep movement, a map-clamped camera, machine-gun projectiles, grenade area damage, chasing/shooting infantry, a compact HUD, health, and respawning. Multiplayer, weapon progression, rescue, extraction, and mission completion are not implemented yet.
+Milestones 0, 1, and 2 are complete. The prototype uses a generated 1200-by-3200 battlefield with a road, river crossing, blocking terrain, and original procedural placeholder graphics. It has arcade jeep movement, a map-clamped camera, machine-gun projectiles, grenade area damage, chasing/shooting infantry, a compact HUD, health, and respawning. The menu supports solo play and ENet host/join-by-IP sessions with up to four total players, lobby nicknames and color slots, host-authoritative player movement, and an independent camera for each player. Loopback tests cover two- and four-player sessions; LAN/Tailscale play and windowed testing remain unverified. Weapon progression, rescue, extraction, and mission completion are not implemented yet.
 
 Continue with later milestones only after the user confirms the next phase.
