@@ -11,6 +11,8 @@ const RESCUE_BUILDING_SCENE := preload("res://scenes/rescue_building.tscn")
 const EXTRACTION_ZONE_SCENE := preload("res://scenes/extraction_zone.tscn")
 const FINAL_BASE_SCENE := preload("res://scenes/final_base.tscn")
 const GROUND_TEXTURE := preload("res://assets/art/jungle_ground.png")
+const MINE_HAZARD_SCENE := preload("res://scenes/mine_hazard.tscn")
+const PAUSE_MENU_SCENE := preload("res://scenes/pause_menu.tscn")
 
 var map_size := Vector2(1200.0, 3200.0)
 var _layout: Dictionary = {}
@@ -22,9 +24,11 @@ func _ready() -> void:
 	queue_redraw()
 	_create_map_collisions()
 	_create_obstacles()
+	_create_hazards()
 	_create_players_and_enemies()
 	_create_rescue_objects()
 	_create_final_base()
+	add_child(PAUSE_MENU_SCENE.instantiate())
 	NetworkSession.player_left.connect(_on_player_left)
 
 func _draw() -> void:
@@ -87,6 +91,13 @@ func _create_obstacles() -> void:
 		obstacle.position = placement["position"]
 		add_child(obstacle)
 
+func _create_hazards() -> void:
+	for index in range(_layout["hazards"].size()):
+		var mine := MINE_HAZARD_SCENE.instantiate()
+		mine.name = "Mine%02d" % (index + 1)
+		mine.position = _layout["hazards"][index]
+		add_child(mine)
+
 func _create_players_and_enemies() -> void:
 	var profiles := NetworkSession.players.duplicate(true)
 	if profiles.is_empty():
@@ -94,6 +105,7 @@ func _create_players_and_enemies() -> void:
 	var peer_ids: Array = profiles.keys()
 	peer_ids.sort()
 	var local_player: Node
+	var player_count := profiles.size()
 	for peer_id in peer_ids:
 		var profile: Dictionary = profiles[peer_id]
 		var slot := int(profile["slot"])
@@ -110,12 +122,14 @@ func _create_players_and_enemies() -> void:
 	for index in range(infantry_positions.size()):
 		var enemy := INFANTRY_SCENE.instantiate()
 		enemy.name = "Infantry%02d" % (index + 1)
+		enemy.apply_coop_scaling(player_count)
 		enemy.position = infantry_positions[index]
 		add_child(enemy)
 	for placement: Dictionary in _layout["heavy_enemies"]:
 		var enemy := INFANTRY_SCENE.instantiate()
 		enemy.name = placement["name"]
 		enemy.configure_enemy(int(placement["type"]))
+		enemy.apply_coop_scaling(player_count)
 		enemy.position = placement["position"]
 		add_child(enemy)
 
@@ -156,6 +170,7 @@ func _create_rescue_objects() -> void:
 func _create_final_base() -> void:
 	var final_base := FINAL_BASE_SCENE.instantiate()
 	final_base.name = "FinalBase"
+	final_base.configure_coop_scaling(maxi(1, NetworkSession.players.size()))
 	final_base.position = _layout["base"]
 	add_child(final_base)
 

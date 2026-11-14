@@ -29,12 +29,15 @@ godot --headless --path . --export-release "Windows Desktop" builds\JackalSquad.
 - WASD or arrow keys: drive
 - Space or left mouse button: machine gun
 - Ctrl or right mouse button: grenade
+- Escape: pause, restart the current mission, or return to command
 
 ## Current status
 
 The game now has a three-mission campaign foundation with distinct large battlefields: Emerald Approach, Flooded Delta, and Iron Highlands. The maps grow from 1200×3200 to 1600×4000 and use different routes, bridges, water barriers, fortified passes, enemy rosters, rescue sites, upgrades, extraction points, and command bases. Infantry, turrets, tanks, armed boats, health and respawning, player-specific weapon upgrades, rescue buildings, helicopter extraction, and host-authoritative multiplayer remain fully integrated.
 
 The presentation uses original project-specific 2D key art and a painted jungle ground texture, supported by detailed procedural vehicle, enemy, structure, foliage, projectile, and explosion rendering. The menu, mission briefings, tactical HUD, and mission-result flow share a cohesive teal, jungle-green, and warm-gold visual language.
+
+Minefields create route hazards on all three maps. Damage now produces a hit flash and local camera response, enemy durability and firing pressure scale with squad size, and the pause/results flows support restart, mission advancement, campaign completion, and return to command.
 
 Automated solo and two-/four-player loopback tests pass. The Windows release export was built and its headless startup check passed. Windowed visual play and connectivity outside loopback remain unverified.
 

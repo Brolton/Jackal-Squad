@@ -47,6 +47,8 @@ var _secondary_cooldown := 0.0
 var _extraction_unload_timer := 0.0
 var _extraction_active := false
 var _respawning := false
+var _hit_flash := 0.0
+var _camera_trauma := 0.0
 
 @onready var _collision_shape: CollisionShape2D = $CollisionShape2D
 @onready var _camera: Camera2D = $Camera2D
@@ -79,6 +81,7 @@ func _ready() -> void:
 	health_changed.emit(health, maximum_health)
 
 func _physics_process(delta: float) -> void:
+	_update_feedback(delta)
 	if _respawning:
 		if NetworkSession.is_networked and multiplayer.is_server():
 			_broadcast_state(delta)
@@ -223,6 +226,9 @@ func take_damage(amount: int) -> void:
 	if NetworkSession.is_networked and not multiplayer.is_server():
 		return
 	health = maxi(health - amount, 0)
+	_hit_flash = 0.13
+	_camera_trauma = minf(1.0, _camera_trauma + 0.55)
+	queue_redraw()
 	health_changed.emit(health, maximum_health)
 	if health == 0:
 		_respawn()
@@ -337,7 +343,7 @@ func _respawn() -> void:
 func _draw() -> void:
 	draw_ellipse_shadow(Vector2(0.0, 5.0), Vector2(19.0, 25.0), Color(0.0, 0.0, 0.0, 0.32))
 	var wheel := Color(0.09, 0.10, 0.09)
-	var body: Color = PLAYER_COLORS[color_slot]
+	var body: Color = Color(1.0, 0.92, 0.72) if _hit_flash > 0.0 else PLAYER_COLORS[color_slot]
 	draw_rect(Rect2(-16.0, -13.0, 6.0, 13.0), wheel)
 	draw_rect(Rect2(10.0, -13.0, 6.0, 13.0), wheel)
 	draw_rect(Rect2(-16.0, 5.0, 6.0, 13.0), wheel)
@@ -368,6 +374,17 @@ func draw_ellipse_shadow(center: Vector2, size: Vector2, color: Color) -> void:
 		var angle := TAU * float(index) / 24.0
 		points.append(center + Vector2(cos(angle) * size.x, sin(angle) * size.y))
 	draw_colored_polygon(points, color)
+
+func _update_feedback(delta: float) -> void:
+	if _hit_flash > 0.0:
+		_hit_flash = maxf(0.0, _hit_flash - delta)
+		queue_redraw()
+	if _camera_trauma > 0.0 and _camera.enabled:
+		_camera_trauma = maxf(0.0, _camera_trauma - delta * 2.8)
+		var magnitude := 7.0 * _camera_trauma * _camera_trauma
+		_camera.offset = Vector2(randf_range(-magnitude, magnitude), randf_range(-magnitude, magnitude))
+	elif _camera.offset != Vector2.ZERO:
+		_camera.offset = Vector2.ZERO
 
 static func _install_input_actions() -> void:
 	_add_key_action("move_up", [KEY_W, KEY_UP])

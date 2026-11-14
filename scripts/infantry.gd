@@ -19,6 +19,8 @@ var _network_sync_timer := 0.0
 var _target_position := Vector2.ZERO
 var _target_rotation := 0.0
 var _has_authoritative_state := false
+var coop_player_count := 1
+var _hit_flash := 0.0
 
 func configure_enemy(kind: int) -> void:
 	enemy_type = clampi(kind, EnemyType.INFANTRY, EnemyType.BOAT)
@@ -56,6 +58,13 @@ func configure_enemy(kind: int) -> void:
 			projectile_damage = 1
 			projectile_speed = 300.0
 
+func apply_coop_scaling(player_count: int) -> void:
+	coop_player_count = clampi(player_count, 1, 4)
+	if coop_player_count <= 1:
+		return
+	maximum_health += ceili(float(maximum_health) * 0.22 * float(coop_player_count - 1))
+	fire_interval = maxf(0.65, fire_interval * (1.0 - 0.06 * float(coop_player_count - 1)))
+
 func _ready() -> void:
 	motion_mode = CharacterBody2D.MOTION_MODE_FLOATING
 	collision_layer = 4
@@ -64,6 +73,9 @@ func _ready() -> void:
 	add_to_group("enemies")
 
 func _physics_process(delta: float) -> void:
+	if _hit_flash > 0.0:
+		_hit_flash = maxf(0.0, _hit_flash - delta)
+		queue_redraw()
 	if NetworkSession.is_networked and not multiplayer.is_server():
 		if _has_authoritative_state:
 			var weight := minf(1.0, delta * 12.0)
@@ -101,6 +113,7 @@ func take_damage(amount: int, attacker_peer_id: int = 0) -> void:
 	if NetworkSession.is_networked and not multiplayer.is_server():
 		return
 	health = maxi(health - amount, 0)
+	_hit_flash = 0.10
 	queue_redraw()
 	if health == 0:
 		NetworkSession.record_enemy_destroyed(attacker_peer_id)
@@ -168,6 +181,8 @@ func _fire_at(direction: Vector2) -> void:
 	)
 
 func _draw() -> void:
+	if _hit_flash > 0.0:
+		draw_circle(Vector2.ZERO, 25.0, Color(1.0, 0.84, 0.45, 0.38))
 	draw_circle(Vector2(4.0, 6.0), 14.0 if enemy_type != EnemyType.TANK else 22.0, Color(0.0, 0.0, 0.0, 0.28))
 	match enemy_type:
 		EnemyType.TURRET:

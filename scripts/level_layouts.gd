@@ -34,6 +34,7 @@ static func _emerald_approach() -> Dictionary:
 		"rescues": [Vector2(470, 2330), Vector2(760, 1150)],
 		"extraction": Vector2(600, 220), "base": Vector2(600, 82),
 		"upgrades": [{"type": &"primary", "position": Vector2(500, 2700)}, {"type": &"secondary", "position": Vector2(700, 2700)}],
+		"hazards": [Vector2(430, 2460), Vector2(770, 2120), Vector2(460, 1020), Vector2(750, 740)],
 	}
 
 static func _flooded_delta() -> Dictionary:
@@ -61,6 +62,7 @@ static func _flooded_delta() -> Dictionary:
 		"rescues": [Vector2(1080, 3020), Vector2(310, 1780)],
 		"extraction": Vector2(700, 250), "base": Vector2(700, 92),
 		"upgrades": [{"type": &"primary", "position": Vector2(420, 3260)}, {"type": &"secondary", "position": Vector2(1020, 2260)}, {"type": &"primary", "position": Vector2(650, 980)}],
+		"hazards": [Vector2(610, 3140), Vector2(890, 2820), Vector2(620, 2290), Vector2(940, 1880), Vector2(530, 1040), Vector2(840, 650)],
 	}
 
 static func _iron_highlands() -> Dictionary:
@@ -90,6 +92,7 @@ static func _iron_highlands() -> Dictionary:
 		"rescues": [Vector2(1240, 2920), Vector2(350, 1180)],
 		"extraction": Vector2(800, 260), "base": Vector2(800, 96),
 		"upgrades": [{"type": &"secondary", "position": Vector2(1180, 3650)}, {"type": &"primary", "position": Vector2(390, 2200)}, {"type": &"secondary", "position": Vector2(1180, 1500)}, {"type": &"primary", "position": Vector2(700, 620)}],
+		"hazards": [Vector2(930, 3540), Vector2(650, 3270), Vector2(980, 2810), Vector2(610, 2430), Vector2(950, 2010), Vector2(650, 1580), Vector2(940, 1080), Vector2(680, 620)],
 	}
 
 static func _obstacles_level_one() -> Array[Dictionary]:

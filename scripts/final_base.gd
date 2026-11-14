@@ -1,9 +1,14 @@
 extends StaticBody2D
 
-const MAX_HEALTH := 30
+const BASE_HEALTH := 30
 
-var health := MAX_HEALTH
+var maximum_health := BASE_HEALTH
+var health := BASE_HEALTH
 var _destroyed := false
+
+func configure_coop_scaling(player_count: int) -> void:
+	maximum_health = BASE_HEALTH + maxi(0, player_count - 1) * 8
+	health = maximum_health
 
 func _ready() -> void:
 	collision_layer = 4
@@ -28,7 +33,7 @@ func take_damage(amount: int, attacker_peer_id: int = 0) -> void:
 func rpc_receive_health(current_health: int) -> void:
 	if NetworkSession.is_host or _destroyed:
 		return
-	health = clampi(current_health, 0, MAX_HEALTH)
+	health = clampi(current_health, 0, maximum_health)
 	queue_redraw()
 
 @rpc("authority", "call_remote", "reliable")
@@ -59,6 +64,6 @@ func _draw() -> void:
 	draw_line(Vector2(-84.0, -40.0), Vector2(84.0, -40.0), Color(0.71, 0.63, 0.38), 3.0)
 	draw_rect(Rect2(-70.0, -54.0, 140.0, 7.0), Color(0.10, 0.11, 0.10))
 	draw_rect(
-		Rect2(-68.0, -52.0, 136.0 * float(health) / float(MAX_HEALTH), 3.0),
+		Rect2(-68.0, -52.0, 136.0 * float(health) / float(maximum_health), 3.0),
 		Color(0.82, 0.30, 0.20)
 	)

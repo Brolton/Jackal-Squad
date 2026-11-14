@@ -142,6 +142,25 @@ func advance_campaign() -> bool:
 			rpc_id(peer_id, "rpc_advance_campaign", campaign_level_index, _get_mission_state())
 	return true
 
+func restart_current_mission() -> bool:
+	if is_networked and not is_host:
+		return false
+	_reset_rescue_score()
+	_start_mission()
+	game_start_requested.emit()
+	if is_host:
+		for peer_id in connected_peer_ids():
+			rpc_id(peer_id, "rpc_restart_mission", campaign_level_index, _get_mission_state())
+	return true
+
+@rpc("authority", "call_remote", "reliable")
+func rpc_restart_mission(level_index: int, mission_state: Dictionary) -> void:
+	if is_host:
+		return
+	campaign_level_index = clampi(level_index, 0, CampaignCatalog.count() - 1)
+	_apply_mission_state(mission_state)
+	game_start_requested.emit()
+
 @rpc("authority", "call_remote", "reliable")
 func rpc_advance_campaign(level_index: int, mission_state: Dictionary) -> void:
 	if is_host:
