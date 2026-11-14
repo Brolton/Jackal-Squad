@@ -213,3 +213,7 @@ Final validation completed on Godot `4.7.2.stable.official.ed1daf0bf`:
 - The refreshed Windows release at `builds\JackalSquad.exe` is 122,892,896 bytes.
 - The exported executable started headlessly and exited successfully after three seconds.
 - SHA-256: `CE67E396ADA1004751E2F90C63CD454C279C47B26F3219F313FBEF516094F13C`.
+
+## Boss pass — mission rules and infantry durability
+
+Infantry maximum health is fixed at one in solo and co-op, while heavy-unit durability still scales with player count. Mission completion now depends only on destroying the final boss; enemy clearing and rescues are optional. Boarding a rescued passenger repairs one missing health point and rescue totals remain in the result statistics. The HUD labels boss destruction as the goal and rescues as a bonus, and solo/host sessions automatically advance four seconds after victory if the player does not press the button first.

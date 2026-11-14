@@ -24,6 +24,7 @@ var _level_name := "EMERALD APPROACH"
 var _campaign_level_index := 0
 var _campaign_level_count := 3
 var _controls_hint_time := 7.0
+var _auto_advance_started := false
 
 func _ready() -> void:
 	_victory_panel.add_theme_stylebox_override("panel", VisualTheme.panel_style(0.97, 14))
@@ -74,7 +75,7 @@ func update_mission_state(state: Dictionary) -> void:
 func _refresh() -> void:
 	_status.text = (
 		"MISSION %d/%d  %s     HP %d/%d     PASSENGERS %d/6     MG Lv.%d     GRENADE Lv.%d\n"
-		+ "RESCUE %d/%d     BASE %s     EVAC %d     TIME %s     KILLS %d"
+		+ "GOAL: DESTROY BOSS [%s]     BONUS RESCUES %d/%d     EVAC %d     TIME %s     KILLS %d"
 	) % [
 		_campaign_level_index + 1,
 		_campaign_level_count,
@@ -84,9 +85,9 @@ func _refresh() -> void:
 		_passenger_count,
 		_primary_upgrade_level + 1,
 		_secondary_upgrade_level + 1,
+		"DESTROYED" if _final_base_destroyed else "ACTIVE",
 		_rescued_passengers,
 		_rescue_objective_total,
-		"DESTROYED" if _final_base_destroyed else "ACTIVE",
 		_evacuated_passengers,
 		_format_time(_mission_elapsed),
 		_enemies_destroyed,
@@ -96,6 +97,9 @@ func _refresh_victory_panel() -> void:
 	_victory_panel.visible = _mission_completed
 	if not _mission_completed:
 		return
+	if not _auto_advance_started and (not NetworkSession.is_networked or NetworkSession.is_host):
+		_auto_advance_started = true
+		_auto_continue_after_delay.call_deferred()
 	_victory_title.text = (
 		"CAMPAIGN COMPLETE"
 		if CampaignCatalog.is_last(_campaign_level_index)
@@ -133,6 +137,11 @@ func _on_continue_pressed() -> void:
 		get_tree().change_scene_to_file(NetworkSession.MAIN_SCENE)
 	else:
 		NetworkSession.advance_campaign()
+
+func _auto_continue_after_delay() -> void:
+	await get_tree().create_timer(4.0).timeout
+	if is_inside_tree() and _mission_completed and _victory_panel.visible:
+		_on_continue_pressed()
 
 func _format_time(seconds: float) -> String:
 	var total_seconds := maxi(0, int(seconds))

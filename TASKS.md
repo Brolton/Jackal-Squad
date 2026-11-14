@@ -79,3 +79,11 @@ LAN/Tailscale sessions have not been tested yet.
 - [x] Replace the mission loop with a faster original 1990s-style action chiptune.
 - [x] Add a synchronized infantry death cry.
 - [x] Run regression, multiplayer validation, and publish a refreshed build.
+
+## Boss and upgrade clarity pass
+
+- [x] Make infantry one-hit enemies and make rescues optional bonuses.
+- [ ] Replace the passive final building with scalable multi-turret bosses.
+- [ ] Clarify the extraction helicopter and mission objective presentation.
+- [ ] Redesign upgrade pickups and make every upgrade level visibly and audibly distinct.
+- [ ] Run regression, multiplayer validation, and publish a refreshed build.

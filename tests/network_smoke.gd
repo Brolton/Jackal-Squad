@@ -186,7 +186,7 @@ func _run_server(expected_players: int) -> void:
 	var final_base: Node = get_tree().current_scene.get_node("FinalBase")
 	final_base.call("take_damage", int(final_base.get("health")), upgrade_owner_id)
 	_check(NetworkSession.final_base_destroyed, "Host records final base destruction")
-	_check(not NetworkSession.mission_completed, "The mission waits for all rescue objectives")
+	_check(NetworkSession.mission_completed, "Boss destruction completes the mission without mandatory rescues")
 
 	deadline = Time.get_ticks_msec() + 12000
 	while NetworkSession.players.size() > 1 and Time.get_ticks_msec() < deadline:
@@ -359,7 +359,7 @@ func _run_client() -> void:
 		and int(local_contribution.get("final_bases_destroyed", 0)) == (1 if expected_slot == 1 else 0),
 		"Host synchronizes player contribution totals"
 	)
-	_check(not NetworkSession.mission_completed, "Incomplete rescue objectives prevent premature victory")
+	_check(NetworkSession.mission_completed, "Clients receive boss-based mission completion")
 	await get_tree().create_timer(float(expected_slot) * 0.75).timeout
 	NetworkSession.leave_lobby()
 	await get_tree().create_timer(0.2).timeout

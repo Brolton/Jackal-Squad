@@ -10,7 +10,7 @@ enum EnemyType { INFANTRY, TURRET, TANK, BOAT }
 
 @export var move_speed := 48.0
 @export var attack_range := 430.0
-@export var maximum_health := 2
+@export var maximum_health := 1
 @export var fire_interval := 1.55
 
 var enemy_type: EnemyType = EnemyType.INFANTRY
@@ -58,7 +58,7 @@ func configure_enemy(kind: int) -> void:
 		_:
 			move_speed = 48.0
 			attack_range = 430.0
-			maximum_health = 2
+			maximum_health = 1
 			fire_interval = 1.55
 			preferred_range = 92.0
 			projectile_damage = 1
@@ -68,7 +68,8 @@ func apply_coop_scaling(player_count: int) -> void:
 	coop_player_count = clampi(player_count, 1, 4)
 	if coop_player_count <= 1:
 		return
-	maximum_health += ceili(float(maximum_health) * 0.22 * float(coop_player_count - 1))
+	if enemy_type != EnemyType.INFANTRY:
+		maximum_health += ceili(float(maximum_health) * 0.22 * float(coop_player_count - 1))
 	fire_interval = maxf(0.65, fire_interval * (1.0 - 0.06 * float(coop_player_count - 1)))
 
 func _ready() -> void:

@@ -8,6 +8,9 @@ func _initialize() -> void:
 func _run_tests() -> void:
 	var session: Node = root.get_node("NetworkSession")
 	session.call("start_solo", "SoloTester")
+	session.call("record_final_base_destroyed", 1)
+	_check(bool(session.get("mission_completed")), "Destroying the boss completes a mission without rescues or clearing every enemy")
+	session.call("start_solo", "SoloTester")
 	var game: Node = load("res://scenes/level_01.tscn").instantiate()
 	root.add_child(game)
 	current_scene = game
@@ -24,12 +27,6 @@ func _run_tests() -> void:
 		int(session.get("enemies_destroyed")) == expected_enemy_total,
 		"Enemy defeats update the mission total"
 	)
-
-	var base: Node = game.get_node("FinalBase")
-	base.call("take_damage", int(base.get("health")), 1)
-	await process_frame
-	_check(bool(session.get("final_base_destroyed")), "The final base can be destroyed")
-	_check(not bool(session.get("mission_completed")), "Destroying the base alone does not win")
 
 	var expected_passengers := 0
 	for building_name in ["RescueBuilding01", "RescueBuilding02"]:
@@ -76,7 +73,11 @@ func _run_tests() -> void:
 		and int(session.get("evacuated_passengers")) == 0,
 		"Helicopters deliver all six passengers"
 	)
-	_check(bool(session.get("mission_completed")), "All objectives complete the mission")
+	var base: Node = game.get_node("FinalBase")
+	base.call("take_damage", int(base.get("health")), 1)
+	await process_frame
+	_check(bool(session.get("final_base_destroyed")), "The final boss can be destroyed")
+	_check(bool(session.get("mission_completed")), "Boss destruction completes the mission")
 	_check(float(session.get("mission_elapsed")) > 0.0, "The mission timer advances")
 
 	var contributions: Dictionary = session.get("player_contributions")

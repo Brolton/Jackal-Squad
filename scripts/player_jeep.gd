@@ -288,6 +288,10 @@ func try_add_passenger() -> bool:
 	if passenger_count >= passenger_capacity:
 		return false
 	passenger_count += 1
+	if health < maximum_health:
+		health += 1
+		health_changed.emit(health, maximum_health)
+		AudioDirector.play_sfx(&"pickup", -4.0)
 	passenger_count_changed.emit(passenger_count, passenger_capacity)
 	return true
 

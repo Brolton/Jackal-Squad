@@ -16,6 +16,8 @@ func _run_tests() -> void:
 		var kind := int(enemy.get("enemy_type"))
 		type_counts[kind] += 1
 	_check(type_counts[0] >= 8, "Infantry remains present in the mission")
+	var infantry_sample: Node = game.get_node("Infantry01")
+	_check(int(infantry_sample.get("maximum_health")) == 1, "Infantry always dies from one standard bullet")
 	_check(type_counts[1] >= 1, "The battlefield contains defensive turrets")
 	_check(type_counts[2] >= 1, "The battlefield contains tanks")
 	_check(type_counts[3] >= 1, "The river has armed boats")

@@ -508,7 +508,6 @@ func _check_mission_completion() -> void:
 		mission_started
 		and not mission_completed
 		and final_base_destroyed
-		and rescued_passengers >= CampaignCatalog.rescue_total(campaign_level_index)
 	):
 		mission_completed = true
 		_publish_mission_state()
