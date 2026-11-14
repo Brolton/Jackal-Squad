@@ -225,3 +225,7 @@ Final bases are shielded boss cores surrounded by independently destructible, in
 ## Boss pass — extraction clarity
 
 The extraction zone is labeled as an optional rescue/repair bonus. Its former abstract fly-by has been replaced with a larger recognizable helicopter silhouette including cockpit, fuselage, tail boom, landing gear, main rotor, and tail rotor. Empty periodic fly-bys were removed: the helicopter now appears only when evacuated passengers are waiting. Milestone 4 directly verifies that no helicopter launches with an empty rescue queue and that a real flight still transfers waiting passengers.
+
+## Boss pass — upgrade clarity
+
+Weapon pickups now have distinct arcade silhouettes and labels: gold multi-barrel `MG / RAPID FIRE` and cyan grenade/ring `BIGGER BOOM`. Collection triggers a large colored ring and `MG UP!` or `BLAST UP!` over the jeep plus type-specific pickup audio. Machine-gun levels change projectile color, core size, glow, and trail length. Grenade levels change projectile size, explosion palette, spark count, shockwave-ring count, radius, and use four distinct synthesized blast sounds. Presentation and Milestone 3 tests verify pickup semantics, jeep attachments, projectile/blast style propagation, level-specific sounds, and mechanical stat changes.

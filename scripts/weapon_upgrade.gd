@@ -1,6 +1,7 @@
 extends Area2D
 
 var upgrade_type: StringName = &"primary"
+var _pulse := 0.0
 
 func configure(kind: StringName) -> void:
 	upgrade_type = kind
@@ -13,6 +14,10 @@ func _ready() -> void:
 	add_to_group("weapon_upgrades")
 	queue_redraw()
 
+func _process(delta: float) -> void:
+	_pulse = fposmod(_pulse + delta * 3.2, TAU)
+	queue_redraw()
+
 func _on_body_entered(body: Node2D) -> void:
 	if NetworkSession.is_networked and not multiplayer.is_server():
 		return
@@ -20,19 +25,37 @@ func _on_body_entered(body: Node2D) -> void:
 		return
 	if not bool(body.call("apply_weapon_upgrade", upgrade_type)):
 		return
-	AudioDirector.play_sfx(&"pickup")
+	AudioDirector.play_sfx(&"upgrade_gun" if upgrade_type == &"primary" else &"upgrade_blast")
 	if NetworkSession.is_networked:
 		NetworkSession.replicate_upgrade_pickup_collected(name)
 	queue_free()
 
 func _draw() -> void:
-	var color := Color(0.94, 0.68, 0.22) if upgrade_type == &"primary" else Color(0.35, 0.72, 0.82)
-	draw_circle(Vector2.ZERO, 18.0, Color(0.07, 0.09, 0.07, 0.86))
-	draw_circle(Vector2.ZERO, 14.0, color)
-	draw_arc(Vector2.ZERO, 18.0, 0.0, TAU, 32, Color(0.92, 0.88, 0.65), 2.0)
-	if upgrade_type == &"primary":
-		draw_rect(Rect2(-3.0, -10.0, 6.0, 16.0), Color(0.12, 0.16, 0.13))
-		draw_rect(Rect2(-7.0, 1.0, 14.0, 5.0), Color(0.12, 0.16, 0.13))
+	var primary := upgrade_type == &"primary"
+	var color := Color(1.0, 0.70, 0.18) if primary else Color(0.25, 0.82, 1.0)
+	var pulse_radius := 25.0 + sin(_pulse) * 3.0
+	draw_circle(Vector2(2, 5), 24.0, Color(0.0, 0.0, 0.0, 0.34))
+	draw_circle(Vector2.ZERO, pulse_radius, Color(color.r, color.g, color.b, 0.12), false, 3.0)
+	draw_circle(Vector2.ZERO, 21.0, Color(0.04, 0.08, 0.08, 0.94))
+	draw_circle(Vector2.ZERO, 17.0, color.darkened(0.16))
+	draw_arc(Vector2.ZERO, 21.0, 0.0, TAU, 32, color.lightened(0.35), 3.0)
+	if primary:
+		for x in [-6.0, 0.0, 6.0]:
+			draw_line(Vector2(x, 7), Vector2(x, -11), Color(0.09, 0.12, 0.11), 4.0)
+			draw_circle(Vector2(x, -11), 2.0, Color(1.0, 0.92, 0.52))
+		draw_string(ThemeDB.fallback_font, Vector2(-10, 5), "MG", HORIZONTAL_ALIGNMENT_LEFT, -1, 10, Color(0.10, 0.10, 0.08))
+		draw_string(ThemeDB.fallback_font, Vector2(-31, 39), "RAPID FIRE", HORIZONTAL_ALIGNMENT_LEFT, -1, 10, color.lightened(0.25))
 	else:
-		draw_circle(Vector2.ZERO, 6.0, Color(0.12, 0.16, 0.13))
-		draw_circle(Vector2.ZERO, 2.5, color.lightened(0.3))
+		draw_circle(Vector2.ZERO, 8.0, Color(0.10, 0.14, 0.13))
+		draw_circle(Vector2(-2, -2), 3.0, color.lightened(0.35))
+		draw_line(Vector2(4, -7), Vector2(9, -13), Color(0.92, 0.58, 0.20), 2.0)
+		for radius in [12.0, 16.0]:
+			draw_arc(Vector2.ZERO, radius, -0.7, 0.7, 10, Color(0.78, 0.94, 1.0, 0.78), 2.0)
+		draw_string(ThemeDB.fallback_font, Vector2(-33, 39), "BIGGER BOOM", HORIZONTAL_ALIGNMENT_LEFT, -1, 10, color.lightened(0.25))
+
+func upgrade_visual_signature() -> Dictionary:
+	return {
+		"type": upgrade_type,
+		"label": "RAPID FIRE" if upgrade_type == &"primary" else "BIGGER BOOM",
+		"icon": "multi_barrel" if upgrade_type == &"primary" else "blast_rings",
+	}

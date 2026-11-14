@@ -60,6 +60,8 @@ func _run_tests() -> void:
 		float(primary_shots[-1].get("speed")) > base_shot_speed,
 		"Machine-gun upgrades improve primary fire"
 	)
+	_check(int(primary_shots[-1].get("visual_level")) == 1, "Machine-gun upgrades visibly change bullets and trails")
+	_check(root.get_node("AudioDirector").get_node_or_null("SFX_upgrade_gun") != null, "Machine-gun pickup uses a dedicated sound")
 
 	var secondary_pickup: Node2D = game.get_node("SecondaryUpgrade01")
 	secondary_pickup.global_position = player.global_position
@@ -67,9 +69,13 @@ func _run_tests() -> void:
 	await physics_frame
 	await process_frame
 	_check(int(player.get("secondary_upgrade_level")) == 1, "Grenade upgrades belong to the collecting player")
+	_check(root.get_node("AudioDirector").get_node_or_null("SFX_upgrade_blast") != null, "Grenade pickup uses a different dedicated sound")
 	player.call("_fire_secondary")
 	var grenades := get_nodes_in_group("grenades")
 	_check(float(grenades[-1].get("blast_radius")) > 92.0, "Grenade upgrades increase blast radius")
+	_check(int(grenades[-1].get("upgrade_level")) == 1, "Grenade upgrades select a distinct explosion style")
+	grenades[-1].call("_explode")
+	_check(root.get_node("AudioDirector").get_node_or_null("SFX_grenade_blast_1") != null, "Upgraded grenades use a level-specific explosion sound")
 
 	_check(bool(player.call("apply_weapon_upgrade", &"primary")), "Weapon upgrades can stack")
 	_check(bool(player.call("apply_weapon_upgrade", &"primary")), "Weapon upgrades reach the maximum level")

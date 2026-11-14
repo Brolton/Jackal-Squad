@@ -5,6 +5,7 @@ extends Area2D
 var direction := Vector2.UP
 var shooter: Node2D
 var visual_only := false
+var upgrade_level := 0
 var _age := 0.0
 var _exploded := false
 var _animation_left := 0.22
@@ -21,13 +22,15 @@ func configure(
 	travel_direction: Vector2,
 	source: Node2D,
 	cosmetic_only: bool = false,
-	blast_range: float = 92.0
+	blast_range: float = 92.0,
+	visual_upgrade_level: int = 0
 ) -> void:
 	position = spawn_position
 	direction = travel_direction.normalized()
 	shooter = source
 	visual_only = cosmetic_only
 	blast_radius = blast_range
+	upgrade_level = clampi(visual_upgrade_level, 0, 3)
 	collision_layer = 0
 	collision_mask = 0 if visual_only else 69
 
@@ -52,7 +55,7 @@ func _explode() -> void:
 	if _exploded:
 		return
 	_exploded = true
-	AudioDirector.play_sfx(&"explosion")
+	AudioDirector.play_sfx(StringName("grenade_blast_%d" % upgrade_level))
 	_collision_shape.set_deferred("disabled", true)
 	monitoring = false
 
@@ -86,10 +89,17 @@ func _explode() -> void:
 
 func _draw() -> void:
 	if _exploded:
-		draw_circle(Vector2.ZERO, blast_radius, Color(0.82, 0.16, 0.05, 0.22))
-		draw_circle(Vector2.ZERO, blast_radius * 0.68, Color(1.0, 0.48, 0.10, 0.38))
-		draw_circle(Vector2.ZERO, blast_radius * 0.34, Color(1.0, 0.88, 0.42, 0.72))
-		draw_arc(Vector2.ZERO, blast_radius, 0.0, TAU, 48, Color(1.0, 0.79, 0.36, 0.9), 4.0)
+		var blast_colors := [Color(1.0, 0.42, 0.08), Color(1.0, 0.72, 0.12), Color(1.0, 0.28, 0.10), Color(0.34, 0.86, 1.0)]
+		var color: Color = blast_colors[upgrade_level]
+		draw_circle(Vector2.ZERO, blast_radius, Color(color.r, color.g, color.b, 0.20))
+		draw_circle(Vector2.ZERO, blast_radius * 0.68, Color(color.r, color.g, color.b, 0.42))
+		draw_circle(Vector2.ZERO, blast_radius * 0.30, Color(1.0, 0.94, 0.62, 0.82))
+		for ring in range(1 + upgrade_level):
+			var ring_radius := blast_radius * (1.0 - float(ring) * 0.17)
+			draw_arc(Vector2.ZERO, ring_radius, 0.0, TAU, 48, Color(color.r, color.g, color.b, 0.92 - ring * 0.16), 3.0 + upgrade_level)
+		for spark in range(6 + upgrade_level * 3):
+			var direction := Vector2.from_angle(TAU * float(spark) / float(6 + upgrade_level * 3))
+			draw_line(direction * blast_radius * 0.35, direction * blast_radius * 0.82, Color(1.0, 0.88, 0.44, 0.70), 2.0)
 	else:
-		draw_circle(Vector2.ZERO, 7.0, Color(0.48, 0.54, 0.25))
+		draw_circle(Vector2.ZERO, 7.0 + upgrade_level, Color(0.32, 0.58 + upgrade_level * 0.08, 0.34 + upgrade_level * 0.12))
 		draw_circle(Vector2(-2.0, -2.0), 2.0, Color(0.86, 0.84, 0.57))

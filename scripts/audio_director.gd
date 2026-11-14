@@ -65,7 +65,7 @@ func audio_manifest() -> Dictionary:
 		"music_seconds": float(MUSIC_BEATS) * BEAT_SECONDS,
 		"music_samples": int(float(MUSIC_BEATS) * BEAT_SECONDS * SAMPLE_RATE),
 		"tempo_bpm": 148,
-		"sfx": [&"shot", &"enemy_shot", &"grenade_throw", &"explosion", &"pickup", &"hit", &"trample", &"soldier_death"],
+		"sfx": [&"shot", &"enemy_shot", &"grenade_throw", &"explosion", &"pickup", &"upgrade_gun", &"upgrade_blast", &"grenade_blast_0", &"grenade_blast_1", &"grenade_blast_2", &"grenade_blast_3", &"hit", &"trample", &"soldier_death"],
 		"engine_loop": true,
 	}
 
@@ -133,6 +133,12 @@ func _build_sfx(kind: StringName) -> AudioStreamWAV:
 		&"hit": 0.16,
 		&"trample": 0.22,
 		&"soldier_death": 0.44,
+		&"upgrade_gun": 0.42,
+		&"upgrade_blast": 0.48,
+		&"grenade_blast_0": 0.48,
+		&"grenade_blast_1": 0.52,
+		&"grenade_blast_2": 0.56,
+		&"grenade_blast_3": 0.62,
 	}.get(kind, 0.20))
 	var sample_count := int(duration * SAMPLE_RATE)
 	var bytes := PackedByteArray()
@@ -156,6 +162,22 @@ func _build_sfx(kind: StringName) -> AudioStreamWAV:
 				var notes: Array[int] = [72, 76, 79, 84]
 				var note: int = notes[mini(notes.size() - 1, int(progress * notes.size()))]
 				sample = _square(time, _midi_frequency(note), 0.28) * 0.24
+			&"upgrade_gun":
+				var gun_notes: Array[int] = [67, 72, 76, 79, 84]
+				var gun_note: int = gun_notes[mini(gun_notes.size() - 1, int(progress * gun_notes.size()))]
+				sample = _square(time, _midi_frequency(gun_note), 0.22) * 0.27 + _triangle(time, _midi_frequency(gun_note - 12)) * 0.10
+			&"upgrade_blast":
+				var blast_notes: Array[int] = [52, 59, 64, 71]
+				var blast_note: int = blast_notes[mini(blast_notes.size() - 1, int(progress * blast_notes.size()))]
+				sample = _square(time, _midi_frequency(blast_note), 0.38) * 0.25 + sin(TAU * _midi_frequency(blast_note + 12) * time) * 0.12
+			&"grenade_blast_0", &"grenade_blast_1", &"grenade_blast_2", &"grenade_blast_3":
+				var blast_level := String(kind).right(1).to_int()
+				var boom_frequency := lerpf(86.0 + blast_level * 16.0, 31.0, progress)
+				sample = noise * (0.42 + blast_level * 0.035) + sin(TAU * boom_frequency * time) * 0.30
+				if blast_level >= 1:
+					sample += _square(time, 180.0 + blast_level * 70.0, 0.18) * 0.08
+				if blast_level >= 3:
+					sample += sin(TAU * 720.0 * time) * pow(1.0 - progress, 4.0) * 0.10
 			&"hit":
 				sample = noise * 0.35 + _square(time, 120.0, 0.5) * 0.18
 			&"trample":
@@ -207,6 +229,9 @@ func _default_volume(kind: StringName) -> float:
 		&"grenade_throw": return -10.0
 		&"explosion": return -7.0
 		&"pickup": return -8.0
+		&"upgrade_gun": return -5.0
+		&"upgrade_blast": return -5.0
+		&"grenade_blast_0", &"grenade_blast_1", &"grenade_blast_2", &"grenade_blast_3": return -6.0
 		&"hit": return -9.0
 		&"trample": return -11.0
 		&"soldier_death": return -7.0

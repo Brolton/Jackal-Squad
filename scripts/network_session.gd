@@ -236,18 +236,19 @@ func spawn_projectile_visual(
 	direction: Vector2,
 	hostile: bool,
 	damage: int,
-	speed: float
+	speed: float,
+	visual_level: int = 0
 ) -> void:
 	if not is_networked or not is_host:
 		return
 	for peer_id in connected_peer_ids():
-		rpc_id(peer_id, "rpc_show_projectile", spawn_position, direction, hostile, damage, speed)
+		rpc_id(peer_id, "rpc_show_projectile", spawn_position, direction, hostile, damage, speed, visual_level)
 
-func spawn_grenade_visual(spawn_position: Vector2, direction: Vector2, blast_radius: float) -> void:
+func spawn_grenade_visual(spawn_position: Vector2, direction: Vector2, blast_radius: float, visual_level: int = 0) -> void:
 	if not is_networked or not is_host:
 		return
 	for peer_id in connected_peer_ids():
-		rpc_id(peer_id, "rpc_show_grenade", spawn_position, direction, blast_radius)
+		rpc_id(peer_id, "rpc_show_grenade", spawn_position, direction, blast_radius, visual_level)
 
 @rpc("any_peer", "call_remote", "reliable")
 func rpc_register_player(requested_nickname: String) -> void:
@@ -298,21 +299,22 @@ func rpc_show_projectile(
 	direction: Vector2,
 	hostile: bool,
 	damage: int,
-	speed: float
+	speed: float,
+	visual_level: int
 ) -> void:
 	if is_host or get_tree().current_scene == null:
 		return
 	var projectile := PROJECTILE_SCENE.instantiate()
-	projectile.configure(spawn_position, direction, null, hostile, damage, speed, false)
+	projectile.configure(spawn_position, direction, null, hostile, damage, speed, false, visual_level)
 	get_tree().current_scene.add_child(projectile)
 	AudioDirector.play_sfx(&"enemy_shot" if hostile else &"shot")
 
 @rpc("authority", "call_remote", "unreliable")
-func rpc_show_grenade(spawn_position: Vector2, direction: Vector2, blast_radius: float) -> void:
+func rpc_show_grenade(spawn_position: Vector2, direction: Vector2, blast_radius: float, visual_level: int) -> void:
 	if is_host or get_tree().current_scene == null:
 		return
 	var grenade := GRENADE_SCENE.instantiate()
-	grenade.configure(spawn_position, direction, null, true, blast_radius)
+	grenade.configure(spawn_position, direction, null, true, blast_radius, visual_level)
 	get_tree().current_scene.add_child(grenade)
 	AudioDirector.play_sfx(&"grenade_throw")
 
@@ -328,7 +330,7 @@ func rpc_remove_upgrade_pickup(pickup_name: String) -> void:
 		return
 	var pickup := get_tree().current_scene.get_node_or_null(pickup_name)
 	if pickup != null:
-		AudioDirector.play_sfx(&"pickup")
+		AudioDirector.play_sfx(&"upgrade_gun" if pickup_name.begins_with("Primary") else &"upgrade_blast")
 		pickup.queue_free()
 
 @rpc("authority", "call_remote", "reliable")

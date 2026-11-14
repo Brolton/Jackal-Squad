@@ -51,6 +51,8 @@ var _respawning := false
 var _hit_flash := 0.0
 var _camera_trauma := 0.0
 var _engine_audio: AudioStreamPlayer
+var _upgrade_flash_time := 0.0
+var _last_upgrade_type: StringName = &""
 
 @onready var _collision_shape: CollisionShape2D = $CollisionShape2D
 @onready var _camera: Camera2D = $Camera2D
@@ -206,6 +208,8 @@ func rpc_receive_state(
 		primary_upgrade_level != received_primary_level
 		or secondary_upgrade_level != received_secondary_level
 	):
+		_last_upgrade_type = &"primary" if received_primary_level > primary_upgrade_level else &"secondary"
+		_upgrade_flash_time = 1.25
 		primary_upgrade_level = received_primary_level
 		secondary_upgrade_level = received_secondary_level
 		weapon_upgrades_changed.emit(primary_upgrade_level, secondary_upgrade_level)
@@ -271,6 +275,8 @@ func apply_weapon_upgrade(upgrade_type: StringName) -> bool:
 		_:
 			return false
 	weapon_upgrades_changed.emit(primary_upgrade_level, secondary_upgrade_level)
+	_last_upgrade_type = upgrade_type
+	_upgrade_flash_time = 1.25
 	queue_redraw()
 	return true
 
@@ -280,6 +286,9 @@ func weapon_visual_signature() -> Dictionary:
 		"rocket_pods": secondary_upgrade_level,
 		"primary_pips": primary_upgrade_level,
 		"secondary_pips": secondary_upgrade_level,
+		"projectile_style": primary_upgrade_level,
+		"blast_style": secondary_upgrade_level,
+		"pickup_flash": _last_upgrade_type,
 	}
 
 func try_add_passenger() -> bool:
@@ -334,7 +343,9 @@ func _fire_primary() -> void:
 		self,
 		false,
 		projectile_damage,
-		projectile_speed
+		projectile_speed,
+		true,
+		primary_upgrade_level
 	)
 	get_tree().current_scene.add_child(projectile)
 	NetworkSession.spawn_projectile_visual(
@@ -342,7 +353,8 @@ func _fire_primary() -> void:
 		facing,
 		false,
 		projectile_damage,
-		projectile_speed
+		projectile_speed,
+		primary_upgrade_level
 	)
 
 func _fire_secondary() -> void:
@@ -352,12 +364,13 @@ func _fire_secondary() -> void:
 	AudioDirector.play_sfx(&"grenade_throw")
 	var upgraded_blast_radius := 92.0 + float(secondary_upgrade_level) * 12.0
 	var grenade := GRENADE_SCENE.instantiate()
-	grenade.configure(global_position + facing * 24.0, facing, self, false, upgraded_blast_radius)
+	grenade.configure(global_position + facing * 24.0, facing, self, false, upgraded_blast_radius, secondary_upgrade_level)
 	get_tree().current_scene.add_child(grenade)
 	NetworkSession.spawn_grenade_visual(
 		global_position + facing * 24.0,
 		facing,
-		upgraded_blast_radius
+		upgraded_blast_radius,
+		secondary_upgrade_level
 	)
 
 func _respawn() -> void:
@@ -388,6 +401,11 @@ func _draw() -> void:
 	draw_line(Vector2(5, -10), Vector2(5, 10), player_color.lightened(0.18), 3.0)
 	draw_circle(Vector2(0, 20), 2.2, player_color.lightened(0.22))
 	_draw_weapon_upgrades()
+	if _upgrade_flash_time > 0.0:
+		var flash_progress := _upgrade_flash_time / 1.25
+		var flash_color := Color(1.0, 0.72, 0.18) if _last_upgrade_type == &"primary" else Color(0.24, 0.84, 1.0)
+		draw_arc(Vector2.ZERO, 34.0 + (1.0 - flash_progress) * 22.0, 0.0, TAU, 40, Color(flash_color.r, flash_color.g, flash_color.b, flash_progress), 3.0)
+		draw_string(ThemeDB.fallback_font, Vector2(-22, -45), "MG UP!" if _last_upgrade_type == &"primary" else "BLAST UP!", HORIZONTAL_ALIGNMENT_LEFT, -1, 11, flash_color)
 
 func _draw_weapon_upgrades() -> void:
 	var steel := Color(0.23, 0.27, 0.27)
@@ -400,9 +418,9 @@ func _draw_weapon_upgrades() -> void:
 	for pod_index in range(secondary_upgrade_level):
 		var side := -1.0 if pod_index % 2 == 0 else 1.0
 		var row := int(pod_index / 2)
-		var pod_center := Vector2(side * 17.0, -3.0 + row * 9.0)
-		draw_rect(Rect2(pod_center - Vector2(3.5, 6), Vector2(7, 12)), Color(0.16, 0.20, 0.18), true)
-		draw_rect(Rect2(pod_center - Vector2(3.5, 6), Vector2(7, 12)), Color(0.44, 0.50, 0.42), false, 1.0)
+		var pod_center := Vector2(side * 18.0, -5.0 + row * 10.0)
+		draw_rect(Rect2(pod_center - Vector2(4.5, 7), Vector2(9, 14)), Color(0.12, 0.17, 0.16), true)
+		draw_rect(Rect2(pod_center - Vector2(4.5, 7), Vector2(9, 14)), Color(0.25, 0.78, 0.92), false, 1.5)
 		for tube_y in [-4.0, 0.0, 4.0]:
 			draw_circle(pod_center + Vector2(0, tube_y), 1.6, Color(0.82, 0.38, 0.16))
 	for pip in range(primary_upgrade_level):
@@ -418,6 +436,9 @@ func draw_ellipse_shadow(center: Vector2, size: Vector2, color: Color) -> void:
 	draw_colored_polygon(points, color)
 
 func _update_feedback(delta: float) -> void:
+	if _upgrade_flash_time > 0.0:
+		_upgrade_flash_time = maxf(0.0, _upgrade_flash_time - delta)
+		queue_redraw()
 	if _engine_audio != null:
 		var speed_ratio := clampf(velocity.length() / maximum_speed, 0.0, 1.0)
 		_engine_audio.pitch_scale = lerpf(0.82, 1.34, speed_ratio)
