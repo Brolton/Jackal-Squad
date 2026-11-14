@@ -83,12 +83,32 @@ func servers_snapshot() -> Array:
 
 func local_ipv4_addresses() -> Array[String]:
 	var result: Array[String] = []
+	for interface_variant in IP.get_local_interfaces():
+		var interface: Dictionary = interface_variant
+		var description := (
+			str(interface.get("name", "")) + " " + str(interface.get("friendly", ""))
+		).to_lower()
+		if _is_virtual_interface(description):
+			continue
+		for address in interface.get("addresses", []):
+			var candidate := str(address)
+			if _is_private_ipv4(candidate) and candidate not in result:
+				result.append(candidate)
+	if not result.is_empty():
+		result.sort()
+		return result
 	for address in IP.get_local_addresses():
 		var candidate := str(address)
 		if _is_private_ipv4(candidate) and candidate not in result:
 			result.append(candidate)
 	result.sort()
 	return result
+
+func _is_virtual_interface(description: String) -> bool:
+	for marker in ["virtual", "vethernet", "hyper-v", "wsl", "docker", "vmware", "vbox", "loopback"]:
+		if marker in description:
+			return true
+	return false
 
 func _receive_packets() -> void:
 	while _socket != null and _socket.get_available_packet_count() > 0:
@@ -133,6 +153,8 @@ func _send_offer(address: String, port: int) -> void:
 func _accept_offer(address: String, payload: Dictionary) -> void:
 	if int(payload.get("game_port", 0)) != GAME_PORT:
 		return
+	if not _matches_local_lan(address):
+		return
 	var previous: Dictionary = _servers.get(address, {})
 	var server := {
 		"address": address,
@@ -176,3 +198,21 @@ func _is_private_ipv4(address: String) -> bool:
 		or (first == 172 and second >= 16 and second <= 31)
 		or (first == 192 and second == 168)
 	)
+
+func _matches_local_lan(address: String) -> bool:
+	var remote_parts := address.split(".")
+	if remote_parts.size() != 4:
+		return false
+	var local_addresses := local_ipv4_addresses()
+	if local_addresses.is_empty():
+		return true
+	for local_address in local_addresses:
+		var local_parts := local_address.split(".")
+		if (
+			local_parts.size() == 4
+			and local_parts[0] == remote_parts[0]
+			and local_parts[1] == remote_parts[1]
+			and local_parts[2] == remote_parts[2]
+		):
+			return true
+	return false
