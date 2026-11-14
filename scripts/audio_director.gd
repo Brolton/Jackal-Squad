@@ -65,7 +65,7 @@ func audio_manifest() -> Dictionary:
 		"music_seconds": float(MUSIC_BEATS) * BEAT_SECONDS,
 		"music_samples": int(float(MUSIC_BEATS) * BEAT_SECONDS * SAMPLE_RATE),
 		"tempo_bpm": 148,
-		"sfx": [&"shot", &"enemy_shot", &"grenade_throw", &"explosion", &"pickup", &"upgrade_gun", &"upgrade_blast", &"grenade_blast_0", &"grenade_blast_1", &"grenade_blast_2", &"grenade_blast_3", &"hit", &"trample", &"soldier_death"],
+		"sfx": [&"shot", &"enemy_shot", &"grenade_throw", &"rocket_launch", &"rocket_blast", &"explosion", &"pickup", &"upgrade_gun", &"upgrade_blast", &"grenade_blast_0", &"grenade_blast_1", &"grenade_blast_2", &"grenade_blast_3", &"hit", &"trample", &"soldier_death"],
 		"engine_loop": true,
 	}
 
@@ -128,6 +128,8 @@ func _build_sfx(kind: StringName) -> AudioStreamWAV:
 		&"shot": 0.10,
 		&"enemy_shot": 0.13,
 		&"grenade_throw": 0.18,
+		&"rocket_launch": 0.24,
+		&"rocket_blast": 0.58,
 		&"explosion": 0.48,
 		&"pickup": 0.36,
 		&"hit": 0.16,
@@ -156,6 +158,12 @@ func _build_sfx(kind: StringName) -> AudioStreamWAV:
 				sample = _square(time, lerpf(430.0, 150.0, progress), 0.42) * 0.34 + noise * 0.12
 			&"grenade_throw":
 				sample = sin(TAU * lerpf(520.0, 920.0, progress) * time) * 0.24 + noise * 0.04
+			&"rocket_launch":
+				var ignition := _square(time, lerpf(210.0, 620.0, progress), 0.32) * 0.22
+				sample = ignition + noise * (0.20 * (1.0 - progress))
+			&"rocket_blast":
+				sample = noise * 0.52 + sin(TAU * lerpf(118.0, 29.0, progress) * time) * 0.34
+				sample += _square(time, 240.0, 0.18) * pow(1.0 - progress, 4.0) * 0.10
 			&"explosion":
 				sample = noise * 0.48 + sin(TAU * lerpf(92.0, 34.0, progress) * time) * 0.30
 			&"pickup":
@@ -227,6 +235,8 @@ func _default_volume(kind: StringName) -> float:
 		&"shot": return -12.0
 		&"enemy_shot": return -16.0
 		&"grenade_throw": return -10.0
+		&"rocket_launch": return -8.0
+		&"rocket_blast": return -5.0
 		&"explosion": return -7.0
 		&"pickup": return -8.0
 		&"upgrade_gun": return -5.0

@@ -57,6 +57,11 @@ func _run_tests() -> void:
 	player.call("_fire_primary")
 	var primary_shots := get_nodes_in_group("player_projectiles")
 	var base_shot_speed := float(primary_shots[-1].get("speed"))
+	_check(
+		float(primary_shots[-1].get("max_travel_distance")) >= 300.0
+		and float(primary_shots[-1].get("max_travel_distance")) <= 800.0,
+		"Machine-gun bullets expire shortly after leaving the visible combat area"
+	)
 	var primary_pickup: Node2D = game.get_node("PrimaryUpgrade01")
 	primary_pickup.global_position = player.global_position
 	await physics_frame
@@ -82,11 +87,16 @@ func _run_tests() -> void:
 	_check(int(player.get("secondary_upgrade_level")) == 1, "Grenade upgrades belong to the collecting player")
 	_check(root.get_node("AudioDirector").get_node_or_null("SFX_upgrade_blast") != null, "Grenade pickup uses a different dedicated sound")
 	player.call("_fire_secondary")
-	var grenades := get_nodes_in_group("grenades")
-	_check(float(grenades[-1].get("blast_radius")) > 92.0, "Grenade upgrades increase blast radius")
-	_check(int(grenades[-1].get("upgrade_level")) == 1, "Grenade upgrades select a distinct explosion style")
-	grenades[-1].call("_explode")
-	_check(root.get_node("AudioDirector").get_node_or_null("SFX_grenade_blast_1") != null, "Upgraded grenades use a level-specific explosion sound")
+	var rockets := get_nodes_in_group("rockets")
+	_check(rockets.size() == 1, "The first secondary upgrade replaces grenades with rockets")
+	var rocket_signature: Dictionary = rockets[-1].call("rocket_signature")
+	_check(
+		bool(rocket_signature["straight_flight"])
+		and float(rocket_signature["max_travel_distance"]) > float(primary_shots[-1].get("max_travel_distance")),
+		"Rockets fly straight through the screen and continue beyond its edge"
+	)
+	rockets[-1].call("_explode")
+	_check(root.get_node("AudioDirector").get_node_or_null("SFX_rocket_blast") != null, "Rockets use a distinct impact sound")
 
 	_check(bool(player.call("apply_weapon_upgrade", &"primary")), "Weapon upgrades can stack")
 	_check(bool(player.call("apply_weapon_upgrade", &"primary")), "Weapon upgrades reach the maximum level")

@@ -9,6 +9,9 @@ var upgrade_level := 0
 var _age := 0.0
 var _exploded := false
 var _animation_left := 0.22
+var throw_speed := 520.0
+var flight_time := 0.84
+var fuse_time := 0.98
 
 @onready var _collision_shape: CollisionShape2D = $CollisionShape2D
 
@@ -42,9 +45,9 @@ func _physics_process(delta: float) -> void:
 		return
 
 	_age += delta
-	if _age < 0.36:
-		position += direction * 250.0 * delta
-	elif _age >= 0.72:
+	if _age < flight_time:
+		position += direction * throw_speed * delta
+	elif _age >= fuse_time:
 		_explode()
 
 func _on_body_entered(body: Node2D) -> void:
@@ -103,3 +106,10 @@ func _draw() -> void:
 	else:
 		draw_circle(Vector2.ZERO, 7.0 + upgrade_level, Color(0.32, 0.58 + upgrade_level * 0.08, 0.34 + upgrade_level * 0.12))
 		draw_circle(Vector2(-2.0, -2.0), 2.0, Color(0.86, 0.84, 0.57))
+
+func grenade_signature() -> Dictionary:
+	return {
+		"throw_distance": throw_speed * flight_time,
+		"flight_time": flight_time,
+		"upgrade_level": upgrade_level,
+	}

@@ -85,7 +85,7 @@ func _run_tests() -> void:
 	var gun_signature: Dictionary = gun_pickup.call("upgrade_visual_signature")
 	var blast_signature: Dictionary = blast_pickup.call("upgrade_visual_signature")
 	_check(str(gun_signature["label"]) == "RAPID FIRE" and str(gun_signature["icon"]) == "multi_barrel", "Machine-gun pickup clearly names and depicts its effect")
-	_check(str(blast_signature["label"]) == "BIGGER BOOM" and str(blast_signature["icon"]) == "blast_rings", "Grenade pickup clearly names and depicts its effect")
+	_check(str(blast_signature["label"]) == "ROCKETS" and str(blast_signature["icon"]) == "rocket", "Secondary pickup clearly shows that grenades become rockets")
 	gun_pickup.queue_free()
 	blast_pickup.queue_free()
 	_check(player.get_node_or_null("TrampleArea") != null, "Jeep has a dedicated infantry trample sensor")

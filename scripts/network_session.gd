@@ -14,6 +14,7 @@ const MAIN_SCENE := "res://scenes/main.tscn"
 const GAME_SCENE := "res://scenes/level_01.tscn"
 const PROJECTILE_SCENE := preload("res://scenes/projectile.tscn")
 const GRENADE_SCENE := preload("res://scenes/grenade.tscn")
+const ROCKET_SCENE := preload("res://scenes/rocket.tscn")
 
 var players: Dictionary = {}
 var local_nickname := "Player"
@@ -245,18 +246,32 @@ func spawn_projectile_visual(
 	hostile: bool,
 	damage: int,
 	speed: float,
-	visual_level: int = 0
+	visual_level: int = 0,
+	travel_limit: float = 0.0
 ) -> void:
 	if not is_networked or not is_host:
 		return
 	for peer_id in connected_peer_ids():
-		rpc_id(peer_id, "rpc_show_projectile", spawn_position, direction, hostile, damage, speed, visual_level)
+		rpc_id(peer_id, "rpc_show_projectile", spawn_position, direction, hostile, damage, speed, visual_level, travel_limit)
 
 func spawn_grenade_visual(spawn_position: Vector2, direction: Vector2, blast_radius: float, visual_level: int = 0) -> void:
 	if not is_networked or not is_host:
 		return
 	for peer_id in connected_peer_ids():
 		rpc_id(peer_id, "rpc_show_grenade", spawn_position, direction, blast_radius, visual_level)
+
+func spawn_rocket_visual(
+	spawn_position: Vector2,
+	direction: Vector2,
+	blast_radius: float,
+	visual_level: int,
+	travel_limit: float,
+	damage: int
+) -> void:
+	if not is_networked or not is_host:
+		return
+	for peer_id in connected_peer_ids():
+		rpc_id(peer_id, "rpc_show_rocket", spawn_position, direction, blast_radius, visual_level, travel_limit, damage)
 
 @rpc("any_peer", "call_remote", "reliable")
 func rpc_register_player(requested_nickname: String) -> void:
@@ -308,12 +323,13 @@ func rpc_show_projectile(
 	hostile: bool,
 	damage: int,
 	speed: float,
-	visual_level: int
+	visual_level: int,
+	travel_limit: float
 ) -> void:
 	if is_host or get_tree().current_scene == null:
 		return
 	var projectile := PROJECTILE_SCENE.instantiate()
-	projectile.configure(spawn_position, direction, null, hostile, damage, speed, false, visual_level)
+	projectile.configure(spawn_position, direction, null, hostile, damage, speed, false, visual_level, travel_limit)
 	get_tree().current_scene.add_child(projectile)
 	AudioDirector.play_sfx(&"enemy_shot" if hostile else &"shot")
 
@@ -325,6 +341,22 @@ func rpc_show_grenade(spawn_position: Vector2, direction: Vector2, blast_radius:
 	grenade.configure(spawn_position, direction, null, true, blast_radius, visual_level)
 	get_tree().current_scene.add_child(grenade)
 	AudioDirector.play_sfx(&"grenade_throw")
+
+@rpc("authority", "call_remote", "unreliable")
+func rpc_show_rocket(
+	spawn_position: Vector2,
+	direction: Vector2,
+	blast_radius: float,
+	visual_level: int,
+	travel_limit: float,
+	damage: int
+) -> void:
+	if is_host or get_tree().current_scene == null:
+		return
+	var rocket := ROCKET_SCENE.instantiate()
+	rocket.configure(spawn_position, direction, null, true, blast_radius, visual_level, travel_limit, damage)
+	get_tree().current_scene.add_child(rocket)
+	AudioDirector.play_sfx(&"rocket_launch")
 
 func replicate_upgrade_pickup_collected(pickup_name: String) -> void:
 	if not is_networked or not is_host:

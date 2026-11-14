@@ -6,6 +6,7 @@ signal passenger_count_changed(current: int, maximum: int)
 
 const PROJECTILE_SCENE := preload("res://scenes/projectile.tscn")
 const GRENADE_SCENE := preload("res://scenes/grenade.tscn")
+const ROCKET_SCENE := preload("res://scenes/rocket.tscn")
 const PLAYER_JEEP_TEXTURE := preload("res://assets/art/player_jeep_v2.png")
 const PLAYER_COLORS := [
 	Color(0.78, 0.20, 0.17),
@@ -291,6 +292,7 @@ func weapon_visual_signature() -> Dictionary:
 		"secondary_pips": secondary_upgrade_level,
 		"projectile_style": primary_upgrade_level,
 		"blast_style": secondary_upgrade_level,
+		"secondary_weapon": "grenade" if secondary_upgrade_level == 0 else "rocket",
 		"pickup_flash": _last_upgrade_type,
 	}
 
@@ -339,6 +341,7 @@ func _fire_primary() -> void:
 	if primary_upgrade_level >= 3:
 		projectile_damage = 3
 	var projectile_speed := 620.0 + float(primary_upgrade_level) * 80.0
+	var projectile_range := _visible_projectile_distance(90.0)
 	var projectile := PROJECTILE_SCENE.instantiate()
 	projectile.configure(
 		global_position + facing * 25.0,
@@ -348,7 +351,8 @@ func _fire_primary() -> void:
 		projectile_damage,
 		projectile_speed,
 		true,
-		primary_upgrade_level
+		primary_upgrade_level,
+		projectile_range
 	)
 	get_tree().current_scene.add_child(projectile)
 	NetworkSession.spawn_projectile_visual(
@@ -357,24 +361,65 @@ func _fire_primary() -> void:
 		false,
 		projectile_damage,
 		projectile_speed,
-		primary_upgrade_level
+		primary_upgrade_level,
+		projectile_range
 	)
 
 func _fire_secondary() -> void:
 	if _secondary_cooldown > 0.0:
 		return
 	_secondary_cooldown = maxf(0.6, 1.2 - float(secondary_upgrade_level) * 0.15)
-	AudioDirector.play_sfx(&"grenade_throw")
-	var upgraded_blast_radius := 92.0 + float(secondary_upgrade_level) * 12.0
-	var grenade := GRENADE_SCENE.instantiate()
-	grenade.configure(global_position + facing * 24.0, facing, self, false, upgraded_blast_radius, secondary_upgrade_level)
-	get_tree().current_scene.add_child(grenade)
-	NetworkSession.spawn_grenade_visual(
-		global_position + facing * 24.0,
+	if secondary_upgrade_level == 0:
+		AudioDirector.play_sfx(&"grenade_throw")
+		var grenade := GRENADE_SCENE.instantiate()
+		grenade.configure(global_position + facing * 24.0, facing, self, false, 92.0, 0)
+		get_tree().current_scene.add_child(grenade)
+		NetworkSession.spawn_grenade_visual(global_position + facing * 24.0, facing, 92.0, 0)
+		return
+	AudioDirector.play_sfx(&"rocket_launch")
+	var rocket_blast_radius := 108.0 + float(secondary_upgrade_level) * 10.0
+	var rocket_damage := 2 + secondary_upgrade_level
+	var rocket_range := _visible_projectile_distance(230.0)
+	var rocket := ROCKET_SCENE.instantiate()
+	rocket.configure(
+		global_position + facing * 30.0,
 		facing,
-		upgraded_blast_radius,
-		secondary_upgrade_level
+		self,
+		false,
+		rocket_blast_radius,
+		secondary_upgrade_level,
+		rocket_range,
+		rocket_damage
 	)
+	get_tree().current_scene.add_child(rocket)
+	NetworkSession.spawn_rocket_visual(
+		global_position + facing * 30.0,
+		facing,
+		rocket_blast_radius,
+		secondary_upgrade_level,
+		rocket_range,
+		rocket_damage
+	)
+
+func _visible_projectile_distance(offscreen_buffer: float) -> float:
+	var viewport_size := get_viewport_rect().size
+	var safe_zoom := Vector2(maxf(_camera.zoom.x, 0.01), maxf(_camera.zoom.y, 0.01))
+	var half_extent := viewport_size * 0.5 / safe_zoom
+	var relative_origin := global_position - _camera.global_position
+	var edge_distance := INF
+	if absf(facing.x) > 0.0001:
+		var edge_x := half_extent.x if facing.x > 0.0 else -half_extent.x
+		var distance_x := (edge_x - relative_origin.x) / facing.x
+		if distance_x > 0.0:
+			edge_distance = minf(edge_distance, distance_x)
+	if absf(facing.y) > 0.0001:
+		var edge_y := half_extent.y if facing.y > 0.0 else -half_extent.y
+		var distance_y := (edge_y - relative_origin.y) / facing.y
+		if distance_y > 0.0:
+			edge_distance = minf(edge_distance, distance_y)
+	if edge_distance == INF:
+		edge_distance = maxf(half_extent.x, half_extent.y)
+	return maxf(180.0, edge_distance + offscreen_buffer)
 
 func _respawn() -> void:
 	if _respawning:

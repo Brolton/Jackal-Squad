@@ -73,8 +73,9 @@ func update_mission_state(state: Dictionary) -> void:
 	_refresh_victory_panel()
 
 func _refresh() -> void:
+	var secondary_label := "GRENADE" if _secondary_upgrade_level == 0 else "ROCKET Lv.%d" % _secondary_upgrade_level
 	_status.text = (
-		"MISSION %d/%d  %s     HP %d/%d     PASSENGERS %d/6     MG Lv.%d     GRENADE Lv.%d\n"
+		"MISSION %d/%d  %s     HP %d/%d     PASSENGERS %d/6     MG Lv.%d     %s\n"
 		+ "GOAL: DESTROY BOSS [%s]     BONUS RESCUES %d/%d     EVAC %d     TIME %s     KILLS %d"
 	) % [
 		_campaign_level_index + 1,
@@ -84,7 +85,7 @@ func _refresh() -> void:
 		_maximum_health,
 		_passenger_count,
 		_primary_upgrade_level + 1,
-		_secondary_upgrade_level + 1,
+		secondary_label,
 		"DESTROYED" if _final_base_destroyed else "ACTIVE",
 		_rescued_passengers,
 		_rescue_objective_total,

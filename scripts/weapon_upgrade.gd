@@ -46,16 +46,14 @@ func _draw() -> void:
 		draw_string(ThemeDB.fallback_font, Vector2(-10, 5), "MG", HORIZONTAL_ALIGNMENT_LEFT, -1, 10, Color(0.10, 0.10, 0.08))
 		draw_string(ThemeDB.fallback_font, Vector2(-31, 39), "RAPID FIRE", HORIZONTAL_ALIGNMENT_LEFT, -1, 10, color.lightened(0.25))
 	else:
-		draw_circle(Vector2.ZERO, 8.0, Color(0.10, 0.14, 0.13))
-		draw_circle(Vector2(-2, -2), 3.0, color.lightened(0.35))
-		draw_line(Vector2(4, -7), Vector2(9, -13), Color(0.92, 0.58, 0.20), 2.0)
-		for radius in [12.0, 16.0]:
-			draw_arc(Vector2.ZERO, radius, -0.7, 0.7, 10, Color(0.78, 0.94, 1.0, 0.78), 2.0)
-		draw_string(ThemeDB.fallback_font, Vector2(-33, 39), "BIGGER BOOM", HORIZONTAL_ALIGNMENT_LEFT, -1, 10, color.lightened(0.25))
+		draw_colored_polygon(PackedVector2Array([Vector2(-5, 6), Vector2(0, -13), Vector2(5, 6)]), Color(0.88, 0.91, 0.82))
+		draw_colored_polygon(PackedVector2Array([Vector2(-5, 4), Vector2(-10, 10), Vector2(-4, 9), Vector2(4, 9), Vector2(10, 10), Vector2(5, 4)]), Color(0.24, 0.31, 0.31))
+		draw_colored_polygon(PackedVector2Array([Vector2(-4, 9), Vector2(0, 17), Vector2(4, 9)]), Color(1.0, 0.42, 0.10))
+		draw_string(ThemeDB.fallback_font, Vector2(-24, 39), "ROCKETS", HORIZONTAL_ALIGNMENT_LEFT, -1, 10, color.lightened(0.25))
 
 func upgrade_visual_signature() -> Dictionary:
 	return {
 		"type": upgrade_type,
-		"label": "RAPID FIRE" if upgrade_type == &"primary" else "BIGGER BOOM",
-		"icon": "multi_barrel" if upgrade_type == &"primary" else "blast_rings",
+		"label": "RAPID FIRE" if upgrade_type == &"primary" else "ROCKETS",
+		"icon": "multi_barrel" if upgrade_type == &"primary" else "rocket",
 	}

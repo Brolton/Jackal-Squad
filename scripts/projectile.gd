@@ -7,7 +7,8 @@ var speed := 600.0
 var hostile := false
 var visual_only := false
 var visual_level := 0
-var _remaining_lifetime := 2.4
+var max_travel_distance := 1200.0
+var travelled_distance := 0.0
 var _projectile_color := Color(1.0, 0.83, 0.40)
 
 func _ready() -> void:
@@ -23,7 +24,8 @@ func configure(
 	attack_damage: int,
 	travel_speed: float,
 	authoritative: bool = true,
-	upgrade_level: int = 0
+	upgrade_level: int = 0,
+	travel_limit: float = 0.0
 ) -> void:
 	position = spawn_position
 	direction = travel_direction.normalized()
@@ -33,6 +35,8 @@ func configure(
 	visual_level = clampi(upgrade_level, 0, 3)
 	damage = attack_damage
 	speed = travel_speed
+	max_travel_distance = travel_limit if travel_limit > 0.0 else travel_speed * 2.4
+	travelled_distance = 0.0
 	collision_layer = (16 if hostile else 8) if authoritative else 0
 	collision_mask = (3 if hostile else 69) if authoritative else 0
 	if hostile:
@@ -42,9 +46,10 @@ func configure(
 	rotation = direction.angle() + PI * 0.5
 
 func _physics_process(delta: float) -> void:
-	position += direction * speed * delta
-	_remaining_lifetime -= delta
-	if _remaining_lifetime <= 0.0:
+	var step := speed * delta
+	position += direction * step
+	travelled_distance += step
+	if travelled_distance >= max_travel_distance:
 		queue_free()
 
 func _on_body_entered(body: Node2D) -> void:
