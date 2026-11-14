@@ -88,3 +88,12 @@ The Godot 4.7.2 Windows x86-64 release export completed successfully. The self-c
 See `README.md` for the tested build command and LAN/Tailscale connection setup. Network instructions are documented but have not been tested outside loopback.
 
 Do not mark a check as passing unless it was actually run.
+
+## Production stage 1 — campaign foundation
+
+```powershell
+godot --headless --editor --path . --quit
+godot --headless --path . --script res://tests/test_campaign.gd
+```
+
+The focused campaign test verifies three distinct loadable mission scene entry points, selected-mission startup, synchronized level metadata, campaign advancement, and finale detection. The Milestone 1, 3, 4, and 5 regression suites are run again before the stage commit.

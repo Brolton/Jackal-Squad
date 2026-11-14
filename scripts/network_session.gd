@@ -29,6 +29,8 @@ var mission_elapsed := 0.0
 var enemies_destroyed := 0
 var final_base_destroyed := false
 var player_contributions: Dictionary = {}
+var campaign_level_index := 0
+var loaded_level_index := -1
 var _pending_passenger_contributions: Dictionary = {}
 var _mission_state_timer := 0.0
 
@@ -48,8 +50,9 @@ func _process(delta: float) -> void:
 		_mission_state_timer = 0.5
 		_publish_mission_state()
 
-func start_solo(nickname: String) -> void:
+func start_solo(nickname: String, selected_level: int = 0) -> void:
 	_close_session()
+	campaign_level_index = clampi(selected_level, 0, CampaignCatalog.count() - 1)
 	_reset_rescue_score()
 	local_nickname = _clean_nickname(nickname)
 	players = {1: _make_profile(local_nickname, 0)}
@@ -109,6 +112,43 @@ func start_multiplayer_game() -> bool:
 	for peer_id in connected_peer_ids():
 		rpc_id(peer_id, "rpc_begin_match", _get_mission_state())
 	return true
+
+func select_campaign_level(index: int) -> bool:
+	if match_started or (is_networked and not is_host):
+		return false
+	campaign_level_index = clampi(index, 0, CampaignCatalog.count() - 1)
+	return true
+
+func current_level_scene() -> String:
+	return CampaignCatalog.scene_path(campaign_level_index)
+
+func set_loaded_level(index: int) -> void:
+	loaded_level_index = clampi(index, 0, CampaignCatalog.count() - 1)
+
+func has_next_campaign_level() -> bool:
+	return not CampaignCatalog.is_last(campaign_level_index)
+
+func advance_campaign() -> bool:
+	if not mission_completed or not has_next_campaign_level():
+		return false
+	if is_networked and not is_host:
+		return false
+	campaign_level_index += 1
+	_reset_rescue_score()
+	_start_mission()
+	game_start_requested.emit()
+	if is_host:
+		for peer_id in connected_peer_ids():
+			rpc_id(peer_id, "rpc_advance_campaign", campaign_level_index, _get_mission_state())
+	return true
+
+@rpc("authority", "call_remote", "reliable")
+func rpc_advance_campaign(level_index: int, mission_state: Dictionary) -> void:
+	if is_host:
+		return
+	campaign_level_index = clampi(level_index, 0, CampaignCatalog.count() - 1)
+	_apply_mission_state(mission_state)
+	game_start_requested.emit()
 
 func leave_lobby() -> void:
 	_close_session()
@@ -397,11 +437,20 @@ func _get_mission_state() -> Dictionary:
 		"final_base_destroyed": final_base_destroyed,
 		"evacuated_passengers": evacuated_passengers,
 		"rescued_passengers": rescued_passengers,
-		"rescue_objective_total": RESCUE_OBJECTIVE_TOTAL,
+		"rescue_objective_total": CampaignCatalog.rescue_total(campaign_level_index),
+		"campaign_level_index": campaign_level_index,
+		"campaign_level_count": CampaignCatalog.count(),
+		"level_name": CampaignCatalog.display_name(campaign_level_index),
+		"campaign_completed": mission_completed and CampaignCatalog.is_last(campaign_level_index),
 		"player_contributions": player_contributions.duplicate(true),
 	}
 
 func _apply_mission_state(state: Dictionary) -> void:
+	campaign_level_index = clampi(
+		int(state.get("campaign_level_index", campaign_level_index)),
+		0,
+		CampaignCatalog.count() - 1
+	)
 	mission_started = bool(state.get("mission_started", false))
 	mission_completed = bool(state.get("mission_completed", false))
 	mission_elapsed = float(state.get("mission_elapsed", 0.0))
@@ -437,7 +486,7 @@ func _check_mission_completion() -> void:
 		mission_started
 		and not mission_completed
 		and final_base_destroyed
-		and rescued_passengers >= RESCUE_OBJECTIVE_TOTAL
+		and rescued_passengers >= CampaignCatalog.rescue_total(campaign_level_index)
 	):
 		mission_completed = true
 		_publish_mission_state()

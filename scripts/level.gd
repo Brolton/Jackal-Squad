@@ -1,5 +1,7 @@
 extends Node2D
 
+@export_range(0, 2) var level_index := 0
+
 const MAP_SIZE := Vector2(1200.0, 3200.0)
 const PLAYER_SCENE := preload("res://scenes/player_jeep.tscn")
 const INFANTRY_SCENE := preload("res://scenes/infantry.tscn")
@@ -36,6 +38,7 @@ const PLAYER_SPAWN_POSITIONS := [
 ]
 
 func _ready() -> void:
+	NetworkSession.set_loaded_level(level_index)
 	queue_redraw()
 	_create_map_collisions()
 	_create_obstacles()

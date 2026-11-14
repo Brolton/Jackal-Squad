@@ -18,6 +18,9 @@ var _enemies_destroyed := 0
 var _final_base_destroyed := false
 var _mission_completed := false
 var _player_contributions: Dictionary = {}
+var _level_name := "EMERALD APPROACH"
+var _campaign_level_index := 0
+var _campaign_level_count := 3
 
 func update_health(current: int, maximum: int) -> void:
 	_current_health = current
@@ -47,16 +50,22 @@ func update_mission_state(state: Dictionary) -> void:
 	_evacuated_passengers = int(state.get("evacuated_passengers", 0))
 	_rescued_passengers = int(state.get("rescued_passengers", 0))
 	_player_contributions = state.get("player_contributions", {}).duplicate(true)
+	_level_name = str(state.get("level_name", _level_name))
+	_campaign_level_index = int(state.get("campaign_level_index", 0))
+	_campaign_level_count = int(state.get("campaign_level_count", CampaignCatalog.count()))
 	_refresh()
 	_refresh_victory_panel()
 
 func _refresh() -> void:
 	_status.text = (
-		"JACKAL SQUAD  |  HEALTH: %d / %d  |  PASSENGERS: %d / 6\n"
+		"MISSION %d / %d: %s  |  HEALTH: %d / %d  |  PASSENGERS: %d / 6\n"
 		+ "MACHINE GUN: Lv. %d  |  GRENADE: Lv. %d\nEVACUATED: %d  |  RESCUED: %d\n"
 		+ "OBJECTIVE: RESCUE %d / %d  |  FINAL BASE: %s\nTIME: %s  |  ENEMIES: %d\n"
 		+ "WASD / ARROWS: DRIVE     SPACE / LMB: FIRE     CTRL / RMB: GRENADE"
 	) % [
+		_campaign_level_index + 1,
+		_campaign_level_count,
+		_level_name,
 		_current_health,
 		_maximum_health,
 		_passenger_count,
@@ -75,7 +84,11 @@ func _refresh_victory_panel() -> void:
 	_victory_panel.visible = _mission_completed
 	if not _mission_completed:
 		return
-	_victory_title.text = "MISSION COMPLETE"
+	_victory_title.text = (
+		"CAMPAIGN COMPLETE"
+		if CampaignCatalog.is_last(_campaign_level_index)
+		else "MISSION COMPLETE"
+	)
 	var summary: Array[String] = [
 		"Time: %s" % _format_time(_mission_elapsed),
 		"Enemies destroyed: %d" % _enemies_destroyed,

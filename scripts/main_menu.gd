@@ -10,6 +10,7 @@ var _players_label: Label
 var _waiting_label: Label
 var _start_button: Button
 var _status_label: Label
+var _mission_selector: OptionButton
 
 func _ready() -> void:
 	_build_ui()
@@ -55,6 +56,14 @@ func _build_ui() -> void:
 	_nickname_input.placeholder_text = "Nickname"
 	_nickname_input.text = "Player"
 	content.add_child(_nickname_input)
+
+	_mission_selector = OptionButton.new()
+	for index in range(CampaignCatalog.count()):
+		_mission_selector.add_item(
+			"Mission %d: %s" % [index + 1, CampaignCatalog.display_name(index)],
+			index
+		)
+	content.add_child(_mission_selector)
 
 	_main_view = VBoxContainer.new()
 	_main_view.add_theme_constant_override("separation", 10)
@@ -122,9 +131,10 @@ func _make_button(text: String) -> Button:
 	return button
 
 func _on_solo_pressed() -> void:
-	NetworkSession.start_solo(_nickname_input.text)
+	NetworkSession.start_solo(_nickname_input.text, _mission_selector.get_selected_id())
 
 func _on_host_pressed() -> void:
+	NetworkSession.select_campaign_level(_mission_selector.get_selected_id())
 	if NetworkSession.host_game(_nickname_input.text):
 		_show_lobby()
 		_refresh_lobby()
@@ -152,7 +162,7 @@ func _on_status_changed(message: String) -> void:
 	_status_label.text = message
 
 func _on_game_start_requested() -> void:
-	get_tree().change_scene_to_file(NetworkSession.GAME_SCENE)
+	get_tree().change_scene_to_file(NetworkSession.current_level_scene())
 
 func _show_lobby() -> void:
 	_main_view.visible = false
