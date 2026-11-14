@@ -161,36 +161,69 @@ func _on_game_start_requested() -> void:
 
 func _draw() -> void:
 	var palette: Array = _layout["palette"]
+	var terrain: StringName = _layout["terrain_theme"]
 	draw_rect(Rect2(Vector2.ZERO, map_size), palette[0])
 	for band in range(5):
 		var band_height := map_size.y / 5.0
 		var band_color: Color = palette[0].lightened(0.025) if band % 2 == 0 else palette[0].darkened(0.025)
 		draw_rect(Rect2(0.0, band * band_height, map_size.x, band_height), band_color)
-	draw_texture_rect(GROUND_TEXTURE, Rect2(Vector2.ZERO, map_size), true, Color(0.70, 0.76, 0.64, 0.40))
+	if terrain == &"jungle":
+		draw_texture_rect(GROUND_TEXTURE, Rect2(Vector2.ZERO, map_size), true, Color(0.70, 0.76, 0.64, 0.40))
+	else:
+		_draw_terrain_accents(terrain)
 
 	var road_width := float(_layout["road_width"])
 	var road_paths: Array = _layout.get("roads", [_layout["road"]])
 	for road_points: Array in road_paths:
-		_draw_road(PackedVector2Array(road_points), road_width)
+		_draw_road(PackedVector2Array(road_points), road_width, terrain)
 	for water_rect: Rect2 in _layout["water"]:
 		_draw_river(water_rect)
 	for bridge_rect: Rect2 in _layout["bridges"]:
 		_draw_bridge(bridge_rect)
 	for barrier: Dictionary in _layout["barriers"]:
 		if str(barrier["name"]).begins_with("CliffPass"):
-			_draw_cliff_barrier(barrier["center"], barrier["size"])
+			_draw_cliff_barrier(barrier["center"], barrier["size"], terrain)
 
-func _draw_road(points: PackedVector2Array, width: float) -> void:
+func _draw_terrain_accents(terrain: StringName) -> void:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = int(_layout["seed"]) + 983
+	var accent_count := int(map_size.y / 115.0)
+	for _index in range(accent_count):
+		var position := Vector2(rng.randf_range(0.0, map_size.x), rng.randf_range(0.0, map_size.y))
+		if terrain == &"desert":
+			var radius := rng.randf_range(8.0, 28.0)
+			draw_circle(position, radius, Color(0.78, 0.64, 0.44, 0.16))
+			draw_circle(position + Vector2(radius * 0.45, -radius * 0.25), radius * 0.35, Color(0.88, 0.75, 0.56, 0.22))
+		else:
+			var radius := rng.randf_range(18.0, 64.0)
+			draw_circle(position, radius, Color(0.94, 0.98, 1.0, 0.48))
+			draw_arc(position, radius * 0.72, 0.2, 2.8, 12, Color(0.55, 0.72, 0.82, 0.22), 2.0)
+
+func _draw_road(points: PackedVector2Array, width: float, terrain: StringName) -> void:
 	if points.size() < 2:
 		return
-	draw_polyline(points, Color(0.08, 0.10, 0.07, 0.48), width + 34.0, true)
-	draw_polyline(points, Color(0.31, 0.27, 0.18), width + 22.0, true)
-	draw_polyline(points, Color(0.48, 0.39, 0.25), width + 10.0, true)
-	draw_polyline(points, Color(0.42, 0.34, 0.23), width, true)
+	var shoulder := Color(0.08, 0.10, 0.07, 0.48)
+	var edge := Color(0.31, 0.27, 0.18)
+	var surface := Color(0.42, 0.34, 0.23)
+	var track := Color(0.21, 0.18, 0.14, 0.42)
+	if terrain == &"desert":
+		shoulder = Color(0.19, 0.18, 0.16, 0.52)
+		edge = Color(0.48, 0.40, 0.31)
+		surface = Color(0.34, 0.31, 0.27)
+		track = Color(0.18, 0.17, 0.15, 0.45)
+	elif terrain == &"snow":
+		shoulder = Color(0.35, 0.48, 0.55, 0.50)
+		edge = Color(0.54, 0.65, 0.70)
+		surface = Color(0.39, 0.48, 0.52)
+		track = Color(0.23, 0.31, 0.35, 0.48)
+	draw_polyline(points, shoulder, width + 34.0, true)
+	draw_polyline(points, edge, width + 22.0, true)
+	draw_polyline(points, edge.lightened(0.12), width + 10.0, true)
+	draw_polyline(points, surface, width, true)
 	for offset in [-width * 0.24, width * 0.24]:
-		var track := _offset_path(points, offset)
-		draw_polyline(track, Color(0.21, 0.18, 0.14, 0.42), 5.0, true)
-		draw_polyline(track, Color(0.64, 0.53, 0.34, 0.18), 1.5, true)
+		var wheel_track := _offset_path(points, offset)
+		draw_polyline(wheel_track, track, 5.0, true)
+		draw_polyline(wheel_track, edge.lightened(0.2), 1.5, true)
 	for index in range(1, points.size()):
 		var start := points[index - 1]
 		var finish := points[index]
@@ -250,12 +283,20 @@ func _draw_bridge(bridge_rect: Rect2) -> void:
 		draw_line(Vector2(deck.position.x + 8, y), Vector2(deck.end.x - 8, y), Color(0.28, 0.20, 0.13, 0.85), 2.0)
 		draw_line(Vector2(deck.position.x + 10, y + 2), Vector2(deck.end.x - 10, y + 2), Color(0.69, 0.51, 0.28, 0.38), 1.0)
 
-func _draw_cliff_barrier(center: Vector2, dimensions: Vector2) -> void:
+func _draw_cliff_barrier(center: Vector2, dimensions: Vector2, terrain: StringName) -> void:
 	var barrier_rect := Rect2(center - dimensions * 0.5, dimensions)
+	var rock_color := Color(0.43, 0.43, 0.34)
+	var highlight_color := Color(0.66, 0.63, 0.48)
+	if terrain == &"desert":
+		rock_color = Color(0.52, 0.42, 0.30)
+		highlight_color = Color(0.72, 0.58, 0.39)
+	elif terrain == &"snow":
+		rock_color = Color(0.56, 0.68, 0.73)
+		highlight_color = Color(0.91, 0.97, 0.99)
 	draw_rect(barrier_rect.grow(8.0), Color(0.08, 0.09, 0.07, 0.48))
-	draw_rect(barrier_rect, Color(0.31, 0.32, 0.26))
-	draw_line(barrier_rect.position, Vector2(barrier_rect.end.x, barrier_rect.position.y), Color(0.62, 0.59, 0.42), 5.0)
-	draw_line(Vector2(barrier_rect.position.x, barrier_rect.end.y), barrier_rect.end, Color(0.14, 0.16, 0.13), 6.0)
+	draw_rect(barrier_rect, rock_color.darkened(0.25))
+	draw_line(barrier_rect.position, Vector2(barrier_rect.end.x, barrier_rect.position.y), highlight_color, 5.0)
+	draw_line(Vector2(barrier_rect.position.x, barrier_rect.end.y), barrier_rect.end, rock_color.darkened(0.35), 6.0)
 	var rock_count := maxi(3, int(dimensions.x / 38.0))
 	for index in range(rock_count):
 		var ratio := (float(index) + 0.5) / float(rock_count)
@@ -268,8 +309,8 @@ func _draw_cliff_barrier(center: Vector2, dimensions: Vector2) -> void:
 			Vector2(x + radius * 0.18, y - radius),
 			Vector2(x + radius, y - radius * 0.12),
 			Vector2(x + radius * 0.64, y + radius * 0.72),
-		]), Color(0.43, 0.43, 0.34))
-		draw_line(Vector2(x - radius * 0.42, y - radius * 0.34), Vector2(x + radius * 0.25, y - radius * 0.60), Color(0.66, 0.63, 0.48), 2.0)
+		]), rock_color)
+		draw_line(Vector2(x - radius * 0.42, y - radius * 0.34), Vector2(x + radius * 0.25, y - radius * 0.60), highlight_color, 2.0)
 
 func terrain_render_signature() -> Dictionary:
 	var visible_barriers := 0
@@ -277,10 +318,11 @@ func terrain_render_signature() -> Dictionary:
 		if str(barrier["name"]).begins_with("CliffPass"):
 			visible_barriers += 1
 	return {
+		"terrain_theme": _layout.get("terrain_theme", &"jungle"),
 		"road_layers": 6,
-		"textured_water": RIVER_TEXTURE != null,
-		"bank_layers": 3,
-		"bridge_planks": true,
+		"textured_water": RIVER_TEXTURE != null and not _layout.get("water", []).is_empty(),
+		"bank_layers": 3 if not _layout.get("water", []).is_empty() else 0,
+		"bridge_planks": not _layout.get("bridges", []).is_empty(),
 		"visible_collision_barriers": visible_barriers,
 	}
 

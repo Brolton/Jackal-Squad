@@ -24,7 +24,7 @@ func _run_tests() -> void:
 		"The selected mission resolves to its own scene"
 	)
 	var state: Dictionary = session.call("mission_state_snapshot")
-	_check(str(state.get("level_name", "")) == "FLOODED DELTA", "Mission state includes the level name")
+	_check(str(state.get("level_name", "")) == "DESERT BASIN", "Mission state includes the selected desert mission name")
 	_check(int(state.get("campaign_level_count", 0)) == 3, "Mission state includes campaign progress")
 
 	session.set("mission_completed", true)

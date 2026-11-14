@@ -11,9 +11,10 @@ The prototype is being expanded into a three-mission cooperative campaign. Every
 
 ## Stage 2 — Large mission layouts
 
-- Emerald Approach: jungle road, bridge chokepoint, rescue camps, frontier base.
-- Flooded Delta: island lanes, multiple crossings, river batteries, evacuation route.
-- Iron Highlands: switchback ascent, fortified passes, final headquarters.
+- Emerald Approach: green jungle, branching roads, bridge chokepoints, rescue camps, frontier base.
+- Desert Basin: brown-gray desert, cactus fields, rocky passes, evacuation route.
+- Snowbound Highlands: white snowy forests, icy passes, final headquarters.
+- Each battlefield is about 1.75 times wider and seven times longer than its original layout, with additional route encounters.
 - Per-level enemy, rescue, upgrade, obstacle, extraction, and base placement data.
 
 ## Stage 3 — 2D art direction and presentation

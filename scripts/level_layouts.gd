@@ -1,18 +1,123 @@
 class_name LevelLayouts
 extends RefCounted
 
+const MAP_SCALE := Vector2(1.75, 7.0)
+
 static func get_layout(index: int) -> Dictionary:
+	var layout: Dictionary
 	match clampi(index, 0, 2):
 		1:
-			return _flooded_delta()
+			layout = _desert_basin()
 		2:
-			return _iron_highlands()
+			layout = _snowbound_highlands()
 		_:
-			return _emerald_approach()
+			layout = _emerald_approach()
+	layout = _scale_layout(layout)
+	_add_long_route_encounters(layout)
+	_add_long_route_obstacles(layout)
+	return layout
+
+static func _scale_layout(layout: Dictionary) -> Dictionary:
+	var scaled := {}
+	for key in layout:
+		var value: Variant = layout[key]
+		if value is Vector2:
+			scaled[key] = value * MAP_SCALE
+		elif value is Rect2:
+			scaled[key] = Rect2(value.position * MAP_SCALE, value.size * Vector2(MAP_SCALE.x, 1.0))
+		elif value is Array:
+			scaled[key] = _scale_array(value)
+		elif value is Dictionary:
+			scaled[key] = _scale_dictionary(value)
+		elif key == "road_width":
+			scaled[key] = float(value) * MAP_SCALE.x
+		else:
+			scaled[key] = value
+	return scaled
+
+static func _scale_array(values: Array) -> Array:
+	var scaled: Array = []
+	for value in values:
+		if value is Vector2:
+			scaled.append(value * MAP_SCALE)
+		elif value is Rect2:
+			scaled.append(Rect2(value.position * MAP_SCALE, value.size * Vector2(MAP_SCALE.x, 1.0)))
+		elif value is Array:
+			scaled.append(_scale_array(value))
+		elif value is Dictionary:
+			scaled.append(_scale_dictionary(value))
+		else:
+			scaled.append(value)
+	return scaled
+
+static func _scale_dictionary(values: Dictionary) -> Dictionary:
+	var scaled := {}
+	for key in values:
+		var value: Variant = values[key]
+		if value is Vector2:
+			var scale := Vector2(MAP_SCALE.x, 1.0) if key == "size" else MAP_SCALE
+			scaled[key] = value * scale
+		elif value is Rect2:
+			scaled[key] = Rect2(value.position * MAP_SCALE, value.size * Vector2(MAP_SCALE.x, 1.0))
+		elif value is Array:
+			scaled[key] = _scale_array(value)
+		elif value is Dictionary:
+			scaled[key] = _scale_dictionary(value)
+		else:
+			scaled[key] = value
+	return scaled
+
+static func _add_long_route_encounters(layout: Dictionary) -> void:
+	var road: Array = layout["road"]
+	var width := float(layout["road_width"])
+	var infantry: Array = layout["infantry"]
+	var heavy_enemies: Array = layout["heavy_enemies"]
+	var heavy_types := [1, 2, 1, 2]
+	var heavy_index := 0
+	for segment_index in range(1, road.size()):
+		var start: Vector2 = road[segment_index - 1]
+		var finish: Vector2 = road[segment_index]
+		var direction := (finish - start).normalized()
+		var side := Vector2(-direction.y, direction.x)
+		for encounter_index in range(3):
+			var progress := float(encounter_index + 1) / 4.0
+			var offset := width * (0.7 if encounter_index % 2 == 0 else -0.7)
+			infantry.append(start.lerp(finish, progress) + side * offset)
+		if segment_index % 2 == 0:
+			var position := start.lerp(finish, 0.58) - side * width * 0.9
+			heavy_enemies.append({
+				"name": "RouteGuard%02d" % (heavy_index + 1),
+				"type": heavy_types[heavy_index % heavy_types.size()],
+				"position": position,
+			})
+			heavy_index += 1
+	layout["infantry"] = infantry
+	layout["heavy_enemies"] = heavy_enemies
+
+static func _add_long_route_obstacles(layout: Dictionary) -> void:
+	var map_size: Vector2 = layout["map_size"]
+	var terrain: StringName = layout["terrain_theme"]
+	var obstacle_kind: StringName = &"tree"
+	if terrain == &"desert":
+		obstacle_kind = &"cactus"
+	elif terrain == &"snow":
+		obstacle_kind = &"snow_tree"
+	var placements: Array = layout["obstacles"]
+	placements.append_array(
+		_scatter_obstacles(
+			int(map_size.x),
+			int(map_size.y),
+			int(layout["seed"]) + 41827,
+			360,
+			obstacle_kind
+		)
+	)
+	layout["obstacles"] = placements
 
 static func _emerald_approach() -> Dictionary:
 	return {
 		"map_size": Vector2(1500.0, 4200.0),
+		"terrain_theme": &"jungle",
 		"seed": 24681357,
 		"palette": [Color(0.13, 0.27, 0.18), Color(0.25, 0.43, 0.24), Color(0.07, 0.19, 0.14)],
 		"road": [Vector2(750, 4200), Vector2(750, 3600), Vector2(360, 2960), Vector2(520, 2480), Vector2(720, 1780), Vector2(700, 1500), Vector2(660, 1120), Vector2(760, 620), Vector2(750, 0)],
@@ -64,28 +169,30 @@ static func _emerald_approach() -> Dictionary:
 		],
 	}
 
-static func _flooded_delta() -> Dictionary:
+static func _desert_basin() -> Dictionary:
 	return {
 		"map_size": Vector2(1400.0, 3600.0),
+		"terrain_theme": &"desert",
 		"seed": 739144,
-		"palette": [Color(0.17, 0.29, 0.23), Color(0.25, 0.40, 0.29), Color(0.10, 0.23, 0.20)],
+		"palette": [Color(0.38, 0.32, 0.24), Color(0.55, 0.45, 0.32), Color(0.25, 0.27, 0.26)],
 		"road": [Vector2(700, 3600), Vector2(760, 3260), Vector2(540, 2920), Vector2(830, 2550), Vector2(700, 2200), Vector2(470, 1860), Vector2(780, 1510), Vector2(920, 1180), Vector2(610, 820), Vector2(700, 0)],
 		"road_width": 220.0,
-		"water": [Rect2(0, 2480, 1400, 230), Rect2(0, 1320, 1400, 260)],
-		"bridges": [Rect2(690, 2440, 180, 310), Rect2(395, 1280, 190, 340), Rect2(890, 1280, 190, 340)],
+		"water": [],
+		"bridges": [],
 		"barriers": [
-			{"name": "LowerWestBank", "center": Vector2(345, 2595), "size": Vector2(690, 230)}, {"name": "LowerEastBank", "center": Vector2(1135, 2595), "size": Vector2(530, 230)},
-			{"name": "UpperWestBank", "center": Vector2(195, 1450), "size": Vector2(390, 260)}, {"name": "UpperMidBank", "center": Vector2(738, 1450), "size": Vector2(305, 260)}, {"name": "UpperEastBank", "center": Vector2(1240, 1450), "size": Vector2(320, 260)},
+			{"name": "CliffPass01", "center": Vector2(220, 2800), "size": Vector2(420, 90)},
+			{"name": "CliffPass02", "center": Vector2(1180, 2050), "size": Vector2(400, 90)},
+			{"name": "CliffPass03", "center": Vector2(250, 1120), "size": Vector2(460, 90)},
 		],
 		"spawns": [Vector2(680, 3400), Vector2(730, 3400), Vector2(680, 3450), Vector2(730, 3450)],
 		"infantry": [Vector2(710, 3160), Vector2(430, 3000), Vector2(980, 2840), Vector2(720, 2300), Vector2(370, 2100), Vector2(1020, 1930), Vector2(520, 1690), Vector2(910, 1660), Vector2(350, 1120), Vector2(1080, 1040), Vector2(620, 720), Vector2(790, 430)],
 		"heavy_enemies": [
-			{"name": "DeltaTurret01", "type": 1, "position": Vector2(430, 2870)}, {"name": "DeltaTank01", "type": 2, "position": Vector2(970, 2200)},
-			{"name": "DeltaBoat01", "type": 3, "position": Vector2(300, 2580)}, {"name": "DeltaBoat02", "type": 3, "position": Vector2(1120, 2580)},
-			{"name": "DeltaBoat03", "type": 3, "position": Vector2(720, 1450)}, {"name": "DeltaTank02", "type": 2, "position": Vector2(460, 900)},
-			{"name": "DeltaTurret02", "type": 1, "position": Vector2(980, 760)}, {"name": "DeltaTurret03", "type": 1, "position": Vector2(480, 340)},
+			{"name": "DesertTurret01", "type": 1, "position": Vector2(430, 2870)}, {"name": "DesertTank01", "type": 2, "position": Vector2(970, 2200)},
+			{"name": "DesertTank02", "type": 2, "position": Vector2(300, 2580)}, {"name": "DesertTurret02", "type": 1, "position": Vector2(1120, 2580)},
+			{"name": "DesertTank03", "type": 2, "position": Vector2(720, 1450)}, {"name": "DesertTank04", "type": 2, "position": Vector2(460, 900)},
+			{"name": "DesertTurret03", "type": 1, "position": Vector2(980, 760)}, {"name": "DesertTurret04", "type": 1, "position": Vector2(480, 340)},
 		],
-		"obstacles": _scatter_obstacles(1400, 3600, 739144, 28, &"tree"),
+		"obstacles": _scatter_obstacles(1400, 3600, 739144, 120, &"cactus"),
 		"rescues": [Vector2(1080, 3020), Vector2(310, 1780)],
 		"extraction": Vector2(700, 250),
 		"extractions": [Vector2(700, 250), Vector2(690, 2160), Vector2(1030, 3180)],
@@ -94,17 +201,17 @@ static func _flooded_delta() -> Dictionary:
 		"hazards": [Vector2(610, 3140), Vector2(890, 2820), Vector2(620, 2290), Vector2(940, 1880), Vector2(530, 1040), Vector2(840, 650)],
 	}
 
-static func _iron_highlands() -> Dictionary:
+static func _snowbound_highlands() -> Dictionary:
 	return {
 		"map_size": Vector2(1600.0, 4000.0),
+		"terrain_theme": &"snow",
 		"seed": 991827,
-		"palette": [Color(0.27, 0.28, 0.22), Color(0.39, 0.39, 0.29), Color(0.18, 0.20, 0.17)],
+		"palette": [Color(0.82, 0.87, 0.89), Color(0.94, 0.97, 0.98), Color(0.63, 0.73, 0.77)],
 		"road": [Vector2(800, 4000), Vector2(1030, 3650), Vector2(520, 3290), Vector2(1080, 2870), Vector2(510, 2460), Vector2(1050, 2050), Vector2(560, 1640), Vector2(1040, 1210), Vector2(610, 760), Vector2(800, 0)],
 		"road_width": 240.0,
-		"water": [Rect2(0, 3050, 1600, 150)],
-		"bridges": [Rect2(420, 3010, 220, 230)],
+		"water": [],
+		"bridges": [],
 		"barriers": [
-			{"name": "RavineWest", "center": Vector2(210, 3125), "size": Vector2(420, 150)}, {"name": "RavineEast", "center": Vector2(1120, 3125), "size": Vector2(960, 150)},
 			{"name": "CliffPass01", "center": Vector2(270, 2700), "size": Vector2(420, 90)}, {"name": "CliffPass02", "center": Vector2(1310, 2300), "size": Vector2(430, 90)},
 			{"name": "CliffPass03", "center": Vector2(280, 1450), "size": Vector2(430, 90)},
 		],
@@ -117,7 +224,7 @@ static func _iron_highlands() -> Dictionary:
 			{"name": "HighlandTank04", "type": 2, "position": Vector2(560, 820)}, {"name": "HighlandTurret04", "type": 1, "position": Vector2(1050, 520)},
 			{"name": "HighlandTurret05", "type": 1, "position": Vector2(550, 310)},
 		],
-		"obstacles": _scatter_obstacles(1600, 4000, 991827, 34, &"rock"),
+		"obstacles": _scatter_obstacles(1600, 4000, 991827, 120, &"snow_tree"),
 		"rescues": [Vector2(1240, 2920), Vector2(350, 1180)],
 		"extraction": Vector2(800, 260),
 		"extractions": [Vector2(800, 260), Vector2(1030, 2020), Vector2(980, 3560)],
@@ -153,12 +260,15 @@ static func _scatter_obstacles(width: int, height: int, seed_value: int, count_v
 	var result: Array[Dictionary] = []
 	var rng := RandomNumberGenerator.new()
 	rng.seed = seed_value
+	var secondary: StringName = &"rock"
+	if dominant == &"snow_tree":
+		secondary = &"snow_rock"
 	for index in range(count_value):
 		var kind := dominant
 		if index % 5 == 0:
 			kind = &"crate"
 		elif index % 3 == 0:
-			kind = &"rock" if dominant == &"tree" else &"tree"
+			kind = secondary
 		result.append({
 			"position": Vector2(rng.randf_range(110.0, width - 110.0), rng.randf_range(300.0, height - 180.0)),
 			"kind": kind,

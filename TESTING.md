@@ -105,7 +105,7 @@ godot --headless --editor --path . --quit
 godot --headless --path . --script res://tests/test_level_layouts.gd
 ```
 
-The layout test instantiates all three campaign missions and verifies their distinct 1200×3200, 1400×3600, and 1600×4000 world bounds; matching camera limits; encounter rosters; rescue sites; extraction zones; and command bases. Campaign and Milestone 1, 3, 4, and 5 regression suites all passed after the data-driven level refactor.
+The layout test instantiates all three campaign missions and verifies their 2625×29400, 2450×25200, and 2800×28000 world bounds; matching camera limits; extended encounter rosters; rescue sites; extraction zones; and command bases. It also checks the jungle, cactus desert, and snowy forest themes. Campaign and Milestone 1, 3, 4, and 5 regression suites all passed after the data-driven level refactor.
 
 ## Production stage 3 — 2D art and presentation
 

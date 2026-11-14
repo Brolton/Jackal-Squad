@@ -6,9 +6,11 @@ func _initialize() -> void:
 	call_deferred("_run_tests")
 
 func _run_tests() -> void:
-	var expected_sizes := [Vector2(1500, 4200), Vector2(1400, 3600), Vector2(1600, 4000)]
+	var expected_sizes := [Vector2(2625, 29400), Vector2(2450, 25200), Vector2(2800, 28000)]
+	var expected_themes: Array[StringName] = [&"jungle", &"desert", &"snow"]
 	var minimum_enemy_counts := [30, 20, 23]
 	for level_index in range(3):
+		var layout := LevelLayouts.get_layout(level_index)
 		var session: Node = root.get_node("NetworkSession")
 		session.call("start_solo", "LayoutTester", level_index)
 		var scene_path := CampaignCatalog.scene_path(level_index)
@@ -17,7 +19,31 @@ func _run_tests() -> void:
 		current_scene = game
 		await process_frame
 
-		_check(game.get("map_size") == expected_sizes[level_index], "Mission %d uses its large world size" % (level_index + 1))
+		_check(game.get("map_size") == expected_sizes[level_index], "Mission %d is wider and seven times longer" % (level_index + 1))
+		_check(layout["terrain_theme"] == expected_themes[level_index], "Mission %d has its own terrain style" % (level_index + 1))
+		var ground_color: Color = layout["palette"][0]
+		var color_matches_theme := false
+		match level_index:
+			0:
+				color_matches_theme = ground_color.g > ground_color.r
+			1:
+				color_matches_theme = ground_color.r > ground_color.g and ground_color.g > ground_color.b
+			_:
+				color_matches_theme = ground_color.r > 0.8 and ground_color.g > 0.8 and ground_color.b > 0.8
+		_check(color_matches_theme, "Mission %d ground palette matches its terrain" % (level_index + 1))
+		_check(layout["infantry"].size() >= 35, "Mission %d has additional encounters along its extended route" % (level_index + 1))
+		if level_index == 1:
+			_check(
+				_obstacle_count(layout, &"cactus") > 100 and layout["water"].is_empty(),
+				"Desert Basin has cactus fields and no flooded terrain"
+			)
+		elif level_index == 2:
+			_check(
+				_obstacle_count(layout, &"snow_tree") > 100
+				and _obstacle_count(layout, &"snow_rock") > 0
+				and layout["water"].is_empty(),
+				"Snowbound Highlands has snow-covered forests and rocky snow"
+			)
 		_check(get_nodes_in_group("enemies").size() >= minimum_enemy_counts[level_index], "Mission %d has its full encounter roster" % (level_index + 1))
 		_check(game.get_tree().get_nodes_in_group("rescue_buildings").size() == 2 or game.get_node_or_null("RescueBuilding02") != null, "Mission %d has two rescue sites" % (level_index + 1))
 		_check(game.get_node_or_null("ExtractionZone") != null and game.get_node_or_null("FinalBase") != null, "Mission %d has extraction and a command base" % (level_index + 1))
@@ -60,11 +86,14 @@ func _run_tests() -> void:
 		_check(camera.limit_right == int(expected_sizes[level_index].x) and camera.limit_bottom == int(expected_sizes[level_index].y), "Mission %d camera follows its world bounds" % (level_index + 1))
 		if level_index == 0:
 			_check(get_nodes_in_group("battlefield_decorations").size() >= 20, "Emerald Approach has dense landmark dressing")
-			var layout := LevelLayouts.get_layout(0)
 			_check(layout["roads"].size() >= 4 and layout["bridges"].size() == 4, "Emerald Approach has branching routes and four bridge choices")
 		elif level_index == 2:
 			var terrain_signature: Dictionary = game.call("terrain_render_signature")
-			_check(int(terrain_signature["visible_collision_barriers"]) == 3, "Iron Highlands renders every blocking cliff pass")
+			_check(
+				int(terrain_signature["visible_collision_barriers"]) == 3
+				and terrain_signature["terrain_theme"] == &"snow",
+				"Snowbound Highlands renders icy terrain and every blocking pass"
+			)
 
 		game.queue_free()
 		await process_frame
@@ -82,3 +111,10 @@ func _check(condition: bool, message: String) -> void:
 	else:
 		_failures += 1
 		push_error("FAIL: %s" % message)
+
+func _obstacle_count(layout: Dictionary, kind: StringName) -> int:
+	var count := 0
+	for placement: Dictionary in layout["obstacles"]:
+		if placement["kind"] == kind:
+			count += 1
+	return count
