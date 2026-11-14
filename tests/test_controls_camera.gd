@@ -17,7 +17,8 @@ func _run_tests() -> void:
 	await process_frame
 	var player: CharacterBody2D = game.get_node("Player_1")
 	var camera: Camera2D = player.get_node("Camera2D")
-	_check(camera.zoom == Vector2(1.3, 1.3), "Gameplay camera is intentionally closer to the action")
+	_check(camera.zoom == Vector2(0.9, 0.9), "Gameplay camera shows enough terrain for tactical awareness")
+	_check(960.0 / camera.zoom.x <= 1100.0, "Camera still limits how much of the world is revealed")
 	_check(_has_physical_key("fire_primary", KEY_J), "J is bound to machine-gun fire")
 	_check(_has_physical_key("fire_secondary", KEY_K), "K is bound to grenade fire")
 	_check(_has_mouse_button("fire_primary", MOUSE_BUTTON_LEFT), "Left mouse remains a primary-fire alternative")

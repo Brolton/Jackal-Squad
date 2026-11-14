@@ -190,10 +190,10 @@ func _draw() -> void:
 	var texture_tint := Color(1.0, 0.82, 0.62) if _hit_flash > 0.0 else Color.WHITE
 	match enemy_type:
 		EnemyType.TURRET:
-			draw_texture_rect(TURRET_TEXTURE, Rect2(-28, -34, 56, 62), false, texture_tint)
+			draw_texture_rect(TURRET_TEXTURE, Rect2(-32, -35, 64, 66), false, texture_tint)
 		EnemyType.TANK:
-			draw_texture_rect(TANK_TEXTURE, Rect2(-27, -40, 54, 77), false, texture_tint)
+			draw_texture_rect(TANK_TEXTURE, Rect2(-31, -45, 62, 88), false, texture_tint)
 		EnemyType.BOAT:
-			draw_texture_rect(BOAT_TEXTURE, Rect2(-25, -42, 50, 84), false, texture_tint)
+			draw_texture_rect(BOAT_TEXTURE, Rect2(-28, -45, 56, 90), false, texture_tint)
 		_:
 			draw_texture_rect(INFANTRY_TEXTURE, Rect2(-16, -25, 32, 47), false, texture_tint)

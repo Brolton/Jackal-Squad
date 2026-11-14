@@ -14,10 +14,10 @@ static func panel_style(alpha: float = 0.94, radius: int = 14) -> StyleBoxFlat:
 	style.set_corner_radius_all(radius)
 	style.shadow_color = Color(0.0, 0.0, 0.0, 0.55)
 	style.shadow_size = 12
-	style.content_margin_left = 24.0
-	style.content_margin_right = 24.0
-	style.content_margin_top = 20.0
-	style.content_margin_bottom = 20.0
+	style.content_margin_left = 18.0
+	style.content_margin_right = 18.0
+	style.content_margin_top = 12.0
+	style.content_margin_bottom = 12.0
 	return style
 
 static func button_style(color: Color, hover := false, pressed := false) -> StyleBoxFlat:
@@ -38,4 +38,4 @@ static func decorate_button(button: Button, accent := false) -> void:
 	button.add_theme_stylebox_override("focus", button_style(base, true))
 	button.add_theme_color_override("font_color", CREAM)
 	button.add_theme_color_override("font_hover_color", Color.WHITE)
-	button.add_theme_font_size_override("font_size", 17)
+	button.add_theme_font_size_override("font_size", 14)

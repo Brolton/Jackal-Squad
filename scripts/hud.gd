@@ -1,6 +1,7 @@
 extends CanvasLayer
 
 @onready var _status: Label = $Status
+@onready var _controls_hint: Label = $ControlsHint
 @onready var _victory_panel: Control = $VictoryPanel
 @onready var _victory_title: Label = $VictoryPanel/VBoxContainer/Title
 @onready var _victory_details: Label = $VictoryPanel/VBoxContainer/Details
@@ -22,11 +23,19 @@ var _player_contributions: Dictionary = {}
 var _level_name := "EMERALD APPROACH"
 var _campaign_level_index := 0
 var _campaign_level_count := 3
+var _controls_hint_time := 7.0
 
 func _ready() -> void:
 	_victory_panel.add_theme_stylebox_override("panel", VisualTheme.panel_style(0.97, 14))
 	VisualTheme.decorate_button(_continue_button, true)
 	_continue_button.pressed.connect(_on_continue_pressed)
+
+func _process(delta: float) -> void:
+	if _controls_hint_time <= 0.0:
+		return
+	_controls_hint_time = maxf(0.0, _controls_hint_time - delta)
+	if _controls_hint_time <= 0.0:
+		_controls_hint.hide()
 
 func update_health(current: int, maximum: int) -> void:
 	_current_health = current
@@ -64,10 +73,8 @@ func update_mission_state(state: Dictionary) -> void:
 
 func _refresh() -> void:
 	_status.text = (
-		"MISSION %d / %d: %s  |  HEALTH: %d / %d  |  PASSENGERS: %d / 6\n"
-		+ "MACHINE GUN: Lv. %d  |  GRENADE: Lv. %d\nEVACUATED: %d  |  RESCUED: %d\n"
-		+ "OBJECTIVE: RESCUE %d / %d  |  FINAL BASE: %s\nTIME: %s  |  ENEMIES: %d\n"
-		+ "WASD / ARROWS: DRIVE     J / LMB: FIRE     K / RMB: GRENADE"
+		"MISSION %d/%d  %s     HP %d/%d     PASSENGERS %d/6     MG Lv.%d     GRENADE Lv.%d\n"
+		+ "RESCUE %d/%d     BASE %s     EVAC %d     TIME %s     KILLS %d"
 	) % [
 		_campaign_level_index + 1,
 		_campaign_level_count,
@@ -77,11 +84,10 @@ func _refresh() -> void:
 		_passenger_count,
 		_primary_upgrade_level + 1,
 		_secondary_upgrade_level + 1,
-		_evacuated_passengers,
-		_rescued_passengers,
 		_rescued_passengers,
 		_rescue_objective_total,
 		"DESTROYED" if _final_base_destroyed else "ACTIVE",
+		_evacuated_passengers,
 		_format_time(_mission_elapsed),
 		_enemies_destroyed,
 	]

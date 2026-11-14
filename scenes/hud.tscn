@@ -6,22 +6,42 @@
 script = ExtResource("1_hud")
 
 [node name="TopBackdrop" type="ColorRect" parent="."]
-offset_left = 10.0
-offset_top = 10.0
-offset_right = 790.0
-offset_bottom = 176.0
-color = Color(0.02, 0.08, 0.085, 0.86)
+offset_left = 8.0
+offset_top = 8.0
+offset_right = 952.0
+offset_bottom = 70.0
+color = Color(0.02, 0.08, 0.085, 0.78)
 mouse_filter = 2
 
 [node name="Status" type="Label" parent="."]
-offset_left = 20.0
-offset_top = 18.0
-offset_right = 760.0
-offset_bottom = 180.0
+offset_left = 16.0
+offset_top = 12.0
+offset_right = 944.0
+offset_bottom = 68.0
 theme_override_colors/font_color = Color(0.92, 0.94, 0.82, 1)
 theme_override_colors/font_outline_color = Color(0.04, 0.07, 0.06, 0.75)
-theme_override_constants/outline_size = 2
-theme_override_font_sizes/font_size = 16
+theme_override_constants/outline_size = 1
+theme_override_font_sizes/font_size = 12
+
+[node name="ControlsHint" type="Label" parent="."]
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -374.0
+offset_top = -31.0
+offset_right = -8.0
+offset_bottom = -8.0
+grow_horizontal = 0
+grow_vertical = 0
+theme_override_colors/font_color = Color(0.91, 0.92, 0.78, 0.92)
+theme_override_colors/font_outline_color = Color(0.02, 0.05, 0.05, 0.95)
+theme_override_constants/outline_size = 4
+theme_override_font_sizes/font_size = 10
+text = "WASD / ARROWS: DRIVE    J / LMB: FIRE    K / RMB: GRENADE"
+horizontal_alignment = 2
 
 [node name="VictoryPanel" type="PanelContainer" parent="."]
 visible = false

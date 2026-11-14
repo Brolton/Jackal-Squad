@@ -40,10 +40,10 @@ func _build_ui() -> void:
 
 	var outer_margin := MarginContainer.new()
 	outer_margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	outer_margin.add_theme_constant_override("margin_left", 54)
-	outer_margin.add_theme_constant_override("margin_top", 44)
-	outer_margin.add_theme_constant_override("margin_right", 54)
-	outer_margin.add_theme_constant_override("margin_bottom", 44)
+	outer_margin.add_theme_constant_override("margin_left", 28)
+	outer_margin.add_theme_constant_override("margin_top", 18)
+	outer_margin.add_theme_constant_override("margin_right", 28)
+	outer_margin.add_theme_constant_override("margin_bottom", 18)
 	add_child(outer_margin)
 
 	var row := HBoxContainer.new()
@@ -51,7 +51,8 @@ func _build_ui() -> void:
 
 	var panel := PanelContainer.new()
 	panel.name = "MenuPanel"
-	panel.custom_minimum_size = Vector2(460.0, 0.0)
+	panel.custom_minimum_size = Vector2(430.0, 0.0)
+	panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	panel.add_theme_stylebox_override("panel", VisualTheme.panel_style(0.93, 16))
 	row.add_child(panel)
 	var spacer := Control.new()
@@ -59,20 +60,20 @@ func _build_ui() -> void:
 	row.add_child(spacer)
 
 	var margin := MarginContainer.new()
-	margin.add_theme_constant_override("margin_left", 8)
-	margin.add_theme_constant_override("margin_top", 4)
-	margin.add_theme_constant_override("margin_right", 8)
-	margin.add_theme_constant_override("margin_bottom", 4)
+	margin.add_theme_constant_override("margin_left", 2)
+	margin.add_theme_constant_override("margin_top", 0)
+	margin.add_theme_constant_override("margin_right", 2)
+	margin.add_theme_constant_override("margin_bottom", 0)
 	panel.add_child(margin)
 
 	var content := VBoxContainer.new()
-	content.add_theme_constant_override("separation", 12)
+	content.add_theme_constant_override("separation", 6)
 	margin.add_child(content)
 
 	var title := Label.new()
 	title.text = "JACKAL SQUAD"
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	title.add_theme_font_size_override("font_size", 38)
+	title.add_theme_font_size_override("font_size", 30)
 	title.add_theme_color_override("font_color", VisualTheme.GOLD)
 	title.add_theme_color_override("font_shadow_color", Color(0, 0, 0, 0.8))
 	title.add_theme_constant_override("shadow_offset_x", 3)
@@ -82,7 +83,7 @@ func _build_ui() -> void:
 	var subtitle := Label.new()
 	subtitle.text = "COOPERATIVE STRIKE CAMPAIGN"
 	subtitle.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	subtitle.add_theme_font_size_override("font_size", 13)
+	subtitle.add_theme_font_size_override("font_size", 11)
 	subtitle.add_theme_color_override("font_color", Color(0.62, 0.78, 0.67))
 	content.add_child(subtitle)
 
@@ -93,7 +94,7 @@ func _build_ui() -> void:
 
 	var mission_label := Label.new()
 	mission_label.text = "STARTING MISSION  •  CAMPAIGN ADVANCES AFTER VICTORY"
-	mission_label.add_theme_font_size_override("font_size", 12)
+	mission_label.add_theme_font_size_override("font_size", 10)
 	mission_label.add_theme_color_override("font_color", VisualTheme.GOLD)
 	content.add_child(mission_label)
 
@@ -108,13 +109,14 @@ func _build_ui() -> void:
 
 	_briefing_label = Label.new()
 	_briefing_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_briefing_label.custom_minimum_size = Vector2(0, 58)
+	_briefing_label.custom_minimum_size = Vector2(0, 42)
+	_briefing_label.add_theme_font_size_override("font_size", 12)
 	_briefing_label.add_theme_color_override("font_color", Color(0.78, 0.84, 0.73))
 	content.add_child(_briefing_label)
 	_on_mission_selected(0)
 
 	_main_view = VBoxContainer.new()
-	_main_view.add_theme_constant_override("separation", 10)
+	_main_view.add_theme_constant_override("separation", 5)
 	content.add_child(_main_view)
 
 	var solo_button := _make_button("Start Solo Campaign")
@@ -128,11 +130,15 @@ func _build_ui() -> void:
 	_address_input = LineEdit.new()
 	_address_input.text = "127.0.0.1"
 	_address_input.placeholder_text = "Host IP address"
-	_main_view.add_child(_address_input)
-
+	var join_row := HBoxContainer.new()
+	join_row.add_theme_constant_override("separation", 6)
+	_address_input.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	join_row.add_child(_address_input)
 	var join_button := _make_button("Join Game")
 	join_button.pressed.connect(_on_join_pressed)
-	_main_view.add_child(join_button)
+	join_button.custom_minimum_size.x = 122.0
+	join_row.add_child(join_button)
+	_main_view.add_child(join_row)
 
 	var quit_button := _make_button("Quit")
 	quit_button.pressed.connect(func() -> void: get_tree().quit())
@@ -168,14 +174,15 @@ func _build_ui() -> void:
 
 	_status_label = Label.new()
 	_status_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_status_label.custom_minimum_size = Vector2(0.0, 42.0)
+	_status_label.custom_minimum_size = Vector2(0.0, 26.0)
+	_status_label.add_theme_font_size_override("font_size", 10)
 	_status_label.add_theme_color_override("font_color", Color(0.76, 0.82, 0.75))
 	content.add_child(_status_label)
 
 func _make_button(text: String) -> Button:
 	var button := Button.new()
 	button.text = text
-	button.custom_minimum_size = Vector2(0.0, 42.0)
+	button.custom_minimum_size = Vector2(0.0, 34.0)
 	VisualTheme.decorate_button(button, text in ["Start Solo Campaign", "Start Game"])
 	return button
 

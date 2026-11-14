@@ -33,6 +33,7 @@ func _run_tests() -> void:
 	var panel := menu.find_child("MenuPanel", true, false) as PanelContainer
 	_check(background != null and background.texture == key_art, "Main menu displays the generated campaign artwork")
 	_check(panel != null and panel.get_theme_stylebox("panel") is StyleBoxFlat, "Main menu uses the production panel theme")
+	_check(panel != null and panel.size.y <= 504.0, "Main menu fits completely inside the 960x540 base viewport")
 	var mission_options := menu.find_children("*", "OptionButton", true, false)
 	_check(mission_options.size() == 1 and (mission_options[0] as OptionButton).item_count == 3, "Styled menu exposes all three mission briefings")
 	menu.queue_free()
@@ -42,6 +43,9 @@ func _run_tests() -> void:
 	root.add_child(hud)
 	await process_frame
 	_check(hud.get_node_or_null("TopBackdrop") != null, "HUD has a readable tactical backdrop")
+	var backdrop := hud.get_node("TopBackdrop") as ColorRect
+	_check(backdrop.size.y <= 64.0, "Tactical HUD stays compact and does not obscure the battlefield")
+	_check(hud.get_node_or_null("ControlsHint") != null, "Control help uses a separate temporary hint")
 	var continue_button := hud.get_node("VictoryPanel/VBoxContainer/ContinueButton") as Button
 	_check(continue_button != null and continue_button.get_theme_stylebox("normal") is StyleBoxFlat, "Mission result panel has a styled campaign action")
 	hud.queue_free()

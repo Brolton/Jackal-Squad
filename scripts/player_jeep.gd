@@ -351,9 +351,9 @@ func _respawn() -> void:
 	health_changed.emit(health, maximum_health)
 
 func _draw() -> void:
-	draw_ellipse_shadow(Vector2(2.0, 5.0), Vector2(22.0, 31.0), Color(0.0, 0.0, 0.0, 0.34))
+	draw_ellipse_shadow(Vector2(2.0, 4.0), Vector2(19.0, 27.0), Color(0.0, 0.0, 0.0, 0.34))
 	var texture_tint := Color(1.0, 0.94, 0.76) if _hit_flash > 0.0 else Color.WHITE
-	draw_texture_rect(PLAYER_JEEP_TEXTURE, Rect2(-22.0, -33.0, 44.0, 66.0), false, texture_tint)
+	draw_texture_rect(PLAYER_JEEP_TEXTURE, Rect2(-19.0, -29.0, 38.0, 57.0), false, texture_tint)
 	var player_color: Color = PLAYER_COLORS[color_slot]
 	draw_line(Vector2(-15, 13), Vector2(-15, 25), player_color.lightened(0.18), 4.0)
 	draw_line(Vector2(15, 13), Vector2(15, 25), player_color.lightened(0.18), 4.0)
