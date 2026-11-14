@@ -8,8 +8,10 @@ func _initialize() -> void:
 func _run_tests() -> void:
 	var key_art: Texture2D = load("res://assets/art/campaign_key_art.png")
 	var ground_art: Texture2D = load("res://assets/art/jungle_ground.png")
+	var river_art: Texture2D = load("res://assets/art/river_water_v2.png")
 	_check(key_art != null and key_art.get_width() >= 1200 and key_art.get_width() > key_art.get_height(), "Campaign key art is a high-resolution landscape texture")
 	_check(ground_art != null and ground_art.get_width() >= 1000 and ground_art.get_height() >= 1000, "Battlefield ground art is a high-resolution tile texture")
+	_check(river_art != null and river_art.get_width() >= 1000 and river_art.get_height() >= 1000, "River uses a high-resolution painted water texture")
 	for sprite_path in [
 		"res://assets/art/player_jeep_v2.png",
 		"res://assets/art/enemy_infantry.png",
@@ -58,6 +60,10 @@ func _run_tests() -> void:
 	current_scene = game
 	await process_frame
 	var player: Node = game.get_node("Player_1")
+	var terrain_signature: Dictionary = game.call("terrain_render_signature")
+	_check(int(terrain_signature["road_layers"]) >= 5, "Roads use layered shoulders, surface, and wheel tracks")
+	_check(bool(terrain_signature["textured_water"]), "Rivers use painted water instead of a flat blue rectangle")
+	_check(int(terrain_signature["bank_layers"]) >= 3 and bool(terrain_signature["bridge_planks"]), "Rivers have irregular banks and detailed bridge decks")
 	var base_signature: Dictionary = player.call("weapon_visual_signature")
 	player.call("apply_weapon_upgrade", &"primary")
 	player.call("apply_weapon_upgrade", &"secondary")

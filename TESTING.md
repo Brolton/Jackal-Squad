@@ -173,3 +173,7 @@ The parser/import check, `test_controls_camera.gd`, and `test_visual_presentatio
 ## Presentation pass — vehicle combat
 
 The parser/import check, `test_milestone3.gd`, and `test_visual_presentation.gd` passed after separating infantry onto a non-blocking trample physics layer. The focused combat test places a soldier under the jeep and verifies that the authoritative ramming sensor defeats it, while heavy enemies remain solid. Player-color rectangles at the rear of the jeep were replaced by an inset body stripe, and upgrade pods now use compact bordered hardware shapes.
+
+## Presentation pass — battlefield rendering
+
+The parser/import check, `test_visual_presentation.gd`, and `test_level_layouts.gd` passed after replacing flat terrain primitives. The test verifies the high-resolution painted river texture and the rendering contract for layered road shoulders, surfaces, dual wheel tracks, irregular bank/foam layers, and planked bridge decks. All three campaign maps still instantiate with their expected bounds, encounters, rescues, cameras, extraction zones, and bases.

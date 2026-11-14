@@ -11,6 +11,7 @@ const RESCUE_BUILDING_SCENE := preload("res://scenes/rescue_building.tscn")
 const EXTRACTION_ZONE_SCENE := preload("res://scenes/extraction_zone.tscn")
 const FINAL_BASE_SCENE := preload("res://scenes/final_base.tscn")
 const GROUND_TEXTURE := preload("res://assets/art/jungle_ground.png")
+const RIVER_TEXTURE := preload("res://assets/art/river_water_v2.png")
 const MINE_HAZARD_SCENE := preload("res://scenes/mine_hazard.tscn")
 const PAUSE_MENU_SCENE := preload("res://scenes/pause_menu.tscn")
 const DECORATION_SCENE := preload("res://scenes/battlefield_decoration.tscn")
@@ -40,33 +41,94 @@ func _draw() -> void:
 		var band_height := map_size.y / 5.0
 		var band_color: Color = palette[0].lightened(0.025) if band % 2 == 0 else palette[0].darkened(0.025)
 		draw_rect(Rect2(0.0, band * band_height, map_size.x, band_height), band_color)
-	draw_texture_rect(GROUND_TEXTURE, Rect2(Vector2.ZERO, map_size), true, Color(0.72, 0.78, 0.66, 0.23))
-
-	var rng := RandomNumberGenerator.new()
-	rng.seed = int(_layout["seed"])
-	for index in range(int(map_size.y / 12.0)):
-		var patch := Vector2(
-			rng.randf_range(24.0, map_size.x - 24.0),
-			rng.randf_range(24.0, map_size.y - 24.0)
-		)
-		var tint: Color = palette[1] if index % 2 == 0 else palette[2]
-		tint.a = 0.40
-		draw_circle(patch, rng.randf_range(5.0, 15.0), tint)
+	draw_texture_rect(GROUND_TEXTURE, Rect2(Vector2.ZERO, map_size), true, Color(0.70, 0.76, 0.64, 0.40))
 
 	var road_width := float(_layout["road_width"])
 	var road_paths: Array = _layout.get("roads", [_layout["road"]])
 	for road_points: Array in road_paths:
-		var road := PackedVector2Array(road_points)
-		draw_polyline(road, Color(0.25, 0.22, 0.18), road_width + 16.0, true)
-		draw_polyline(road, Color(0.49, 0.41, 0.29), road_width, true)
-		draw_polyline(road, Color(0.34, 0.29, 0.23, 0.45), 5.0, true)
+		_draw_road(PackedVector2Array(road_points), road_width)
 	for water_rect: Rect2 in _layout["water"]:
-		draw_rect(water_rect, Color(0.08, 0.27, 0.36))
-		for ripple_x in range(int(water_rect.position.x + 24.0), int(water_rect.end.x), 96):
-			draw_line(Vector2(ripple_x, water_rect.position.y + 42.0), Vector2(ripple_x + 38.0, water_rect.position.y + 42.0), Color(0.30, 0.58, 0.64, 0.62), 2.0)
+		_draw_river(water_rect)
 	for bridge_rect: Rect2 in _layout["bridges"]:
-		draw_rect(bridge_rect, Color(0.39, 0.30, 0.21))
-		draw_rect(bridge_rect.grow(-12.0), Color(0.61, 0.49, 0.32))
+		_draw_bridge(bridge_rect)
+
+func _draw_road(points: PackedVector2Array, width: float) -> void:
+	if points.size() < 2:
+		return
+	draw_polyline(points, Color(0.08, 0.10, 0.07, 0.48), width + 34.0, true)
+	draw_polyline(points, Color(0.31, 0.27, 0.18), width + 22.0, true)
+	draw_polyline(points, Color(0.48, 0.39, 0.25), width + 10.0, true)
+	draw_polyline(points, Color(0.42, 0.34, 0.23), width, true)
+	for offset in [-width * 0.24, width * 0.24]:
+		var track := _offset_path(points, offset)
+		draw_polyline(track, Color(0.21, 0.18, 0.14, 0.42), 5.0, true)
+		draw_polyline(track, Color(0.64, 0.53, 0.34, 0.18), 1.5, true)
+	for index in range(1, points.size()):
+		var start := points[index - 1]
+		var finish := points[index]
+		var segment := finish - start
+		var steps := maxi(1, int(segment.length() / 72.0))
+		for step in range(steps):
+			var ratio := (float(step) + 0.5) / float(steps)
+			var center := start.lerp(finish, ratio)
+			var tangent := segment.normalized()
+			var normal := Vector2(-tangent.y, tangent.x)
+			var side := -1.0 if (index + step) % 2 == 0 else 1.0
+			draw_circle(center + normal * width * 0.36 * side, 3.0, Color(0.23, 0.19, 0.13, 0.42))
+
+func _offset_path(points: PackedVector2Array, distance: float) -> PackedVector2Array:
+	var result := PackedVector2Array()
+	for index in range(points.size()):
+		var tangent: Vector2
+		if index == 0:
+			tangent = points[1] - points[0]
+		elif index == points.size() - 1:
+			tangent = points[index] - points[index - 1]
+		else:
+			tangent = points[index + 1] - points[index - 1]
+		var normal := Vector2(-tangent.y, tangent.x).normalized()
+		result.append(points[index] + normal * distance)
+	return result
+
+func _draw_river(water_rect: Rect2) -> void:
+	draw_rect(water_rect.grow(18.0), Color(0.09, 0.12, 0.08, 0.82))
+	draw_rect(water_rect.grow(10.0), Color(0.35, 0.29, 0.18))
+	draw_texture_rect(RIVER_TEXTURE, water_rect, true, Color(0.66, 0.82, 0.78, 0.92))
+	var rng := RandomNumberGenerator.new()
+	rng.seed = int(_layout["seed"]) + int(water_rect.position.y)
+	for edge_y in [water_rect.position.y, water_rect.end.y]:
+		var bank := PackedVector2Array()
+		var foam := PackedVector2Array()
+		var direction := 1.0 if edge_y == water_rect.position.y else -1.0
+		for x in range(int(water_rect.position.x), int(water_rect.end.x) + 1, 36):
+			var wobble := rng.randf_range(-4.0, 4.0)
+			bank.append(Vector2(x, edge_y + wobble))
+			foam.append(Vector2(x, edge_y + direction * (7.0 + wobble * 0.35)))
+		draw_polyline(bank, Color(0.55, 0.43, 0.25), 10.0, true)
+		draw_polyline(bank, Color(0.15, 0.24, 0.13), 4.0, true)
+		draw_polyline(foam, Color(0.60, 0.88, 0.84, 0.58), 2.0, true)
+	for x in range(int(water_rect.position.x + 40.0), int(water_rect.end.x), 120):
+		var y := water_rect.position.y + water_rect.size.y * (0.28 if x % 240 == 0 else 0.68)
+		draw_arc(Vector2(x, y), 16.0, 0.15, 2.65, 12, Color(0.72, 0.94, 0.88, 0.42), 1.5)
+
+func _draw_bridge(bridge_rect: Rect2) -> void:
+	draw_rect(Rect2(bridge_rect.position + Vector2(5, 7), bridge_rect.size), Color(0.03, 0.04, 0.03, 0.52))
+	draw_rect(bridge_rect, Color(0.24, 0.17, 0.11))
+	var deck := bridge_rect.grow(-10.0)
+	draw_rect(deck, Color(0.54, 0.39, 0.22))
+	draw_line(Vector2(deck.position.x + 5, deck.position.y), Vector2(deck.position.x + 5, deck.end.y), Color(0.18, 0.12, 0.08), 5.0)
+	draw_line(Vector2(deck.end.x - 5, deck.position.y), Vector2(deck.end.x - 5, deck.end.y), Color(0.18, 0.12, 0.08), 5.0)
+	for y in range(int(deck.position.y + 12.0), int(deck.end.y), 18):
+		draw_line(Vector2(deck.position.x + 8, y), Vector2(deck.end.x - 8, y), Color(0.28, 0.20, 0.13, 0.85), 2.0)
+		draw_line(Vector2(deck.position.x + 10, y + 2), Vector2(deck.end.x - 10, y + 2), Color(0.69, 0.51, 0.28, 0.38), 1.0)
+
+func terrain_render_signature() -> Dictionary:
+	return {
+		"road_layers": 6,
+		"textured_water": RIVER_TEXTURE != null,
+		"bank_layers": 3,
+		"bridge_planks": true,
+	}
 
 func _create_map_collisions() -> void:
 	_add_wall("WestBoundary", Vector2(-16.0, map_size.y * 0.5), Vector2(32.0, map_size.y + 64.0))
