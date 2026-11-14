@@ -260,3 +260,18 @@ Final LAN-release validation on Godot `4.7.2.stable.official.ed1daf0bf`:
 - The packaged executable started headlessly and exited with code 0.
 - `builds\JackalSquad-LAN\JackalSquad.exe`: 122,923,920 bytes, SHA-256 `613290C006C6928CA089DF2983340AA41996F7FD132AB0F5EC2B7AAB3137BE5F`.
 - `builds\JackalSquad-LAN.zip`: 51,762,517 bytes, SHA-256 `A050639E0079E7CCD577160A7383CCECB619B519BDF0C0306D12437AA635F42D`.
+
+## Boss targeting and rescue character pass
+
+Boss targeting now filters the player roster by each turret's attack range before assigning targets. The boss test verifies that every turret focuses one nearby player when all other players are out of range, then splits targets again when a second player becomes available.
+
+The helicopter presentation contract verifies that its positive-X flight direction matches a positive-X cockpit offset and a negative-X tail offset. Rescued prisoners now use the generated transparent `rescue_prisoner.png` character asset, including an explicit unarmed visual signature. Their authoritative movement builds ordered routes through bridge rectangles for every intervening horizontal river; the focused simulation follows a prisoner across the lower river and asserts that every position inside the water is also inside a bridge.
+
+Final validation on Godot `4.7.2.stable.official.ed1daf0bf`:
+
+- All 12 gameplay, campaign, presentation, boss, and rescue suites passed.
+- Two-player ENet smoke passed on host and client with prisoner position/rotation replication.
+- Four-player ENet smoke passed on the host and all three clients.
+- The refreshed packaged executable started headlessly and exited with code 0.
+- `builds\JackalSquad-LAN\JackalSquad.exe`: 123,360,560 bytes, SHA-256 `254F02B1A7622E013D31BF3782105BFB6393D9E8D8ECB503B3020B4254CCDCF5`.
+- `builds\JackalSquad-LAN.zip`: 52,198,780 bytes, SHA-256 `BFECFDAE725FB8AB1C1AE02569831E3E389D1553DFB80ECB17076D99082D31FE`.

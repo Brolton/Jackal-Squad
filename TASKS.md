@@ -95,3 +95,11 @@ LAN/Tailscale sessions have not been tested yet.
 - [x] Return failed clients to the join screen with actionable firewall diagnostics.
 - [x] Add an administrator helper for UDP `24567` and discovery UDP `24568`.
 - [x] Verify discovery in separate processes and re-run the ENet multiplayer smoke test.
+
+## Boss targeting and rescue character pass
+
+- [x] Make all boss turrets focus the only player currently available in attack range.
+- [x] Turn the extraction helicopter so its cockpit faces its flight direction.
+- [x] Replace rescue placeholders with a transparent unarmed-prisoner character sprite.
+- [x] Route rescued prisoners across rivers using bridges and synchronize their facing.
+- [x] Run full regression, two-/four-player validation, and publish a refreshed LAN package.
