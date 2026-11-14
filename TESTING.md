@@ -229,3 +229,16 @@ The extraction zone is labeled as an optional rescue/repair bonus. Its former ab
 ## Boss pass — upgrade clarity
 
 Weapon pickups now have distinct arcade silhouettes and labels: gold multi-barrel `MG / RAPID FIRE` and cyan grenade/ring `BIGGER BOOM`. Collection triggers a large colored ring and `MG UP!` or `BLAST UP!` over the jeep plus type-specific pickup audio. Machine-gun levels change projectile color, core size, glow, and trail length. Grenade levels change projectile size, explosion palette, spark count, shockwave-ring count, radius, and use four distinct synthesized blast sounds. Presentation and Milestone 3 tests verify pickup semantics, jeep attachments, projectile/blast style propagation, level-specific sounds, and mechanical stat changes.
+
+## Boss and campaign pass — final validation
+
+Final validation completed on Godot `4.7.2.stable.official.ed1daf0bf`:
+
+- All 12 focused and regression suites passed, including the complete boss scaling matrix and a real mission-one-to-mission-two scene transition.
+- Two-player ENet loopback passed on the host and client, including turret destruction, core destruction, contribution totals, and boss-based mission completion.
+- Four-player ENet loopback passed on the host and all three clients with the two-turret mission-one boss.
+- The refreshed Windows release at `builds\JackalSquad.exe` is 122,912,544 bytes.
+- The exported executable started headlessly and exited successfully with code 0.
+- SHA-256: `57AEAF49AB41CEC3F9C9E20AEA341E3CA31F1D8C0780C840C118C507AC5A548F`.
+
+The campaign transition regression specifically verifies that a boss victory changes the active scene instead of only incrementing the mission index. Interactive windowed play and LAN/Tailscale connectivity still require real player sessions and are not represented as tested.

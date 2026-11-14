@@ -86,4 +86,4 @@ LAN/Tailscale sessions have not been tested yet.
 - [x] Replace the passive final building with scalable multi-turret bosses.
 - [x] Clarify the extraction helicopter and mission objective presentation.
 - [x] Redesign upgrade pickups and make every upgrade level visibly and audibly distinct.
-- [ ] Run regression, multiplayer validation, and publish a refreshed build.
+- [x] Run regression, multiplayer validation, and publish a refreshed build.
