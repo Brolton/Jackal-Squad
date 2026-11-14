@@ -1,6 +1,10 @@
 extends CharacterBody2D
 
 const PROJECTILE_SCENE := preload("res://scenes/projectile.tscn")
+const INFANTRY_TEXTURE := preload("res://assets/art/enemy_infantry.png")
+const TURRET_TEXTURE := preload("res://assets/art/enemy_turret.png")
+const TANK_TEXTURE := preload("res://assets/art/enemy_tank.png")
+const BOAT_TEXTURE := preload("res://assets/art/enemy_boat.png")
 
 enum EnemyType { INFANTRY, TURRET, TANK, BOAT }
 
@@ -183,38 +187,13 @@ func _fire_at(direction: Vector2) -> void:
 func _draw() -> void:
 	if _hit_flash > 0.0:
 		draw_circle(Vector2.ZERO, 25.0, Color(1.0, 0.84, 0.45, 0.38))
-	draw_circle(Vector2(4.0, 6.0), 14.0 if enemy_type != EnemyType.TANK else 22.0, Color(0.0, 0.0, 0.0, 0.28))
+	var texture_tint := Color(1.0, 0.82, 0.62) if _hit_flash > 0.0 else Color.WHITE
 	match enemy_type:
 		EnemyType.TURRET:
-			draw_circle(Vector2(0.0, 2.0), 17.0, Color(0.20, 0.24, 0.20))
-			draw_circle(Vector2.ZERO, 12.0, Color(0.43, 0.49, 0.35))
-			draw_rect(Rect2(-4.0, -19.0, 8.0, 19.0), Color(0.22, 0.27, 0.21))
-			draw_circle(Vector2(-4.0, -4.0), 3.0, Color(0.67, 0.61, 0.35))
+			draw_texture_rect(TURRET_TEXTURE, Rect2(-28, -34, 56, 62), false, texture_tint)
 		EnemyType.TANK:
-			draw_rect(Rect2(-18.0, -15.0, 36.0, 30.0), Color(0.18, 0.22, 0.18))
-			draw_rect(Rect2(-14.0, -12.0, 28.0, 24.0), Color(0.45, 0.43, 0.29))
-			draw_circle(Vector2.ZERO, 8.0, Color(0.33, 0.36, 0.27))
-			draw_rect(Rect2(-3.0, -25.0, 6.0, 25.0), Color(0.19, 0.22, 0.18))
-			draw_line(Vector2(-12, -9), Vector2(10, -9), Color(0.65, 0.62, 0.40), 2.0)
-			draw_circle(Vector2.ZERO, 3.0, Color(0.73, 0.65, 0.35))
+			draw_texture_rect(TANK_TEXTURE, Rect2(-27, -40, 54, 77), false, texture_tint)
 		EnemyType.BOAT:
-			draw_colored_polygon(
-				PackedVector2Array([
-					Vector2(-21.0, -10.0),
-					Vector2(21.0, -10.0),
-					Vector2(15.0, 13.0),
-					Vector2(-15.0, 13.0),
-				]),
-				Color(0.37, 0.34, 0.26)
-			)
-			draw_rect(Rect2(-8.0, -7.0, 16.0, 12.0), Color(0.52, 0.49, 0.36))
-			draw_rect(Rect2(-2.0, -20.0, 4.0, 18.0), Color(0.19, 0.23, 0.18))
-			draw_line(Vector2(-16, 8), Vector2(16, 8), Color(0.67, 0.60, 0.36), 2.0)
-			draw_circle(Vector2(0, -2), 3.0, Color(0.82, 0.69, 0.31))
+			draw_texture_rect(BOAT_TEXTURE, Rect2(-25, -42, 50, 84), false, texture_tint)
 		_:
-			draw_circle(Vector2(0.0, 2.0), 11.0, Color(0.50, 0.39, 0.20))
-			draw_circle(Vector2.ZERO, 7.0, Color(0.66, 0.69, 0.45))
-			draw_rect(Rect2(-5.0, -9.0, 10.0, 4.0), Color(0.25, 0.32, 0.21))
-			draw_line(Vector2(0.0, 1.0), Vector2(0.0, -13.0), Color(0.20, 0.22, 0.18), 2.0)
-			draw_circle(Vector2(0.0, -3.0), 2.0, Color(0.88, 0.79, 0.58))
-			draw_line(Vector2(-5, 6), Vector2(5, 6), Color(0.28, 0.22, 0.12), 2.0)
+			draw_texture_rect(INFANTRY_TEXTURE, Rect2(-16, -25, 32, 47), false, texture_tint)

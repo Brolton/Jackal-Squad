@@ -142,3 +142,7 @@ Interactive windowed QA could not be automated because Windows UI control did no
 ## Player feedback pass — camera and controls
 
 `test_controls_camera.gd` verifies fixed `canvas_items` stretching with `keep` aspect, the tighter 1.3× gameplay camera, J/K bindings, both mouse alternatives, and removal of the Space/Ctrl requirement. The Milestone 1 gameplay and campaign suites passed again after the input and viewport changes.
+
+## Player feedback pass — production unit art
+
+`test_visual_presentation.gd` now verifies five high-resolution gameplay sprite sources, real alpha transparency, menu/HUD styling, and changing weapon-visual signatures. Primary upgrades add visible barrels and cyan indicators; grenade upgrades add side-mounted rocket pods and orange indicators. The focused presentation and Milestone 3 combat/upgrade suites passed after the sprite replacement.

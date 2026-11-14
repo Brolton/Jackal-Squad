@@ -6,6 +6,7 @@ signal passenger_count_changed(current: int, maximum: int)
 
 const PROJECTILE_SCENE := preload("res://scenes/projectile.tscn")
 const GRENADE_SCENE := preload("res://scenes/grenade.tscn")
+const PLAYER_JEEP_TEXTURE := preload("res://assets/art/player_jeep_v2.png")
 const PLAYER_COLORS := [
 	Color(0.78, 0.20, 0.17),
 	Color(0.20, 0.43, 0.82),
@@ -248,7 +249,16 @@ func apply_weapon_upgrade(upgrade_type: StringName) -> bool:
 		_:
 			return false
 	weapon_upgrades_changed.emit(primary_upgrade_level, secondary_upgrade_level)
+	queue_redraw()
 	return true
+
+func weapon_visual_signature() -> Dictionary:
+	return {
+		"barrels": 1 + primary_upgrade_level,
+		"rocket_pods": secondary_upgrade_level,
+		"primary_pips": primary_upgrade_level,
+		"secondary_pips": secondary_upgrade_level,
+	}
 
 func try_add_passenger() -> bool:
 	if NetworkSession.is_networked and not multiplayer.is_server():
@@ -341,32 +351,34 @@ func _respawn() -> void:
 	health_changed.emit(health, maximum_health)
 
 func _draw() -> void:
-	draw_ellipse_shadow(Vector2(0.0, 5.0), Vector2(19.0, 25.0), Color(0.0, 0.0, 0.0, 0.32))
-	var wheel := Color(0.09, 0.10, 0.09)
-	var body: Color = Color(1.0, 0.92, 0.72) if _hit_flash > 0.0 else PLAYER_COLORS[color_slot]
-	draw_rect(Rect2(-16.0, -13.0, 6.0, 13.0), wheel)
-	draw_rect(Rect2(10.0, -13.0, 6.0, 13.0), wheel)
-	draw_rect(Rect2(-16.0, 5.0, 6.0, 13.0), wheel)
-	draw_rect(Rect2(10.0, 5.0, 6.0, 13.0), wheel)
-	draw_colored_polygon(
-		PackedVector2Array([
-			Vector2(-10.0, 17.0),
-			Vector2(-13.0, -8.0),
-			Vector2(-7.0, -18.0),
-			Vector2(7.0, -18.0),
-			Vector2(13.0, -8.0),
-			Vector2(10.0, 17.0),
-		]),
-		body
-	)
-	draw_colored_polygon(PackedVector2Array([Vector2(-7, -16), Vector2(7, -16), Vector2(10, -7), Vector2(-10, -7)]), body.lightened(0.22))
-	draw_rect(Rect2(-7.0, -7.0, 14.0, 11.0), Color(0.12, 0.30, 0.34))
-	draw_line(Vector2(-6, -5), Vector2(5, -5), Color(0.67, 0.88, 0.86, 0.55), 2.0)
-	draw_line(Vector2(-9.0, 7.0), Vector2(9.0, 7.0), Color(0.83, 0.65, 0.35), 2.0)
-	draw_circle(Vector2.ZERO, 3.0, Color(0.86, 0.76, 0.52))
-	draw_circle(Vector2(-7, -16), 2.5, Color(1.0, 0.88, 0.55, 0.95))
-	draw_circle(Vector2(7, -16), 2.5, Color(1.0, 0.88, 0.55, 0.95))
-	draw_line(Vector2(-10, 15), Vector2(10, 15), body.darkened(0.35), 2.0)
+	draw_ellipse_shadow(Vector2(2.0, 5.0), Vector2(22.0, 31.0), Color(0.0, 0.0, 0.0, 0.34))
+	var texture_tint := Color(1.0, 0.94, 0.76) if _hit_flash > 0.0 else Color.WHITE
+	draw_texture_rect(PLAYER_JEEP_TEXTURE, Rect2(-22.0, -33.0, 44.0, 66.0), false, texture_tint)
+	var player_color: Color = PLAYER_COLORS[color_slot]
+	draw_line(Vector2(-15, 13), Vector2(-15, 25), player_color.lightened(0.18), 4.0)
+	draw_line(Vector2(15, 13), Vector2(15, 25), player_color.lightened(0.18), 4.0)
+	draw_line(Vector2(-13, 27), Vector2(13, 27), player_color, 3.0)
+	_draw_weapon_upgrades()
+
+func _draw_weapon_upgrades() -> void:
+	var steel := Color(0.23, 0.27, 0.27)
+	var hot := Color(1.0, 0.70, 0.22)
+	var barrel_count := 1 + primary_upgrade_level
+	for index in range(barrel_count):
+		var barrel_x := (float(index) - float(barrel_count - 1) * 0.5) * 4.5
+		draw_line(Vector2(barrel_x, -8), Vector2(barrel_x, -34), steel, 3.0)
+		draw_circle(Vector2(barrel_x, -34), 1.8, hot if primary_upgrade_level >= 2 else steel.lightened(0.3))
+	for pod_index in range(secondary_upgrade_level):
+		var side := -1.0 if pod_index % 2 == 0 else 1.0
+		var row := int(pod_index / 2)
+		var pod_center := Vector2(side * 17.0, -3.0 + row * 9.0)
+		draw_rect(Rect2(pod_center - Vector2(4, 7), Vector2(8, 14)), Color(0.18, 0.22, 0.19))
+		for tube_y in [-4.0, 0.0, 4.0]:
+			draw_circle(pod_center + Vector2(0, tube_y), 1.6, Color(0.82, 0.38, 0.16))
+	for pip in range(primary_upgrade_level):
+		draw_circle(Vector2(-8 + pip * 4, 24), 1.5, Color(0.26, 0.88, 0.98))
+	for pip in range(secondary_upgrade_level):
+		draw_circle(Vector2(8 - pip * 4, 24), 1.5, Color(1.0, 0.52, 0.18))
 
 func draw_ellipse_shadow(center: Vector2, size: Vector2, color: Color) -> void:
 	var points := PackedVector2Array()
