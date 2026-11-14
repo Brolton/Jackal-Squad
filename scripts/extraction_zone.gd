@@ -84,19 +84,19 @@ func _draw_helicopter(center: Vector2) -> void:
 		center + Vector2(-27, 11), center + Vector2(-37, 0),
 	]), body_color)
 	draw_colored_polygon(PackedVector2Array([
-		center + Vector2(-23, -9), center + Vector2(-5, -11),
-		center + Vector2(-9, 2), center + Vector2(-30, 3),
+		center + Vector2(23, -9), center + Vector2(5, -11),
+		center + Vector2(9, 2), center + Vector2(30, 3),
 	]), Color(0.20, 0.37, 0.40))
-	draw_line(center + Vector2(26, 0), center + Vector2(65, 3), body_color, 7.0)
+	draw_line(center + Vector2(-26, 0), center + Vector2(-65, 3), body_color, 7.0)
 	draw_colored_polygon(PackedVector2Array([
-		center + Vector2(57, 2), center + Vector2(72, -14), center + Vector2(69, 5),
+		center + Vector2(-57, 2), center + Vector2(-72, -14), center + Vector2(-69, 5),
 	]), highlight)
 	draw_circle(center, 7.0, Color(0.18, 0.21, 0.16))
 	var rotor_direction := Vector2(cos(_rotor_phase), sin(_rotor_phase) * 0.22)
 	draw_line(center - rotor_direction * 49.0, center + rotor_direction * 49.0, Color(0.12, 0.15, 0.13), 3.0)
-	draw_circle(center + Vector2(68, 3), 9.0, Color(0.10, 0.13, 0.12), false, 2.0)
-	draw_line(center + Vector2(68, -6), center + Vector2(68, 12), Color(0.15, 0.18, 0.15), 2.0)
-	draw_line(center + Vector2(59, 3), center + Vector2(77, 3), Color(0.15, 0.18, 0.15), 2.0)
+	draw_circle(center + Vector2(-68, 3), 9.0, Color(0.10, 0.13, 0.12), false, 2.0)
+	draw_line(center + Vector2(-68, -6), center + Vector2(-68, 12), Color(0.15, 0.18, 0.15), 2.0)
+	draw_line(center + Vector2(-77, 3), center + Vector2(-59, 3), Color(0.15, 0.18, 0.15), 2.0)
 	draw_line(center + Vector2(-20, 14), center + Vector2(-13, 20), Color(0.13, 0.16, 0.13), 3.0)
 	draw_line(center + Vector2(17, 14), center + Vector2(24, 20), Color(0.13, 0.16, 0.13), 3.0)
 
@@ -106,3 +106,10 @@ func draw_ellipse_shadow(center: Vector2, size: Vector2, color: Color) -> void:
 		var angle := TAU * float(index) / 20.0
 		points.append(center + Vector2(cos(angle) * size.x, sin(angle) * size.y))
 	draw_colored_polygon(points, color)
+
+func helicopter_visual_signature() -> Dictionary:
+	return {
+		"travel_direction_x": signf(helicopter_speed),
+		"cockpit_offset_x": 18.0,
+		"tail_offset_x": -68.0,
+	}

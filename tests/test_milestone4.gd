@@ -20,6 +20,13 @@ func _run_tests() -> void:
 	session.set("evacuated_passengers", 0)
 	session.set("rescued_passengers", 0)
 	var extraction_zone: Node2D = game.get_node("ExtractionZone")
+	var helicopter_signature: Dictionary = extraction_zone.call("helicopter_visual_signature")
+	_check(
+		float(helicopter_signature["travel_direction_x"]) > 0.0
+		and float(helicopter_signature["cockpit_offset_x"]) > 0.0
+		and float(helicopter_signature["tail_offset_x"]) < 0.0,
+		"The rescue helicopter flies nose-first instead of tail-first"
+	)
 	extraction_zone.set("_helicopter_timer", 0.0)
 	extraction_zone.call("_physics_process", 0.1)
 	_check(not bool(extraction_zone.get("_helicopter_active")), "The rescue helicopter does not fly when nobody is waiting")
