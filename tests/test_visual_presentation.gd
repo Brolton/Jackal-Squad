@@ -18,6 +18,7 @@ func _run_tests() -> void:
 		"res://assets/art/enemy_turret.png",
 		"res://assets/art/enemy_tank.png",
 		"res://assets/art/enemy_boat.png",
+		"res://assets/art/rescue_prisoner.png",
 	]:
 		var sprite_texture: Texture2D = load(sprite_path)
 		_check(

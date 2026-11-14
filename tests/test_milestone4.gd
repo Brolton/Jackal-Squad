@@ -33,11 +33,47 @@ func _run_tests() -> void:
 	var player: Node = game.get_node("Player_1")
 	var building: Node2D = game.get_node("RescueBuilding01")
 	var building_position := building.global_position
+	var route: PackedVector2Array = game.call("passenger_ground_path", building_position, player.global_position)
+	var route_uses_bridge := false
+	for point in route:
+		for bridge_variant in LevelLayouts.get_layout(0)["bridges"]:
+			var bridge: Rect2 = bridge_variant
+			if bridge.has_point(point):
+				route_uses_bridge = true
+	_check(route.size() >= 3 and route_uses_bridge, "Rescued prisoners route across rivers by bridge")
 	building.call("take_damage", 4)
 	_check(
 		get_nodes_in_group("rescue_passengers").size() == 3,
 		"Destroying a rescue building releases three passengers"
 	)
+	var passenger: Node = get_nodes_in_group("rescue_passengers")[0]
+	var passenger_signature: Dictionary = passenger.call("passenger_visual_signature")
+	_check(
+		int(passenger_signature["texture_width"]) >= 1000
+		and bool(passenger_signature["has_alpha"])
+		and not bool(passenger_signature["armed"])
+		and bool(passenger_signature["uses_ground_path"]),
+		"Rescued prisoners use a transparent unarmed character sprite and ground navigation"
+	)
+	var lower_river: Rect2 = LevelLayouts.get_layout(0)["water"][0]
+	var crossed_lower_river := false
+	var entered_water_away_from_bridge := false
+	for _step in range(260):
+		if passenger.is_queued_for_deletion():
+			break
+		passenger.call("_physics_process", 0.1)
+		var passenger_position: Vector2 = passenger.global_position
+		if passenger_position.y > lower_river.end.y:
+			crossed_lower_river = true
+		if lower_river.has_point(passenger_position):
+			var on_bridge := false
+			for bridge_variant in LevelLayouts.get_layout(0)["bridges"]:
+				var bridge: Rect2 = bridge_variant
+				if bridge.has_point(passenger_position):
+					on_bridge = true
+			if not on_bridge:
+				entered_water_away_from_bridge = true
+	_check(crossed_lower_river and not entered_water_away_from_bridge, "A rescued prisoner physically crosses the river only on a bridge")
 	player.global_position = building_position
 	for _frame in range(10):
 		await physics_frame

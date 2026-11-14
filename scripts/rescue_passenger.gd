@@ -2,11 +2,18 @@ extends Node2D
 
 const PICKUP_DISTANCE := 20.0
 const MOVE_SPEED := 76.0
+const PATH_REFRESH_INTERVAL := 0.35
+const WAYPOINT_DISTANCE := 7.0
+const PASSENGER_TEXTURE := preload("res://assets/art/rescue_prisoner.png")
 
 var passenger_id := ""
 var _sync_timer := 0.0
 var _target_position := Vector2.ZERO
 var _has_authoritative_state := false
+var _ground_path := PackedVector2Array()
+var _path_index := 0
+var _path_refresh_timer := 0.0
+var _last_target_position := Vector2(INF, INF)
 
 func configure(identifier: String, spawn_position: Vector2) -> void:
 	passenger_id = identifier
@@ -34,23 +41,48 @@ func _physics_process(delta: float) -> void:
 				queue_free()
 				return
 		else:
-			global_position = global_position.move_toward(
-				target.global_position,
-				MOVE_SPEED * delta
-			)
+			_follow_ground_path(target, delta)
 
 	_sync_timer -= delta
 	if _sync_timer <= 0.0:
 		_sync_timer = 0.05
 		if NetworkSession.is_networked and NetworkSession.is_host:
 			for peer_id in NetworkSession.connected_peer_ids():
-				rpc_id(peer_id, "rpc_receive_position", global_position)
+				rpc_id(peer_id, "rpc_receive_position", global_position, rotation)
+
+func _follow_ground_path(target: Node2D, delta: float) -> void:
+	_path_refresh_timer -= delta
+	if (
+		_path_refresh_timer <= 0.0
+		or _ground_path.is_empty()
+		or _last_target_position.distance_to(target.global_position) > 48.0
+	):
+		_path_refresh_timer = PATH_REFRESH_INTERVAL
+		_last_target_position = target.global_position
+		var scene := get_tree().current_scene
+		if scene != null and scene.has_method("passenger_ground_path"):
+			_ground_path = scene.call("passenger_ground_path", global_position, target.global_position)
+		else:
+			_ground_path = PackedVector2Array([target.global_position])
+		_path_index = 0
+	if _ground_path.is_empty():
+		return
+	while _path_index < _ground_path.size() - 1 and global_position.distance_to(_ground_path[_path_index]) <= WAYPOINT_DISTANCE:
+		_path_index += 1
+	var destination := _ground_path[mini(_path_index, _ground_path.size() - 1)]
+	var movement := destination - global_position
+	if movement.length_squared() <= 0.01:
+		return
+	var direction := movement.normalized()
+	rotation = lerp_angle(rotation, direction.angle() + PI * 0.5, minf(1.0, delta * 10.0))
+	global_position = global_position.move_toward(destination, MOVE_SPEED * delta)
 
 @rpc("authority", "call_remote", "unreliable_ordered")
-func rpc_receive_position(world_position: Vector2) -> void:
+func rpc_receive_position(world_position: Vector2, facing_rotation: float) -> void:
 	if not NetworkSession.is_networked or multiplayer.is_server():
 		return
 	_target_position = world_position
+	rotation = facing_rotation
 	_has_authoritative_state = true
 
 @rpc("authority", "call_remote", "reliable")
@@ -75,8 +107,14 @@ func _nearest_player_with_space() -> Node2D:
 	return nearest
 
 func _draw() -> void:
-	draw_circle(Vector2(0.0, 7.0), 5.0, Color(0.18, 0.17, 0.14))
-	draw_rect(Rect2(-4.0, -4.0, 8.0, 11.0), Color(0.79, 0.73, 0.53))
-	draw_circle(Vector2(0.0, -7.0), 4.0, Color(0.72, 0.54, 0.38))
-	draw_line(Vector2(-4.0, 0.0), Vector2(-8.0, 6.0), Color(0.73, 0.67, 0.48), 2.0)
-	draw_line(Vector2(4.0, 0.0), Vector2(8.0, 6.0), Color(0.73, 0.67, 0.48), 2.0)
+	draw_circle(Vector2(2.0, 6.0), 12.0, Color(0.0, 0.0, 0.0, 0.22))
+	draw_texture_rect(PASSENGER_TEXTURE, Rect2(-14.0, -22.0, 28.0, 43.0), false)
+
+func passenger_visual_signature() -> Dictionary:
+	return {
+		"texture_width": PASSENGER_TEXTURE.get_width(),
+		"texture_height": PASSENGER_TEXTURE.get_height(),
+		"has_alpha": PASSENGER_TEXTURE.get_image().detect_alpha() != Image.ALPHA_NONE,
+		"armed": false,
+		"uses_ground_path": true,
+	}

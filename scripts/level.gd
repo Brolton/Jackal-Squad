@@ -138,6 +138,60 @@ func terrain_render_signature() -> Dictionary:
 		"bridge_planks": true,
 	}
 
+func passenger_ground_path(from_position: Vector2, target_position: Vector2) -> PackedVector2Array:
+	var path := PackedVector2Array()
+	var water_rects: Array = _layout.get("water", []).duplicate()
+	var travelling_down := target_position.y > from_position.y
+	water_rects.sort_custom(func(left: Rect2, right: Rect2) -> bool:
+		return left.position.y < right.position.y if travelling_down else left.position.y > right.position.y
+	)
+	var current_position := from_position
+	for water_variant in water_rects:
+		var water: Rect2 = water_variant
+		var current_side := _water_side(current_position, water)
+		var target_side := _water_side(target_position, water)
+		if current_side == 0 or current_side == target_side:
+			continue
+		var bridge := _best_bridge_for_crossing(water, current_position, target_position)
+		if bridge.size == Vector2.ZERO:
+			continue
+		var crossing_x := bridge.get_center().x
+		var near_y := water.position.y - 14.0 if current_side < 0 else water.end.y + 14.0
+		var far_y := water.end.y + 14.0 if current_side < 0 else water.position.y - 14.0
+		path.append(Vector2(crossing_x, near_y))
+		if target_side == 0 and bridge.has_point(target_position):
+			path.append(target_position)
+			current_position = target_position
+			break
+		path.append(Vector2(crossing_x, far_y))
+		current_position = Vector2(crossing_x, far_y)
+	if path.is_empty() or path[-1].distance_to(target_position) > 1.0:
+		path.append(target_position)
+	return path
+
+func _water_side(point: Vector2, water: Rect2) -> int:
+	if point.y < water.position.y:
+		return -1
+	if point.y > water.end.y:
+		return 1
+	return 0
+
+func _best_bridge_for_crossing(water: Rect2, from_position: Vector2, target_position: Vector2) -> Rect2:
+	var best_bridge := Rect2()
+	var best_score := INF
+	for bridge_variant in _layout.get("bridges", []):
+		var bridge: Rect2 = bridge_variant
+		if bridge.end.y < water.position.y or bridge.position.y > water.end.y:
+			continue
+		if bridge.has_point(target_position):
+			return bridge
+		var center := bridge.get_center()
+		var score := from_position.distance_to(center) + center.distance_to(target_position)
+		if score < best_score:
+			best_score = score
+			best_bridge = bridge
+	return best_bridge
+
 func _create_map_collisions() -> void:
 	_add_wall("WestBoundary", Vector2(-16.0, map_size.y * 0.5), Vector2(32.0, map_size.y + 64.0))
 	_add_wall("EastBoundary", Vector2(map_size.x + 16.0, map_size.y * 0.5), Vector2(32.0, map_size.y + 64.0))
