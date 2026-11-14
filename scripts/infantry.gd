@@ -9,10 +9,10 @@ const BOAT_TEXTURE := preload("res://assets/art/enemy_boat.png")
 enum EnemyType { INFANTRY, TURRET, TANK, BOAT }
 
 @export var move_speed := 48.0
-@export var attack_range := 430.0
+@export var attack_range := 1050.0
 @export var maximum_health := 1
 @export var fire_interval := 1.55
-@export var detection_range := 520.0
+@export var detection_range := 1050.0
 
 var enemy_type: EnemyType = EnemyType.INFANTRY
 var health := 2
@@ -30,6 +30,10 @@ var _walk_phase := 0.0
 var _walk_strength := 0.0
 var _visual_moving := false
 var _infantry_region := Rect2()
+var _boat_patrol_bounds := Rect2()
+var _boat_patrol_target := Vector2.ZERO
+var _boat_patrol_timer := 0.0
+var _boat_rng := RandomNumberGenerator.new()
 
 @onready var _collision_shape: CollisionShape2D = $CollisionShape2D
 
@@ -38,40 +42,46 @@ func configure_enemy(kind: int) -> void:
 	match enemy_type:
 		EnemyType.TURRET:
 			move_speed = 0.0
-			attack_range = 620.0
+			attack_range = 1050.0
 			maximum_health = 4
 			fire_interval = 1.2
 			preferred_range = 0.0
 			projectile_damage = 1
 			projectile_speed = 350.0
-			detection_range = 620.0
+			detection_range = 1050.0
 		EnemyType.TANK:
 			move_speed = 24.0
-			attack_range = 560.0
+			attack_range = 1050.0
 			maximum_health = 6
 			fire_interval = 1.8
 			preferred_range = 175.0
 			projectile_damage = 2
 			projectile_speed = 280.0
-			detection_range = 610.0
+			detection_range = 1050.0
 		EnemyType.BOAT:
-			move_speed = 0.0
-			attack_range = 700.0
+			move_speed = 42.0
+			attack_range = 1050.0
 			maximum_health = 4
 			fire_interval = 1.6
 			preferred_range = 0.0
 			projectile_damage = 2
 			projectile_speed = 330.0
-			detection_range = 700.0
+			detection_range = 1050.0
 		_:
 			move_speed = 48.0
-			attack_range = 430.0
+			attack_range = 1050.0
 			maximum_health = 1
 			fire_interval = 1.55
 			preferred_range = 92.0
 			projectile_damage = 1
 			projectile_speed = 300.0
-			detection_range = 520.0
+			detection_range = 1050.0
+
+func configure_boat_patrol(bounds: Rect2) -> void:
+	if bounds.size.x <= 0.0 or bounds.size.y <= 0.0:
+		push_error("Boat patrol bounds must have positive dimensions.")
+		return
+	_boat_patrol_bounds = bounds
 
 func apply_coop_scaling(player_count: int) -> void:
 	coop_player_count = clampi(player_count, 1, 4)
@@ -91,9 +101,12 @@ func _ready() -> void:
 		_infantry_region = Rect2(INFANTRY_TEXTURE.get_image().get_used_rect())
 	else:
 		collision_layer = 4
-		collision_mask = 35
+		collision_mask = 3 if enemy_type == EnemyType.BOAT else 35
 		(_collision_shape.shape as CircleShape2D).radius = 24.0 if enemy_type != EnemyType.TURRET else 21.0
 	health = maximum_health
+	if enemy_type == EnemyType.BOAT:
+		_boat_rng.seed = int(global_position.x * 31.0 + global_position.y * 17.0)
+		_boat_patrol_target = global_position
 	add_to_group("enemies")
 
 func can_be_trampled() -> bool:
@@ -119,7 +132,10 @@ func _physics_process(delta: float) -> void:
 	_fire_cooldown = maxf(0.0, _fire_cooldown - delta)
 	var target := _nearest_player()
 	if target == null:
-		velocity = Vector2.ZERO
+		if enemy_type == EnemyType.BOAT and _boat_patrol_bounds.size != Vector2.ZERO:
+			_advance_boat_patrol(delta)
+		else:
+			velocity = Vector2.ZERO
 		_update_walk_animation(false, delta)
 		_broadcast_state(delta)
 		return
@@ -131,6 +147,7 @@ func _physics_process(delta: float) -> void:
 	else:
 		velocity = Vector2.ZERO
 	move_and_slide()
+	_clamp_boat_to_patrol_bounds()
 	_update_walk_animation(velocity.length_squared() > 1.0, delta)
 
 	if distance > 0.0:
@@ -138,6 +155,29 @@ func _physics_process(delta: float) -> void:
 	if distance <= attack_range and _fire_cooldown == 0.0:
 		_fire_at(offset.normalized())
 	_broadcast_state(delta)
+
+func _advance_boat_patrol(delta: float) -> void:
+	_boat_patrol_timer -= delta
+	if _boat_patrol_timer <= 0.0 or global_position.distance_to(_boat_patrol_target) < 32.0:
+		_boat_patrol_target = Vector2(
+			_boat_rng.randf_range(_boat_patrol_bounds.position.x, _boat_patrol_bounds.end.x),
+			_boat_rng.randf_range(_boat_patrol_bounds.position.y, _boat_patrol_bounds.end.y)
+		)
+		_boat_patrol_timer = _boat_rng.randf_range(1.5, 3.5)
+	var direction := global_position.direction_to(_boat_patrol_target)
+	velocity = direction * move_speed
+	if direction.length_squared() > 0.0:
+		rotation = direction.angle() + PI * 0.5
+	move_and_slide()
+	_clamp_boat_to_patrol_bounds()
+
+func _clamp_boat_to_patrol_bounds() -> void:
+	if enemy_type != EnemyType.BOAT or _boat_patrol_bounds.size == Vector2.ZERO:
+		return
+	global_position = Vector2(
+		clampf(global_position.x, _boat_patrol_bounds.position.x, _boat_patrol_bounds.end.x),
+		clampf(global_position.y, _boat_patrol_bounds.position.y, _boat_patrol_bounds.end.y)
+	)
 
 func take_damage(amount: int, attacker_peer_id: int = 0) -> void:
 	if amount <= 0 or not is_inside_tree():

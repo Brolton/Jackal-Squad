@@ -18,6 +18,7 @@ func _run_tests() -> void:
 	_check(get_nodes_in_group("enemies").size() >= 4, "The battlefield contains infantry enemies")
 
 	var first_enemy: CharacterBody2D = get_nodes_in_group("enemies")[0]
+	first_enemy.global_position = player.global_position + Vector2(0.0, -180.0)
 	var distance_before := player.global_position.distance_to(first_enemy.global_position)
 	for _frame in range(18):
 		await physics_frame
@@ -33,22 +34,23 @@ func _run_tests() -> void:
 	Input.action_release("move_up")
 	_check(player.global_position.y < initial_position.y, "WASD movement accelerates the jeep north")
 
-	player.global_position = Vector2(120.0, 3150.0)
+	var lower_river: Rect2 = LevelLayouts.get_layout(0)["water"][0]
+	player.global_position = Vector2(120.0, lower_river.end.y + 190.0)
 	player.velocity = Vector2.ZERO
 	Input.action_press("move_up")
 	for _frame in range(90):
 		await physics_frame
 	Input.action_release("move_up")
-	_check(player.global_position.y > 3040.0, "The lower river blocks jeeps away from its two bridges")
+	_check(player.global_position.y > lower_river.end.y, "The lower river blocks jeeps away from its two bridges")
 
 	var river_shot: Area2D = load("res://scenes/projectile.tscn").instantiate()
 	# Use an open bank segment so the check measures the river layer, not a boat hit.
-	river_shot.configure(Vector2(850.0, 3070.0), Vector2.UP, player, false, 1, 700.0)
+	river_shot.configure(Vector2(650.0, lower_river.end.y + 20.0), Vector2.UP, player, false, 1, 700.0)
 	game.add_child(river_shot)
 	for _frame in range(25):
 		await physics_frame
 	_check(
-		is_instance_valid(river_shot) and river_shot.global_position.y < 2840.0,
+		is_instance_valid(river_shot) and river_shot.global_position.y < lower_river.position.y,
 		"Projectiles fly across river barriers while jeeps remain bridge-bound"
 	)
 

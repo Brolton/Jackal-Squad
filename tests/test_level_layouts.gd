@@ -21,6 +21,10 @@ func _run_tests() -> void:
 
 		_check(game.get("map_size") == expected_sizes[level_index], "Mission %d is wider and seven times longer" % (level_index + 1))
 		_check(layout["terrain_theme"] == expected_themes[level_index], "Mission %d has its own terrain style" % (level_index + 1))
+		_check(
+			_max_flank_gap(layout, true) <= 1400.0 and _max_flank_gap(layout, false) <= 1400.0,
+			"Mission %d has continuous enemy coverage along both map edges" % (level_index + 1)
+		)
 		var ground_color: Color = layout["palette"][0]
 		var color_matches_theme := false
 		match level_index:
@@ -87,6 +91,37 @@ func _run_tests() -> void:
 		if level_index == 0:
 			_check(get_nodes_in_group("battlefield_decorations").size() >= 20, "Emerald Approach has dense landmark dressing")
 			_check(layout["roads"].size() >= 4 and layout["bridges"].size() == 4, "Emerald Approach has branching routes and four bridge choices")
+			for bridge: Rect2 in layout["bridges"]:
+				var crosses_river := false
+				for water: Rect2 in layout["water"]:
+					if bridge.position.y <= water.get_center().y and bridge.end.y >= water.get_center().y:
+						crosses_river = true
+				_check(crosses_river, "Every bridge is aligned with the river")
+			var boat_count := 0
+			var patrol_boat: Node2D
+			for enemy in get_nodes_in_group("enemies"):
+				if enemy.get("enemy_type") != 3:
+					continue
+				boat_count += 1
+				if patrol_boat == null:
+					patrol_boat = enemy
+				var patrol_bounds: Rect2 = enemy.get("_boat_patrol_bounds")
+				var collision_mask: int = enemy.get("collision_mask")
+				_check(patrol_bounds.has_point(enemy.global_position), "River boats spawn inside their patrol area")
+				_check((collision_mask & 32) == 0, "River boats can move past riverbank barriers")
+				for bridge: Rect2 in layout["bridges"]:
+					_check(not patrol_bounds.intersects(bridge), "River boat patrols stay clear of bridges")
+			_check(boat_count == 4, "All river boats receive navigable patrol areas")
+			if patrol_boat != null:
+				var patrol_start := patrol_boat.global_position
+				for _frame in range(30):
+					await physics_frame
+				var boat_bounds: Rect2 = patrol_boat.get("_boat_patrol_bounds")
+				_check(
+					patrol_boat.global_position.distance_to(patrol_start) > 1.0
+					and boat_bounds.has_point(patrol_boat.global_position),
+					"River boats patrol continuously without entering bridges or banks"
+				)
 		elif level_index == 2:
 			var terrain_signature: Dictionary = game.call("terrain_render_signature")
 			_check(
@@ -118,3 +153,16 @@ func _obstacle_count(layout: Dictionary, kind: StringName) -> int:
 		if placement["kind"] == kind:
 			count += 1
 	return count
+
+func _max_flank_gap(layout: Dictionary, left_edge: bool) -> float:
+	var positions: Array[float] = [0.0, float(layout["map_size"].y)]
+	var edge_x := 120.0 if left_edge else float(layout["map_size"].x) - 120.0
+	for position: Vector2 in layout["infantry"]:
+		var on_edge := position.x <= edge_x if left_edge else position.x >= edge_x
+		if on_edge:
+			positions.append(position.y)
+	positions.sort()
+	var maximum_gap := 0.0
+	for index in range(1, positions.size()):
+		maximum_gap = maxf(maximum_gap, positions[index] - positions[index - 1])
+	return maximum_gap

@@ -275,3 +275,9 @@ Final validation on Godot `4.7.2.stable.official.ed1daf0bf`:
 - The refreshed packaged executable started headlessly and exited with code 0.
 - `builds\JackalSquad-LAN\JackalSquad.exe`: 123,360,560 bytes, SHA-256 `254F02B1A7622E013D31BF3782105BFB6393D9E8D8ECB503B3020B4254CCDCF5`.
 - `builds\JackalSquad-LAN.zip`: 52,198,780 bytes, SHA-256 `BFECFDAE725FB8AB1C1AE02569831E3E389D1553DFB80ECB17076D99082D31FE`.
+
+## Enemy flank and river alignment follow-up
+
+The expanded maps now place regular guards along both outer flanks. Enemy detection and attack ranges cover the visible combat area. River and bridge rectangles preserve their intended centers when the map is scaled, aligning water with collision barriers and boat spawns. Boats patrol the river sections between bridges without entering bridge decks.
+
+The level-layout, gameplay-polish, and Milestone 1, 3, and 4 tests pass, including coverage for flank spacing, on-screen enemy engagement, aligned bridges, boat patrol bounds and movement, and passenger river crossings. The refreshed Windows release at `builds\JackalSquad.exe` is 128,440,896 bytes and passed a headless startup check.

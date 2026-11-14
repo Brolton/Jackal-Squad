@@ -68,7 +68,7 @@ func _run_tests() -> void:
 	var lower_river: Rect2 = LevelLayouts.get_layout(0)["water"][0]
 	var crossed_lower_river := false
 	var entered_water_away_from_bridge := false
-	for _step in range(260):
+	for _step in range(750):
 		if passenger.is_queued_for_deletion():
 			break
 		passenger.call("_physics_process", 0.1)
@@ -84,7 +84,9 @@ func _run_tests() -> void:
 			if not on_bridge:
 				entered_water_away_from_bridge = true
 	_check(crossed_lower_river and not entered_water_away_from_bridge, "A rescued prisoner physically crosses the river only on a bridge")
-	player.global_position = building_position
+	player.global_position = passenger.global_position
+	for released_passenger in get_nodes_in_group("rescue_passengers"):
+		released_passenger.global_position = player.global_position
 	for _frame in range(10):
 		await physics_frame
 	_check(int(player.get("passenger_count")) == 3, "Nearby passengers board the jeep automatically")

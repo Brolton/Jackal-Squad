@@ -14,8 +14,13 @@ static func get_layout(index: int) -> Dictionary:
 			layout = _emerald_approach()
 	layout = _scale_layout(layout)
 	_add_long_route_encounters(layout)
+	_add_flank_guards(layout)
 	_add_long_route_obstacles(layout)
 	return layout
+
+static func _scale_rect(rect: Rect2) -> Rect2:
+	var scaled_size := rect.size * Vector2(MAP_SCALE.x, 1.0)
+	return Rect2(rect.get_center() * MAP_SCALE - scaled_size * 0.5, scaled_size)
 
 static func _scale_layout(layout: Dictionary) -> Dictionary:
 	var scaled := {}
@@ -24,7 +29,7 @@ static func _scale_layout(layout: Dictionary) -> Dictionary:
 		if value is Vector2:
 			scaled[key] = value * MAP_SCALE
 		elif value is Rect2:
-			scaled[key] = Rect2(value.position * MAP_SCALE, value.size * Vector2(MAP_SCALE.x, 1.0))
+			scaled[key] = _scale_rect(value)
 		elif value is Array:
 			scaled[key] = _scale_array(value)
 		elif value is Dictionary:
@@ -41,7 +46,7 @@ static func _scale_array(values: Array) -> Array:
 		if value is Vector2:
 			scaled.append(value * MAP_SCALE)
 		elif value is Rect2:
-			scaled.append(Rect2(value.position * MAP_SCALE, value.size * Vector2(MAP_SCALE.x, 1.0)))
+			scaled.append(_scale_rect(value))
 		elif value is Array:
 			scaled.append(_scale_array(value))
 		elif value is Dictionary:
@@ -58,7 +63,7 @@ static func _scale_dictionary(values: Dictionary) -> Dictionary:
 			var scale := Vector2(MAP_SCALE.x, 1.0) if key == "size" else MAP_SCALE
 			scaled[key] = value * scale
 		elif value is Rect2:
-			scaled[key] = Rect2(value.position * MAP_SCALE, value.size * Vector2(MAP_SCALE.x, 1.0))
+			scaled[key] = _scale_rect(value)
 		elif value is Array:
 			scaled[key] = _scale_array(value)
 		elif value is Dictionary:
@@ -93,6 +98,23 @@ static func _add_long_route_encounters(layout: Dictionary) -> void:
 			heavy_index += 1
 	layout["infantry"] = infantry
 	layout["heavy_enemies"] = heavy_enemies
+
+static func _add_flank_guards(layout: Dictionary) -> void:
+	var map_size: Vector2 = layout["map_size"]
+	var infantry: Array = layout["infantry"]
+	var water_rects: Array = layout["water"]
+	var guard_rows := maxi(2, int(ceil(map_size.y / 1100.0)))
+	for row in range(1, guard_rows):
+		var y := map_size.y * float(row) / float(guard_rows)
+		for x in [56.0, map_size.x - 56.0]:
+			var position := Vector2(x, y)
+			for water: Rect2 in water_rects:
+				if water.has_point(position):
+					var north_bank := water.position.y - 145.0
+					var south_bank := water.end.y + 145.0
+					position.y = north_bank if absf(position.y - north_bank) < absf(position.y - south_bank) else south_bank
+			infantry.append(position)
+	layout["infantry"] = infantry
 
 static func _add_long_route_obstacles(layout: Dictionary) -> void:
 	var map_size: Vector2 = layout["map_size"]

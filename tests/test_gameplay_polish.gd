@@ -28,6 +28,16 @@ func _run_tests() -> void:
 	enemy.call("apply_coop_scaling", 4)
 	_check(int(enemy.get("maximum_health")) > solo_health, "Enemy durability scales for a four-player squad")
 	_check(float(enemy.get("fire_interval")) < 1.8, "Co-op scaling also increases enemy pressure")
+	var player_camera: Camera2D = player.get_node("Camera2D")
+	var half_view := root.get_visible_rect().size * 0.5 / player_camera.zoom
+	var visible_distance := Vector2(half_view.x, half_view.y + absf(player_camera.position.y)).length()
+	for enemy_type in range(4):
+		enemy.call("configure_enemy", enemy_type)
+		_check(
+			float(enemy.get("detection_range")) >= visible_distance
+			and float(enemy.get("attack_range")) >= visible_distance,
+			"Enemy type %d can detect and attack players anywhere on screen" % enemy_type
+		)
 	enemy.free()
 
 	for existing_enemy in get_nodes_in_group("enemies"):

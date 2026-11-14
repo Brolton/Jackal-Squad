@@ -455,9 +455,12 @@ func _create_players_and_enemies() -> void:
 	for placement: Dictionary in _layout["heavy_enemies"]:
 		var enemy := INFANTRY_SCENE.instantiate()
 		enemy.name = placement["name"]
-		enemy.configure_enemy(int(placement["type"]))
+		var enemy_type := int(placement["type"])
+		enemy.configure_enemy(enemy_type)
 		enemy.apply_coop_scaling(player_count)
 		enemy.position = placement["position"]
+		if enemy_type == 3:
+			enemy.configure_boat_patrol(_boat_patrol_bounds(placement["position"]))
 		add_child(enemy)
 
 	var hud := HUD_SCENE.instantiate()
@@ -482,6 +485,45 @@ func _create_players_and_enemies() -> void:
 	NetworkSession.mission_state_changed.connect(Callable(hud, "update_mission_state"))
 	hud.call("update_mission_state", NetworkSession.mission_state_snapshot())
 	_create_weapon_upgrades()
+
+func _boat_patrol_bounds(boat_position: Vector2) -> Rect2:
+	for water: Rect2 in _layout.get("water", []):
+		if not water.has_point(boat_position):
+			continue
+		var x_segments: Array[Vector2] = []
+		var segment_start := water.position.x + 28.0
+		var segment_end := water.end.x - 28.0
+		for bridge: Rect2 in _layout.get("bridges", []):
+			if bridge.end.y < water.position.y or bridge.position.y > water.end.y:
+				continue
+			var bridge_start := maxf(water.position.x + 28.0, bridge.position.x - 28.0)
+			var bridge_end := minf(water.end.x - 28.0, bridge.end.x + 28.0)
+			if bridge_start > segment_start:
+				x_segments.append(Vector2(segment_start, bridge_start))
+			segment_start = maxf(segment_start, bridge_end)
+		if segment_end > segment_start:
+			x_segments.append(Vector2(segment_start, segment_end))
+		if x_segments.is_empty():
+			push_error("No navigable river section is available for boat at %s." % boat_position)
+			return Rect2()
+
+		var selected_segment := x_segments[0]
+		var best_distance := INF
+		for segment in x_segments:
+			if boat_position.x >= segment.x and boat_position.x <= segment.y:
+				selected_segment = segment
+				best_distance = 0.0
+				break
+			var distance := absf(boat_position.x - (segment.x + segment.y) * 0.5)
+			if distance < best_distance:
+				selected_segment = segment
+				best_distance = distance
+		return Rect2(
+			Vector2(selected_segment.x, water.position.y + 28.0),
+			Vector2(selected_segment.y - selected_segment.x, water.size.y - 56.0)
+		)
+	push_error("No river contains boat at %s." % boat_position)
+	return Rect2()
 
 func _create_rescue_objects() -> void:
 	var rescue_positions: Array = _layout["rescues"]
