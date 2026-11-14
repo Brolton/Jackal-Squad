@@ -5,6 +5,7 @@ const PLAYER_SCENE := preload("res://scenes/player_jeep.tscn")
 const INFANTRY_SCENE := preload("res://scenes/infantry.tscn")
 const OBSTACLE_SCENE := preload("res://scenes/obstacle.tscn")
 const HUD_SCENE := preload("res://scenes/hud.tscn")
+const WEAPON_UPGRADE_SCENE := preload("res://scenes/weapon_upgrade.tscn")
 
 const INFANTRY_POSITIONS := [
 	Vector2(600.0, 2500.0),
@@ -15,6 +16,14 @@ const INFANTRY_POSITIONS := [
 	Vector2(390.0, 930.0),
 	Vector2(830.0, 560.0),
 	Vector2(550.0, 300.0),
+]
+const ADDITIONAL_ENEMY_PLACEMENTS := [
+	{"name": "Turret01", "type": 1, "position": Vector2(330.0, 2050.0)},
+	{"name": "Tank01", "type": 2, "position": Vector2(760.0, 1740.0)},
+	{"name": "Boat01", "type": 3, "position": Vector2(430.0, 1510.0)},
+	{"name": "Boat02", "type": 3, "position": Vector2(770.0, 1510.0)},
+	{"name": "Tank02", "type": 2, "position": Vector2(850.0, 600.0)},
+	{"name": "Turret02", "type": 1, "position": Vector2(340.0, 350.0)},
 ]
 const PLAYER_SPAWN_POSITIONS := [
 	Vector2(600.0, 2860.0),
@@ -141,12 +150,37 @@ func _create_players_and_enemies() -> void:
 		enemy.name = "Infantry%02d" % (index + 1)
 		enemy.position = INFANTRY_POSITIONS[index]
 		add_child(enemy)
+	for placement in ADDITIONAL_ENEMY_PLACEMENTS:
+		var enemy := INFANTRY_SCENE.instantiate()
+		enemy.name = placement["name"]
+		enemy.configure_enemy(int(placement["type"]))
+		enemy.position = placement["position"]
+		add_child(enemy)
 
 	var hud := HUD_SCENE.instantiate()
 	add_child(hud)
 	if local_player != null:
 		local_player.connect(&"health_changed", Callable(hud, "update_health"))
+		local_player.connect(&"weapon_upgrades_changed", Callable(hud, "update_weapon_upgrades"))
 		hud.call("update_health", local_player.get("health"), local_player.get("maximum_health"))
+		hud.call(
+			"update_weapon_upgrades",
+			local_player.get("primary_upgrade_level"),
+			local_player.get("secondary_upgrade_level")
+		)
+	_create_weapon_upgrades()
+
+func _create_weapon_upgrades() -> void:
+	var placements := [
+		{"name": "PrimaryUpgrade01", "type": &"primary", "position": Vector2(500.0, 2700.0)},
+		{"name": "SecondaryUpgrade01", "type": &"secondary", "position": Vector2(700.0, 2700.0)},
+	]
+	for placement in placements:
+		var pickup := WEAPON_UPGRADE_SCENE.instantiate()
+		pickup.name = placement["name"]
+		pickup.configure(placement["type"])
+		pickup.position = placement["position"]
+		add_child(pickup)
 
 func _on_player_left(peer_id: int) -> void:
 	var player := get_node_or_null("Player_%d" % peer_id)

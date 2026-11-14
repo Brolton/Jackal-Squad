@@ -27,8 +27,8 @@ LAN/Tailscale sessions have not been tested yet.
 
 ## Milestone 3 — Combat and upgrades
 
-- [ ] Add enemy types, authoritative damage, projectiles, upgrades, and respawning.
-- [ ] Test combat and upgrade ownership in solo and multiplayer sessions.
+- [x] Add enemy types, authoritative damage, projectiles, upgrades, and respawning.
+- [x] Test combat and upgrade ownership in solo and multiplayer sessions.
 
 ## Milestone 4 — Rescue mechanics
 

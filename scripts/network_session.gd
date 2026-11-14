@@ -79,7 +79,8 @@ func start_multiplayer_game() -> bool:
 	match_started = true
 	_set_status("Mission started.")
 	game_start_requested.emit()
-	rpc("rpc_begin_match")
+	for peer_id in connected_peer_ids():
+		rpc_id(peer_id, "rpc_begin_match")
 	return true
 
 func leave_lobby() -> void:
@@ -97,19 +98,14 @@ func spawn_projectile_visual(
 ) -> void:
 	if not is_networked or not is_host:
 		return
-	rpc(
-		"rpc_show_projectile",
-		spawn_position,
-		direction,
-		hostile,
-		damage,
-		speed
-	)
+	for peer_id in connected_peer_ids():
+		rpc_id(peer_id, "rpc_show_projectile", spawn_position, direction, hostile, damage, speed)
 
-func spawn_grenade_visual(spawn_position: Vector2, direction: Vector2) -> void:
+func spawn_grenade_visual(spawn_position: Vector2, direction: Vector2, blast_radius: float) -> void:
 	if not is_networked or not is_host:
 		return
-	rpc("rpc_show_grenade", spawn_position, direction)
+	for peer_id in connected_peer_ids():
+		rpc_id(peer_id, "rpc_show_grenade", spawn_position, direction, blast_radius)
 
 @rpc("any_peer", "call_remote", "reliable")
 func rpc_register_player(requested_nickname: String) -> void:
@@ -168,12 +164,39 @@ func rpc_show_projectile(
 	get_tree().current_scene.add_child(projectile)
 
 @rpc("authority", "call_remote", "unreliable")
-func rpc_show_grenade(spawn_position: Vector2, direction: Vector2) -> void:
+func rpc_show_grenade(spawn_position: Vector2, direction: Vector2, blast_radius: float) -> void:
 	if is_host or get_tree().current_scene == null:
 		return
 	var grenade := GRENADE_SCENE.instantiate()
-	grenade.configure(spawn_position, direction, null, true)
+	grenade.configure(spawn_position, direction, null, true, blast_radius)
 	get_tree().current_scene.add_child(grenade)
+
+func replicate_upgrade_pickup_collected(pickup_name: String) -> void:
+	if not is_networked or not is_host:
+		return
+	for peer_id in connected_peer_ids():
+		rpc_id(peer_id, "rpc_remove_upgrade_pickup", pickup_name)
+
+@rpc("authority", "call_remote", "reliable")
+func rpc_remove_upgrade_pickup(pickup_name: String) -> void:
+	if is_host or get_tree().current_scene == null:
+		return
+	var pickup := get_tree().current_scene.get_node_or_null(pickup_name)
+	if pickup != null:
+		pickup.queue_free()
+
+func connected_peer_ids() -> Array[int]:
+	var connected_ids: Array[int] = []
+	if not is_host or multiplayer.multiplayer_peer == null:
+		return connected_ids
+	var enet_peer := multiplayer.multiplayer_peer as ENetMultiplayerPeer
+	if enet_peer == null:
+		return connected_ids
+	for peer_id in multiplayer.get_peers():
+		var remote_peer := enet_peer.get_peer(int(peer_id))
+		if remote_peer != null and remote_peer.get_state() == ENetPacketPeer.STATE_CONNECTED:
+			connected_ids.append(int(peer_id))
+	return connected_ids
 
 func _on_peer_connected(peer_id: int) -> void:
 	if is_host and match_started:
@@ -219,14 +242,10 @@ func _publish_lobby(excluded_peer_id: int = 0) -> void:
 	var snapshot := players.duplicate(true)
 	lobby_changed.emit(snapshot)
 	if is_host:
-		var enet_peer := multiplayer.multiplayer_peer as ENetMultiplayerPeer
-		for peer_id in multiplayer.get_peers():
-			var remote_peer_id := int(peer_id)
-			if remote_peer_id == excluded_peer_id:
+		for peer_id in connected_peer_ids():
+			if peer_id == excluded_peer_id:
 				continue
-			var remote_peer := enet_peer.get_peer(remote_peer_id)
-			if remote_peer != null and remote_peer.get_state() == ENetPacketPeer.STATE_CONNECTED:
-				rpc_id(remote_peer_id, "rpc_receive_lobby", snapshot)
+			rpc_id(peer_id, "rpc_receive_lobby", snapshot)
 
 func _first_available_slot() -> int:
 	var used_slots: Array[int] = []

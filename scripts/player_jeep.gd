@@ -1,6 +1,7 @@
 extends CharacterBody2D
 
 signal health_changed(current: int, maximum: int)
+signal weapon_upgrades_changed(primary_level: int, secondary_level: int)
 
 const PROJECTILE_SCENE := preload("res://scenes/projectile.tscn")
 const GRENADE_SCENE := preload("res://scenes/grenade.tscn")
@@ -10,6 +11,7 @@ const PLAYER_COLORS := [
 	Color(0.90, 0.76, 0.19),
 	Color(0.58, 0.31, 0.75),
 ]
+const MAX_WEAPON_UPGRADE_LEVEL := 3
 
 @export var acceleration := 850.0
 @export var maximum_speed := 220.0
@@ -22,6 +24,8 @@ var spawn_position := Vector2.ZERO
 var player_peer_id := 1
 var player_nickname := "Player"
 var color_slot := 0
+var primary_upgrade_level := 0
+var secondary_upgrade_level := 0
 var _received_movement := Vector2.ZERO
 var _received_primary := false
 var _received_secondary := false
@@ -139,7 +143,9 @@ func rpc_receive_state(
 	world_position: Vector2,
 	world_rotation: float,
 	current_health: int,
-	is_visible: bool
+	is_visible: bool,
+	received_primary_level: int,
+	received_secondary_level: int
 ) -> void:
 	if not NetworkSession.is_networked or multiplayer.is_server():
 		return
@@ -154,6 +160,13 @@ func rpc_receive_state(
 	if visible != is_visible:
 		visible = is_visible
 		_collision_shape.set_deferred("disabled", not is_visible)
+	if (
+		primary_upgrade_level != received_primary_level
+		or secondary_upgrade_level != received_secondary_level
+	):
+		primary_upgrade_level = received_primary_level
+		secondary_upgrade_level = received_secondary_level
+		weapon_upgrades_changed.emit(primary_upgrade_level, secondary_upgrade_level)
 
 func _broadcast_state(delta: float) -> void:
 	if not NetworkSession.is_host:
@@ -162,7 +175,17 @@ func _broadcast_state(delta: float) -> void:
 	if _network_state_timer > 0.0:
 		return
 	_network_state_timer = 0.05
-	rpc("rpc_receive_state", global_position, rotation, health, visible)
+	for peer_id in NetworkSession.connected_peer_ids():
+		rpc_id(
+			peer_id,
+			"rpc_receive_state",
+			global_position,
+			rotation,
+			health,
+			visible,
+			primary_upgrade_level,
+			secondary_upgrade_level
+		)
 
 func _read_movement() -> Vector2:
 	return Input.get_vector("move_left", "move_right", "move_up", "move_down")
@@ -183,23 +206,64 @@ func take_damage(amount: int) -> void:
 	if health == 0:
 		_respawn()
 
+func apply_weapon_upgrade(upgrade_type: StringName) -> bool:
+	if NetworkSession.is_networked and not multiplayer.is_server():
+		return false
+	match upgrade_type:
+		&"primary":
+			if primary_upgrade_level >= MAX_WEAPON_UPGRADE_LEVEL:
+				return false
+			primary_upgrade_level += 1
+		&"secondary":
+			if secondary_upgrade_level >= MAX_WEAPON_UPGRADE_LEVEL:
+				return false
+			secondary_upgrade_level += 1
+		_:
+			return false
+	weapon_upgrades_changed.emit(primary_upgrade_level, secondary_upgrade_level)
+	return true
+
 func _fire_primary() -> void:
 	if _primary_cooldown > 0.0:
 		return
-	_primary_cooldown = 0.30
+	_primary_cooldown = maxf(0.12, 0.30 - float(primary_upgrade_level) * 0.05)
+	var projectile_damage := 1
+	if primary_upgrade_level >= 2:
+		projectile_damage = 2
+	if primary_upgrade_level >= 3:
+		projectile_damage = 3
+	var projectile_speed := 620.0 + float(primary_upgrade_level) * 80.0
 	var projectile := PROJECTILE_SCENE.instantiate()
-	projectile.configure(global_position + facing * 25.0, facing, self, false, 1, 620.0)
+	projectile.configure(
+		global_position + facing * 25.0,
+		facing,
+		self,
+		false,
+		projectile_damage,
+		projectile_speed
+	)
 	get_tree().current_scene.add_child(projectile)
-	NetworkSession.spawn_projectile_visual(global_position + facing * 25.0, facing, false, 1, 620.0)
+	NetworkSession.spawn_projectile_visual(
+		global_position + facing * 25.0,
+		facing,
+		false,
+		projectile_damage,
+		projectile_speed
+	)
 
 func _fire_secondary() -> void:
 	if _secondary_cooldown > 0.0:
 		return
-	_secondary_cooldown = 1.2
+	_secondary_cooldown = maxf(0.6, 1.2 - float(secondary_upgrade_level) * 0.15)
+	var upgraded_blast_radius := 92.0 + float(secondary_upgrade_level) * 12.0
 	var grenade := GRENADE_SCENE.instantiate()
-	grenade.configure(global_position + facing * 24.0, facing, self)
+	grenade.configure(global_position + facing * 24.0, facing, self, false, upgraded_blast_radius)
 	get_tree().current_scene.add_child(grenade)
-	NetworkSession.spawn_grenade_visual(global_position + facing * 24.0, facing)
+	NetworkSession.spawn_grenade_visual(
+		global_position + facing * 24.0,
+		facing,
+		upgraded_blast_radius
+	)
 
 func _respawn() -> void:
 	if _respawning:

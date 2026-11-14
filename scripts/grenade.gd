@@ -20,12 +20,14 @@ func configure(
 	spawn_position: Vector2,
 	travel_direction: Vector2,
 	source: Node2D,
-	cosmetic_only: bool = false
+	cosmetic_only: bool = false,
+	blast_range: float = 92.0
 ) -> void:
 	position = spawn_position
 	direction = travel_direction.normalized()
 	shooter = source
 	visual_only = cosmetic_only
+	blast_radius = blast_range
 	collision_layer = 0
 	collision_mask = 0 if visual_only else 5
 

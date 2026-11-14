@@ -33,9 +33,17 @@ godot --headless --path . res://tests/network_smoke.tscn -- --server
 godot --headless --path . res://tests/network_smoke.tscn -- --client
 ```
 
-For four players, run one host with `--server4` and three clients with `--client`, `--client2`, and `--client3`, each in its own process. Godot 4.7.2 loopback checks passed for both two and four total players. They verify lobby registration, nicknames and color slots, host-started scene loading, per-player camera selection, client movement, authoritative host snapshots, and removal of disconnected players.
+For four players, run one host with `--server4` and three clients with `--client`, `--client2`, and `--client3`, each in its own process. Godot 4.7.2 loopback checks passed for both two and four total players. They verify lobby registration, nicknames and color slots, host-started scene loading, per-player camera selection, client movement, authoritative damage and snapshots, player-specific upgrade replication, and removal of disconnected players.
 
 LAN/Tailscale connectivity and windowed play have not been manually verified.
+
+## Milestone 3 combat and upgrades
+
+```powershell
+godot --headless --path . --script res://tests/test_milestone3.gd
+```
+
+The test passed on Godot 4.7.2. It checks infantry, turrets, tanks, and armed boats; enemy durability and projectile damage; pickup collection and removal; primary and grenade upgrade effects; and the maximum weapon level. The Milestone 1 regression test also passes with the expanded enemy roster.
 
 ## Environment notes
 
@@ -47,7 +55,7 @@ LAN/Tailscale connectivity and windowed play have not been manually verified.
 
 ## Remaining gameplay and build checks
 
-- Test pickup ownership, passenger capacity, automatic boarding/unloading, immediate unload stop on zone exit, resume on return, helicopter collection, and score synchronization.
+- Test passenger pickup ownership, capacity, automatic boarding/unloading, immediate unload stop on zone exit, resume on return, helicopter collection, and score synchronization.
 - Test mission completion in solo mode and LAN/Tailscale connectivity when available.
 - Run windowed visual play and create/verify a Windows export.
 

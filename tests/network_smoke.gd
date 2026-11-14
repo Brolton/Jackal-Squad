@@ -80,6 +80,35 @@ func _run_server(expected_players: int) -> void:
 			_fail("Host did not observe remote jeep %d." % peer_id)
 	_check(all_remote_players_moved, "Host simulated every client's movement authoritatively")
 
+	var upgrade_owner_id := 0
+	for peer_id in remote_slots:
+		if int(remote_slots[peer_id]) == 1:
+			upgrade_owner_id = int(peer_id)
+	var combat_target: Node = get_tree().current_scene.get_node("Player_%d" % upgrade_owner_id)
+	var health_before_host_damage := int(combat_target.get("health"))
+	combat_target.call("take_damage", 1)
+	_check(
+		int(combat_target.get("health")) == health_before_host_damage - 1,
+		"Host applies authoritative damage to a remote player"
+	)
+	var primary_pickup: Node2D = get_tree().current_scene.get_node("PrimaryUpgrade01")
+	var upgrade_owner: Node = get_tree().current_scene.get_node("Player_%d" % upgrade_owner_id)
+	upgrade_owner.global_position = primary_pickup.global_position
+	deadline = Time.get_ticks_msec() + 2000
+	while (
+		int(upgrade_owner.get("primary_upgrade_level")) == 0
+		and Time.get_ticks_msec() < deadline
+	):
+		await get_tree().physics_frame
+	_check(
+		int(upgrade_owner.get("primary_upgrade_level")) == 1,
+		"Host applies a weapon pickup to the collecting player"
+	)
+	_check(
+		int(get_tree().current_scene.get_node("Player_1").get("primary_upgrade_level")) == 0,
+		"Weapon upgrades remain player-specific"
+	)
+
 	deadline = Time.get_ticks_msec() + 7000
 	while NetworkSession.players.size() > 1 and Time.get_ticks_msec() < deadline:
 		await get_tree().process_frame
@@ -138,6 +167,12 @@ func _run_client() -> void:
 		_finish()
 		return
 
+	var health_before_client_damage := int(local_player.get("health"))
+	local_player.call("take_damage", 1)
+	_check(
+		int(local_player.get("health")) == health_before_client_damage,
+		"Clients cannot apply authoritative damage locally"
+	)
 	var local_camera: Camera2D = local_player.get_node("Camera2D")
 	var host_player: Node = get_tree().current_scene.get_node("Player_1")
 	var host_camera: Camera2D = host_player.get_node("Camera2D")
@@ -152,12 +187,39 @@ func _run_client() -> void:
 	await get_tree().create_timer(0.35).timeout
 	_check(local_player.global_position.y < start_position.y, "Client jeep responds to local movement")
 	_check(int(local_player.get("authoritative_state_count")) > 0, "Client received host movement snapshots")
+	var movement_snapshot_deadline := Time.get_ticks_msec() + 2000
+	while (
+		Vector2(local_player.get("last_authoritative_position")).y >= start_position.y
+		and Time.get_ticks_msec() < movement_snapshot_deadline
+	):
+		await get_tree().process_frame
 	var authoritative_position: Vector2 = local_player.get("last_authoritative_position")
 	_check(
 		authoritative_position.y < start_position.y,
 		"Host snapshot reflects the client's movement input"
 	)
 	await get_tree().create_timer(2.5).timeout
+	var primary_pickup_deadline := Time.get_ticks_msec() + 3000
+	while (
+		get_tree().current_scene.get_node_or_null("PrimaryUpgrade01") != null
+		and Time.get_ticks_msec() < primary_pickup_deadline
+	):
+		await get_tree().process_frame
+	_check(
+		get_tree().current_scene.get_node_or_null("PrimaryUpgrade01") == null,
+		"Host-collected weapon pickups disappear on clients"
+	)
+	var expected_primary_level := 1 if expected_slot == 1 else 0
+	_check(
+		int(local_player.get("primary_upgrade_level")) == expected_primary_level,
+		"Host synchronizes upgrades only to their owner"
+	)
+	if expected_slot == 1:
+		_check(
+			int(local_player.get("health")) < int(local_player.get("maximum_health")),
+			"Host synchronizes damage to the targeted player"
+		)
+	await get_tree().create_timer(float(expected_slot) * 0.75).timeout
 	NetworkSession.leave_lobby()
 	await get_tree().create_timer(0.2).timeout
 	_finish()

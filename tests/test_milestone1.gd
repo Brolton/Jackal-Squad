@@ -86,6 +86,8 @@ func _run_tests() -> void:
 	var grenade: Area2D = load("res://scenes/grenade.tscn").instantiate()
 	grenade.configure(damage_target.global_position, Vector2.UP, player)
 	game.add_child(grenade)
+	while int(damage_target.get("health")) > 2:
+		damage_target.call("take_damage", 1)
 	grenade.call("_explode")
 	_check(damage_target.is_queued_for_deletion(), "Grenade area damage destroys a weakened nearby enemy")
 
