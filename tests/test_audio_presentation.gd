@@ -32,6 +32,17 @@ func _run_tests() -> void:
 	var soldier: Node = game.get_node("Infantry01")
 	soldier.call("take_damage", int(soldier.get("maximum_health")), 1)
 	_check(audio.get_node_or_null("SFX_soldier_death") != null, "Infantry death triggers a distinct synthesized cry")
+	player.call("try_add_passenger")
+	_check(
+		audio.get_node_or_null("SFX_passenger_boarded") != null,
+		"Passenger boarding plays an audible confirmation"
+	)
+	var extraction_zone: Node = game.get_node("ExtractionZone")
+	extraction_zone.call("_start_helicopter")
+	_check(
+		audio.get_node_or_null("SFX_helicopter_arrival") != null,
+		"Helicopter arrival plays a distinct sound"
+	)
 
 	game.queue_free()
 	await process_frame

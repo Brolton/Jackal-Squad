@@ -95,8 +95,59 @@ func _run_tests() -> void:
 		and float(rocket_signature["max_travel_distance"]) > float(primary_shots[-1].get("max_travel_distance")),
 		"Rockets fly straight through the screen and continue beyond its edge"
 	)
+	_check(int(rockets[-1].get("damage")) >= 10, "A rocket is strong enough to destroy a four-player tank")
 	rockets[-1].call("_explode")
 	_check(root.get_node("AudioDirector").get_node_or_null("SFX_rocket_blast") != null, "Rockets use a distinct impact sound")
+
+	var grenade_tank: Node = load("res://scenes/infantry.tscn").instantiate()
+	grenade_tank.name = "GrenadeBalanceTank"
+	grenade_tank.call("configure_enemy", 2)
+	grenade_tank.position = Vector2(220.0, 500.0)
+	game.add_child(grenade_tank)
+	await physics_frame
+	var grenade_scene: PackedScene = load("res://scenes/grenade.tscn")
+	var first_grenade: Area2D = grenade_scene.instantiate()
+	first_grenade.configure(grenade_tank.global_position, Vector2.UP, player)
+	game.add_child(first_grenade)
+	first_grenade.call("_explode")
+	_check(int(grenade_tank.get("health")) == 3, "A direct grenade removes half a standard tank's health")
+	var second_grenade: Area2D = grenade_scene.instantiate()
+	second_grenade.configure(grenade_tank.global_position, Vector2.UP, player)
+	game.add_child(second_grenade)
+	second_grenade.call("_explode")
+	_check(grenade_tank.is_queued_for_deletion(), "Two direct grenades destroy a standard tank")
+
+	tank.set("health", int(tank.get("maximum_health")))
+	tank.call("apply_coop_scaling", 4)
+	tank.set("health", int(tank.get("maximum_health")))
+	var rocket_scene: PackedScene = load("res://scenes/rocket.tscn")
+	var anti_tank_rocket: Area2D = rocket_scene.instantiate()
+	anti_tank_rocket.configure(tank.global_position, Vector2.UP, player, false, 112.0, 1, 900.0, 10)
+	game.add_child(anti_tank_rocket)
+	await physics_frame
+	anti_tank_rocket.call("_explode")
+	_check(tank.is_queued_for_deletion(), "One rocket destroys a standard tank")
+
+	var boss_turret: Node2D = load("res://scenes/boss_turret.tscn").instantiate()
+	boss_turret.call("configure", 0, 0)
+	boss_turret.position = Vector2(220.0, 220.0)
+	game.add_child(boss_turret)
+	await physics_frame
+	var boss_turret_rocket: Area2D = rocket_scene.instantiate()
+	boss_turret_rocket.configure(boss_turret.global_position, Vector2.UP, player, false, 112.0, 1, 900.0, 10)
+	game.add_child(boss_turret_rocket)
+	await physics_frame
+	boss_turret_rocket.call("_explode")
+	_check(
+		not boss_turret.is_queued_for_deletion() and int(boss_turret.get("health")) > 0,
+		"Boss turrets survive a single rocket"
+	)
+	var second_boss_turret_rocket: Area2D = rocket_scene.instantiate()
+	second_boss_turret_rocket.configure(boss_turret.global_position, Vector2.UP, player, false, 112.0, 1, 900.0, 10)
+	game.add_child(second_boss_turret_rocket)
+	await physics_frame
+	second_boss_turret_rocket.call("_explode")
+	_check(boss_turret.is_queued_for_deletion(), "A second rocket can destroy a boss turret")
 
 	_check(bool(player.call("apply_weapon_upgrade", &"primary")), "Weapon upgrades can stack")
 	_check(bool(player.call("apply_weapon_upgrade", &"primary")), "Weapon upgrades reach the maximum level")

@@ -105,6 +105,7 @@ func rpc_receive_position(world_position: Vector2, facing_rotation: float) -> vo
 @rpc("authority", "call_remote", "reliable")
 func rpc_passenger_boarded() -> void:
 	if not multiplayer.is_server():
+		AudioDirector.play_sfx(&"passenger_boarded")
 		queue_free()
 
 func _nearest_player_with_space() -> Node2D:

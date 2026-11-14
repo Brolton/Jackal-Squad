@@ -10,8 +10,8 @@ var _age := 0.0
 var _exploded := false
 var _animation_left := 0.22
 var throw_speed := 520.0
-var flight_time := 0.84
-var fuse_time := 0.98
+var flight_time := 0.42
+var fuse_time := 0.56
 
 @onready var _collision_shape: CollisionShape2D = $CollisionShape2D
 
@@ -60,7 +60,7 @@ func _explode() -> void:
 	_exploded = true
 	AudioDirector.play_sfx(StringName("grenade_blast_%d" % upgrade_level))
 	_collision_shape.set_deferred("disabled", true)
-	monitoring = false
+	set_deferred("monitoring", false)
 
 	if visual_only:
 		queue_redraw()
@@ -81,7 +81,7 @@ func _explode() -> void:
 		if body == shooter or not body is Node2D or not body.has_method("take_damage"):
 			continue
 		var distance := global_position.distance_to((body as Node2D).global_position)
-		var damage := 2 if distance <= blast_radius * 0.5 else 1
+		var damage := 3 if distance <= blast_radius * 0.5 else 2
 		if attacker_peer_id >= 0 and (
 			body.is_in_group("enemies") or body.is_in_group("final_base")
 		):

@@ -65,7 +65,7 @@ func audio_manifest() -> Dictionary:
 		"music_seconds": float(MUSIC_BEATS) * BEAT_SECONDS,
 		"music_samples": int(float(MUSIC_BEATS) * BEAT_SECONDS * SAMPLE_RATE),
 		"tempo_bpm": 148,
-		"sfx": [&"shot", &"enemy_shot", &"grenade_throw", &"rocket_launch", &"rocket_blast", &"explosion", &"pickup", &"upgrade_gun", &"upgrade_blast", &"grenade_blast_0", &"grenade_blast_1", &"grenade_blast_2", &"grenade_blast_3", &"hit", &"trample", &"soldier_death"],
+		"sfx": [&"shot", &"enemy_shot", &"grenade_throw", &"rocket_launch", &"rocket_blast", &"explosion", &"pickup", &"upgrade_gun", &"upgrade_blast", &"grenade_blast_0", &"grenade_blast_1", &"grenade_blast_2", &"grenade_blast_3", &"hit", &"trample", &"soldier_death", &"helicopter_arrival", &"passenger_boarded", &"helicopter_boarded"],
 		"engine_loop": true,
 	}
 
@@ -135,6 +135,9 @@ func _build_sfx(kind: StringName) -> AudioStreamWAV:
 		&"hit": 0.16,
 		&"trample": 0.22,
 		&"soldier_death": 0.44,
+		&"helicopter_arrival": 0.72,
+		&"passenger_boarded": 0.28,
+		&"helicopter_boarded": 0.42,
 		&"upgrade_gun": 0.42,
 		&"upgrade_blast": 0.48,
 		&"grenade_blast_0": 0.48,
@@ -196,6 +199,16 @@ func _build_sfx(kind: StringName) -> AudioStreamWAV:
 				var voice := _square(time, cry_frequency + vibrato, 0.46) * 0.24
 				var formant := sin(TAU * (cry_frequency * 2.15) * time) * 0.16
 				sample = voice + formant + noise * 0.075
+			&"helicopter_arrival":
+				var rotor := _square(time, lerpf(92.0, 138.0, progress), 0.48) * 0.18
+				var approach := sin(TAU * lerpf(170.0, 82.0, progress) * time) * 0.22
+				sample = rotor + approach + noise * 0.12
+			&"passenger_boarded":
+				var note := _midi_frequency(72 + int(progress * 3.0) * 6)
+				sample = _square(time, note, 0.30) * 0.20 + noise * 0.035
+			&"helicopter_boarded":
+				var note := _midi_frequency(76 + int(progress * 3.0) * 4)
+				sample = _square(time, note, 0.26) * 0.18 + _triangle(time, note * 0.5) * 0.08
 			_:
 				sample = noise * 0.2
 		_write_sample(bytes, index, sample * envelope)
@@ -245,4 +258,7 @@ func _default_volume(kind: StringName) -> float:
 		&"hit": return -9.0
 		&"trample": return -11.0
 		&"soldier_death": return -7.0
+		&"helicopter_arrival": return -4.0
+		&"passenger_boarded": return -5.0
+		&"helicopter_boarded": return -5.0
 		_: return -12.0

@@ -26,6 +26,7 @@ func _run_tests() -> void:
 		and float(helicopter_signature["cockpit_offset_x"]) > 0.0
 		and float(helicopter_signature["tail_offset_x"]) < 0.0
 		and bool(helicopter_signature["landing_pad"])
+		and bool(helicopter_signature["ground_level"])
 		and str(helicopter_signature["pad_label"]) == "H"
 		and bool(helicopter_signature["staged_boarding"]),
 		"The rescue helicopter flies nose-first to a marked H pad with staged boarding"
@@ -119,6 +120,14 @@ func _run_tests() -> void:
 	)
 	helicopter_signature = extraction_zone.call("helicopter_visual_signature")
 	_check(int(helicopter_signature["boarding_visuals"]) > 0, "An unloaded passenger visibly walks from the jeep to the helicopter")
+	var boarding_visuals: Array = extraction_zone.get("_boarding_visuals")
+	boarding_visuals.append({"progress": 0.99, "from": Vector2.ZERO})
+	extraction_zone.set("_boarding_visuals", boarding_visuals)
+	extraction_zone.call("_update_boarding_visuals", 0.02)
+	_check(
+		root.get_node("AudioDirector").get_node_or_null("SFX_helicopter_boarded") != null,
+		"Passengers boarding the helicopter play a confirmation sound"
+	)
 
 	player.velocity = Vector2.ZERO
 	player.global_position = extraction_zone.global_position + Vector2(400.0, 0.0)

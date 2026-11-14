@@ -19,6 +19,7 @@ var _last_evacuated_count := 0
 var _passenger_region := Rect2()
 
 func _ready() -> void:
+	z_index = -1
 	collision_layer = 0
 	collision_mask = 2
 	monitoring = not NetworkSession.is_networked or multiplayer.is_server()
@@ -80,6 +81,7 @@ func _update_boarding_visuals(delta: float) -> void:
 		visual["progress"] = float(visual["progress"]) + delta / 0.72
 		if float(visual["progress"]) >= 1.0:
 			_boarding_visuals.remove_at(index)
+			AudioDirector.play_sfx(&"helicopter_boarded")
 		else:
 			_boarding_visuals[index] = visual
 
@@ -96,6 +98,7 @@ func _start_helicopter() -> void:
 	_helicopter_state = HelicopterState.APPROACHING
 	_helicopter_active = true
 	_landed_clear_time = 0.0
+	AudioDirector.play_sfx(&"helicopter_arrival")
 	queue_redraw()
 	if NetworkSession.is_networked:
 		for peer_id in NetworkSession.connected_peer_ids():
@@ -124,6 +127,7 @@ func rpc_start_helicopter() -> void:
 	_helicopter_state = HelicopterState.APPROACHING
 	_helicopter_active = true
 	_landed_clear_time = 0.0
+	AudioDirector.play_sfx(&"helicopter_arrival")
 	queue_redraw()
 
 @rpc("authority", "call_remote", "reliable")
@@ -227,6 +231,7 @@ func helicopter_visual_signature() -> Dictionary:
 		"cockpit_offset_x": 18.0,
 		"tail_offset_x": -68.0,
 		"landing_pad": true,
+		"ground_level": z_index < 0,
 		"pad_label": "H",
 		"staged_boarding": true,
 		"helicopter_state": _helicopter_state,

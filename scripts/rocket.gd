@@ -69,7 +69,7 @@ func _explode() -> void:
 	_exploded = true
 	AudioDirector.play_sfx(&"rocket_blast")
 	_collision_shape.set_deferred("disabled", true)
-	monitoring = false
+	set_deferred("monitoring", false)
 	if not visual_only:
 		_apply_blast_damage()
 	queue_redraw()
@@ -91,6 +91,8 @@ func _apply_blast_damage() -> void:
 			continue
 		var distance := global_position.distance_to((body as Node2D).global_position)
 		var applied_damage := damage if distance <= blast_radius * 0.55 else maxi(1, damage - 1)
+		if body.is_in_group("boss_turrets"):
+			applied_damage = maxi(1, int(floor(float(applied_damage) * 0.4)))
 		if attacker_peer_id >= 0 and (body.is_in_group("enemies") or body.is_in_group("final_base")):
 			body.call("take_damage", applied_damage, attacker_peer_id)
 		else:

@@ -309,6 +309,7 @@ func try_add_passenger() -> bool:
 	if passenger_count >= passenger_capacity:
 		return false
 	passenger_count += 1
+	AudioDirector.play_sfx(&"passenger_boarded")
 	if health < maximum_health:
 		health += 1
 		health_changed.emit(health, maximum_health)
@@ -385,7 +386,7 @@ func _fire_secondary() -> void:
 		return
 	AudioDirector.play_sfx(&"rocket_launch")
 	var rocket_blast_radius := 108.0 + float(secondary_upgrade_level) * 10.0
-	var rocket_damage := 2 + secondary_upgrade_level
+	var rocket_damage := 9 + secondary_upgrade_level
 	var rocket_range := _visible_projectile_distance(230.0)
 	var rocket := ROCKET_SCENE.instantiate()
 	rocket.configure(

@@ -84,7 +84,11 @@ func _run_tests() -> void:
 	_check(get_nodes_in_group("grenades").size() > 0, "Secondary fire spawns a grenade")
 	var base_grenade: Node = get_nodes_in_group("grenades")[-1]
 	var grenade_signature: Dictionary = base_grenade.call("grenade_signature")
-	_check(float(grenade_signature["throw_distance"]) >= 400.0, "The starting grenade reaches well beyond the jeep")
+	_check(
+		float(grenade_signature["throw_distance"]) >= 180.0
+		and float(grenade_signature["throw_distance"]) <= 250.0,
+		"The starting grenade has a short, controlled throw distance"
+	)
 
 	var damage_target: CharacterBody2D = game.get_node("Tank01")
 	var health_before: int = damage_target.get("health")

@@ -18,6 +18,9 @@ const DECORATION_SCENE := preload("res://scenes/battlefield_decoration.tscn")
 
 var map_size := Vector2(1200.0, 3200.0)
 var _layout: Dictionary = {}
+var _reinforcement_slots: Dictionary = {}
+var _reinforcement_serials: Dictionary = {}
+var _reinforcements_enabled := false
 
 func _ready() -> void:
 	_layout = LevelLayouts.get_layout(level_index)
@@ -32,12 +35,126 @@ func _ready() -> void:
 	_create_players_and_enemies()
 	_create_rescue_objects()
 	_create_final_base()
+	_configure_reinforcements()
 	add_child(PAUSE_MENU_SCENE.instantiate())
 	NetworkSession.player_left.connect(_on_player_left)
 	NetworkSession.game_start_requested.connect(_on_game_start_requested)
 
+func _physics_process(delta: float) -> void:
+	_update_reinforcements(delta)
+
 func _exit_tree() -> void:
 	AudioDirector.stop_mission_audio()
+
+func _configure_reinforcements() -> void:
+	var configurations := [
+		{"infantry": 1, "tanks": 1, "respawn": 12.0},
+		{"infantry": 2, "tanks": 1, "respawn": 9.0},
+		{"infantry": 2, "tanks": 2, "respawn": 6.0},
+	]
+	var configuration: Dictionary = configurations[clampi(level_index, 0, 2)]
+	for enemy_type in [0, 2]:
+		var limit := int(configuration["infantry"] if enemy_type == 0 else configuration["tanks"])
+		_reinforcement_slots[enemy_type] = {
+			"limit": limit,
+			"interval": float(configuration["respawn"]),
+			"timer": 3.0 if enemy_type == 0 else 5.0,
+		}
+		_reinforcement_serials[enemy_type] = 0
+
+func _update_reinforcements(delta: float) -> void:
+	if NetworkSession.mission_completed or (NetworkSession.is_networked and not NetworkSession.is_host):
+		return
+	var boss := get_node_or_null("FinalBase") as Node2D
+	if boss == null:
+		return
+	var nearest_player := _nearest_player_to_boss(boss.global_position)
+	if nearest_player == null or nearest_player.global_position.distance_to(boss.global_position) > 1350.0:
+		return
+	_reinforcements_enabled = true
+	for enemy_type in [0, 2]:
+		var slot: Dictionary = _reinforcement_slots[enemy_type]
+		if _active_reinforcement_count(enemy_type) >= int(slot["limit"]):
+			slot["timer"] = float(slot["interval"])
+			_reinforcement_slots[enemy_type] = slot
+			continue
+		slot["timer"] = float(slot["timer"]) - delta
+		if float(slot["timer"]) <= 0.0:
+			_spawn_reinforcement(enemy_type, nearest_player)
+			slot["timer"] = float(slot["interval"])
+		_reinforcement_slots[enemy_type] = slot
+
+func _nearest_player_to_boss(boss_position: Vector2) -> Node2D:
+	var nearest: Node2D
+	var nearest_distance := INF
+	for player in get_tree().get_nodes_in_group("players"):
+		if not player is Node2D or not player.visible:
+			continue
+		var distance := boss_position.distance_squared_to(player.global_position)
+		if distance < nearest_distance:
+			nearest = player
+			nearest_distance = distance
+	return nearest
+
+func _active_reinforcement_count(enemy_type: int) -> int:
+	var count := 0
+	for enemy in get_tree().get_nodes_in_group("reinforcement_enemies"):
+		if (
+			is_instance_valid(enemy)
+			and not enemy.is_queued_for_deletion()
+			and int(enemy.get("enemy_type")) == enemy_type
+		):
+			count += 1
+	return count
+
+func _spawn_reinforcement(enemy_type: int, nearby_player: Node2D) -> void:
+	var serial := int(_reinforcement_serials[enemy_type]) + 1
+	_reinforcement_serials[enemy_type] = serial
+	var kind_name := "Infantry" if enemy_type == 0 else "Tank"
+	var enemy_name := "Reinforcement%s_%03d" % [kind_name, serial]
+	var camera := nearby_player.get_node_or_null("Camera2D") as Camera2D
+	var screen_top := nearby_player.global_position.y - 210.0
+	if camera != null:
+		var half_height := get_viewport_rect().size.y * 0.5 / maxf(camera.zoom.y, 0.01)
+		screen_top = camera.global_position.y - half_height + 24.0
+	var type_offset := -55.0 if enemy_type == 0 else 55.0
+	var reinforcement_x := clampf(
+		nearby_player.global_position.x + float((serial % 3) - 1) * 90.0 + type_offset,
+		40.0,
+		map_size.x - 40.0
+	)
+	var spawn_position := Vector2(
+		reinforcement_x,
+		clampf(screen_top, 24.0, map_size.y - 24.0)
+	)
+	_create_reinforcement_enemy(enemy_type, enemy_name, spawn_position)
+	if NetworkSession.is_networked and NetworkSession.is_host:
+		rpc("rpc_spawn_reinforcement", enemy_type, enemy_name, spawn_position)
+
+func _create_reinforcement_enemy(enemy_type: int, enemy_name: String, spawn_position: Vector2) -> void:
+	var enemy := INFANTRY_SCENE.instantiate()
+	enemy.name = enemy_name
+	enemy.configure_enemy(enemy_type)
+	enemy.apply_coop_scaling(maxi(1, NetworkSession.players.size()))
+	enemy.position = spawn_position
+	enemy.add_to_group("reinforcement_enemies")
+	add_child(enemy)
+
+@rpc("authority", "call_remote", "reliable")
+func rpc_spawn_reinforcement(enemy_type: int, enemy_name: String, spawn_position: Vector2) -> void:
+	if NetworkSession.is_host:
+		return
+	_create_reinforcement_enemy(enemy_type, enemy_name, spawn_position)
+
+func reinforcement_signature() -> Dictionary:
+	var infantry_slot: Dictionary = _reinforcement_slots.get(0, {})
+	var tank_slot: Dictionary = _reinforcement_slots.get(2, {})
+	return {
+		"infantry_limit": int(infantry_slot.get("limit", 0)),
+		"tank_limit": int(tank_slot.get("limit", 0)),
+		"respawn_seconds": float(infantry_slot.get("interval", 0.0)),
+		"enabled_near_boss": _reinforcements_enabled,
+	}
 
 func _on_game_start_requested() -> void:
 	get_tree().change_scene_to_file(NetworkSession.current_level_scene())
