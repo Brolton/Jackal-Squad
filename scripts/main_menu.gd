@@ -15,6 +15,7 @@ var _mission_selector: OptionButton
 var _briefing_label: Label
 
 func _ready() -> void:
+	AudioDirector.stop_music()
 	_build_ui()
 	NetworkSession.lobby_changed.connect(_on_lobby_changed)
 	NetworkSession.status_changed.connect(_on_status_changed)

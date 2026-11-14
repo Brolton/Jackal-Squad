@@ -50,6 +50,7 @@ var _extraction_active := false
 var _respawning := false
 var _hit_flash := 0.0
 var _camera_trauma := 0.0
+var _engine_audio: AudioStreamPlayer
 
 @onready var _collision_shape: CollisionShape2D = $CollisionShape2D
 @onready var _camera: Camera2D = $Camera2D
@@ -81,12 +82,19 @@ func _ready() -> void:
 	if not NetworkSession.is_networked or player_peer_id == multiplayer.get_unique_id():
 		_camera.make_current()
 	_trample_area.body_entered.connect(_on_trample_body_entered)
+	_engine_audio = AudioStreamPlayer.new()
+	_engine_audio.name = "EngineAudio"
+	_engine_audio.stream = AudioDirector.engine_stream()
+	_engine_audio.volume_db = -25.0
+	add_child(_engine_audio)
+	_engine_audio.play()
 	health_changed.emit(health, maximum_health)
 
 func _on_trample_body_entered(body: Node2D) -> void:
 	if NetworkSession.is_networked and not multiplayer.is_server():
 		return
 	if body.has_method("can_be_trampled") and bool(body.call("can_be_trampled")):
+		AudioDirector.play_sfx(&"trample")
 		body.call("take_damage", int(body.get("maximum_health")), player_peer_id)
 
 func _physics_process(delta: float) -> void:
@@ -111,6 +119,11 @@ func _physics_process(delta: float) -> void:
 		_process_client_player(delta)
 	if not NetworkSession.is_networked or multiplayer.is_server():
 		_process_extraction(delta)
+
+func _exit_tree() -> void:
+	if _engine_audio != null:
+		_engine_audio.stop()
+		_engine_audio.stream = null
 
 func _process_host_player(delta: float) -> void:
 	var is_host_player := player_peer_id == 1
@@ -235,6 +248,7 @@ func take_damage(amount: int) -> void:
 	if NetworkSession.is_networked and not multiplayer.is_server():
 		return
 	health = maxi(health - amount, 0)
+	AudioDirector.play_sfx(&"hit")
 	_hit_flash = 0.13
 	_camera_trauma = minf(1.0, _camera_trauma + 0.55)
 	queue_redraw()
@@ -302,6 +316,7 @@ func _fire_primary() -> void:
 	if _primary_cooldown > 0.0:
 		return
 	_primary_cooldown = maxf(0.12, 0.30 - float(primary_upgrade_level) * 0.05)
+	AudioDirector.play_sfx(&"shot")
 	var projectile_damage := 1
 	if primary_upgrade_level >= 2:
 		projectile_damage = 2
@@ -330,6 +345,7 @@ func _fire_secondary() -> void:
 	if _secondary_cooldown > 0.0:
 		return
 	_secondary_cooldown = maxf(0.6, 1.2 - float(secondary_upgrade_level) * 0.15)
+	AudioDirector.play_sfx(&"grenade_throw")
 	var upgraded_blast_radius := 92.0 + float(secondary_upgrade_level) * 12.0
 	var grenade := GRENADE_SCENE.instantiate()
 	grenade.configure(global_position + facing * 24.0, facing, self, false, upgraded_blast_radius)
@@ -398,6 +414,10 @@ func draw_ellipse_shadow(center: Vector2, size: Vector2, color: Color) -> void:
 	draw_colored_polygon(points, color)
 
 func _update_feedback(delta: float) -> void:
+	if _engine_audio != null:
+		var speed_ratio := clampf(velocity.length() / maximum_speed, 0.0, 1.0)
+		_engine_audio.pitch_scale = lerpf(0.82, 1.34, speed_ratio)
+		_engine_audio.volume_db = lerpf(-25.0, -17.0, speed_ratio)
 	if _hit_flash > 0.0:
 		_hit_flash = maxf(0.0, _hit_flash - delta)
 		queue_redraw()

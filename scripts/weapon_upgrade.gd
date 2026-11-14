@@ -20,6 +20,7 @@ func _on_body_entered(body: Node2D) -> void:
 		return
 	if not bool(body.call("apply_weapon_upgrade", upgrade_type)):
 		return
+	AudioDirector.play_sfx(&"pickup")
 	if NetworkSession.is_networked:
 		NetworkSession.replicate_upgrade_pickup_collected(name)
 	queue_free()

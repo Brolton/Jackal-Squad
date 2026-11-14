@@ -52,6 +52,7 @@ func _explode() -> void:
 	if _exploded:
 		return
 	_exploded = true
+	AudioDirector.play_sfx(&"explosion")
 	_collision_shape.set_deferred("disabled", true)
 	monitoring = false
 

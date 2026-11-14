@@ -305,6 +305,7 @@ func rpc_show_projectile(
 	var projectile := PROJECTILE_SCENE.instantiate()
 	projectile.configure(spawn_position, direction, null, hostile, damage, speed, false)
 	get_tree().current_scene.add_child(projectile)
+	AudioDirector.play_sfx(&"enemy_shot" if hostile else &"shot")
 
 @rpc("authority", "call_remote", "unreliable")
 func rpc_show_grenade(spawn_position: Vector2, direction: Vector2, blast_radius: float) -> void:
@@ -313,6 +314,7 @@ func rpc_show_grenade(spawn_position: Vector2, direction: Vector2, blast_radius:
 	var grenade := GRENADE_SCENE.instantiate()
 	grenade.configure(spawn_position, direction, null, true, blast_radius)
 	get_tree().current_scene.add_child(grenade)
+	AudioDirector.play_sfx(&"grenade_throw")
 
 func replicate_upgrade_pickup_collected(pickup_name: String) -> void:
 	if not is_networked or not is_host:
@@ -326,6 +328,7 @@ func rpc_remove_upgrade_pickup(pickup_name: String) -> void:
 		return
 	var pickup := get_tree().current_scene.get_node_or_null(pickup_name)
 	if pickup != null:
+		AudioDirector.play_sfx(&"pickup")
 		pickup.queue_free()
 
 @rpc("authority", "call_remote", "reliable")

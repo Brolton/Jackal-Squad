@@ -37,6 +37,8 @@ The game has three selectable campaign missions: Emerald Approach, Flooded Delta
 
 The presentation uses original project-specific key art, painted terrain, and high-resolution transparent top-down sprites for player jeeps, infantry, turrets, tanks, and boats. Primary upgrades add visible gun barrels and cyan indicators; grenade upgrades add rocket pods and orange indicators. The menu, mission briefings, tactical HUD, and mission-result flow share a cohesive teal, jungle-green, and warm-gold visual language.
 
+The soundtrack and sound effects are original procedural 8-bit PCM synthesized by the game at runtime. Each mission has looping chiptune music, and gameplay includes responsive jeep-engine, machine-gun, enemy-fire, grenade, explosion, impact, ramming, and pickup audio.
+
 Minefields create route hazards on all three maps. Damage now produces a hit flash and local camera response, enemy durability and firing pressure scale with squad size, and the pause/results flows support restart, mission advancement, campaign completion, and return to command.
 
 Automated solo and two-/four-player loopback tests pass. The Windows release export was built and its headless startup check passed. Windowed visual play and connectivity outside loopback remain unverified.

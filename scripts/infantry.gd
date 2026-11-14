@@ -178,6 +178,7 @@ func _nearest_player() -> Node2D:
 
 func _fire_at(direction: Vector2) -> void:
 	_fire_cooldown = fire_interval
+	AudioDirector.play_sfx(&"enemy_shot")
 	var projectile := PROJECTILE_SCENE.instantiate()
 	projectile.configure(
 		global_position + direction * 18.0,

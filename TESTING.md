@@ -177,3 +177,7 @@ The parser/import check, `test_milestone3.gd`, and `test_visual_presentation.gd`
 ## Presentation pass — battlefield rendering
 
 The parser/import check, `test_visual_presentation.gd`, and `test_level_layouts.gd` passed after replacing flat terrain primitives. The test verifies the high-resolution painted river texture and the rendering contract for layered road shoulders, surfaces, dual wheel tracks, irregular bank/foam layers, and planked bridge decks. All three campaign maps still instantiate with their expected bounds, encounters, rescues, cameras, extraction zones, and bases.
+
+## Presentation pass — original audio
+
+`test_audio_presentation.gd` and the Milestone 3 regression passed after adding runtime-synthesized 16 kHz PCM. The focused test verifies a four-second looping chiptune, a responsive looping engine waveform, seven gameplay effect types, level music startup, and live machine-gun/grenade triggers. Mission teardown stops and frees active audio voices so scene changes do not retain playback nodes.

@@ -22,6 +22,7 @@ var _layout: Dictionary = {}
 func _ready() -> void:
 	_layout = LevelLayouts.get_layout(level_index)
 	map_size = _layout["map_size"]
+	AudioDirector.start_music(level_index)
 	NetworkSession.set_loaded_level(level_index)
 	queue_redraw()
 	_create_map_collisions()
@@ -33,6 +34,9 @@ func _ready() -> void:
 	_create_final_base()
 	add_child(PAUSE_MENU_SCENE.instantiate())
 	NetworkSession.player_left.connect(_on_player_left)
+
+func _exit_tree() -> void:
+	AudioDirector.stop_mission_audio()
 
 func _draw() -> void:
 	var palette: Array = _layout["palette"]

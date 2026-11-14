@@ -33,6 +33,7 @@ func _trigger(body: Node2D = null) -> void:
 		return
 	_armed = false
 	_exploded = true
+	AudioDirector.play_sfx(&"explosion", -2.0)
 	monitoring = false
 	if body != null and body.has_method("take_damage"):
 		body.call("take_damage", damage)
