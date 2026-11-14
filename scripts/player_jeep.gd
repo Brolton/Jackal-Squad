@@ -43,6 +43,7 @@ var _target_rotation := 0.0
 var _has_authoritative_state := false
 var authoritative_state_count := 0
 var last_authoritative_position := Vector2.ZERO
+var minimum_received_health := 999
 var _primary_cooldown := 0.0
 var _secondary_cooldown := 0.0
 var _extraction_unload_timer := 0.0
@@ -73,6 +74,7 @@ func _ready() -> void:
 	collision_mask = 37
 	add_to_group("players")
 	health = maximum_health
+	minimum_received_health = maximum_health
 	spawn_position = global_position
 	_install_input_actions()
 	_nickname_label.text = player_nickname
@@ -200,6 +202,7 @@ func rpc_receive_state(
 	authoritative_state_count += 1
 	if health != current_health:
 		health = current_health
+		minimum_received_health = mini(minimum_received_health, current_health)
 		health_changed.emit(health, maximum_health)
 	if visible != is_visible:
 		visible = is_visible

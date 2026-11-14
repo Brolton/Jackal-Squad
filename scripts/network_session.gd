@@ -21,6 +21,7 @@ var is_networked := false
 var is_host := false
 var match_started := false
 var status_message := "Choose a game mode."
+var auto_advance_enabled := true
 var evacuated_passengers := 0
 var rescued_passengers := 0
 var mission_started := false

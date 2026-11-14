@@ -83,12 +83,12 @@ func _run_tests() -> void:
 	Input.action_release("fire_secondary")
 	_check(get_nodes_in_group("grenades").size() > 0, "Secondary fire spawns a grenade")
 
-	var damage_target: CharacterBody2D = get_nodes_in_group("enemies")[-1]
+	var damage_target: CharacterBody2D = game.get_node("Tank01")
 	var health_before: int = damage_target.get("health")
 	damage_target.call("take_damage", 1)
-	_check(int(damage_target.get("health")) == health_before - 1, "Enemy damage reduces infantry health")
+	_check(int(damage_target.get("health")) == health_before - 1, "Enemy damage reduces heavy-unit health")
 
-	var projectile_target: CharacterBody2D = get_nodes_in_group("enemies")[-2]
+	var projectile_target: CharacterBody2D = game.get_node("Turret01")
 	var projectile_health_before: int = projectile_target.get("health")
 	var projectile: Area2D = load("res://scenes/projectile.tscn").instantiate()
 	projectile.configure(projectile_target.global_position, Vector2.UP, player, false, 1, 1.0)

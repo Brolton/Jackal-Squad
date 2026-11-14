@@ -8,6 +8,7 @@ var _role := ""
 var _departed_positions: Dictionary = {}
 
 func _ready() -> void:
+	NetworkSession.auto_advance_enabled = false
 	var arguments := OS.get_cmdline_user_args()
 	if not arguments.is_empty():
 		_role = str(arguments[0]).trim_prefix("--")
@@ -298,7 +299,7 @@ func _run_client() -> void:
 	)
 	if expected_slot == 1:
 		_check(
-			int(local_player.get("health")) < int(local_player.get("maximum_health")),
+			int(local_player.get("minimum_received_health")) < int(local_player.get("maximum_health")),
 			"Host synchronizes damage to the targeted player"
 		)
 	var rescue_deadline := Time.get_ticks_msec() + 6000
@@ -336,13 +337,14 @@ func _run_client() -> void:
 		"Host synchronizes helicopter rescue totals"
 	)
 	var mission_deadline := Time.get_ticks_msec() + 5000
+	var expected_enemy_total := 2 if NetworkSession.players.size() <= 2 else 3
 	var local_contribution: Dictionary = NetworkSession.player_contributions.get(local_peer_id, {})
 	while (
 		(
 			get_tree().current_scene.get_node_or_null("FinalBase") != null
 			or not NetworkSession.final_base_destroyed
-			or NetworkSession.enemies_destroyed != 1
-			or int(local_contribution.get("enemies_destroyed", 0)) != (1 if expected_slot == 1 else 0)
+			or NetworkSession.enemies_destroyed != expected_enemy_total
+			or int(local_contribution.get("enemies_destroyed", 0)) != (expected_enemy_total if expected_slot == 1 else 0)
 			or int(local_contribution.get("passengers_rescued", 0)) != (1 if expected_slot == 1 else 0)
 			or int(local_contribution.get("final_bases_destroyed", 0)) != (1 if expected_slot == 1 else 0)
 		)
@@ -355,9 +357,9 @@ func _run_client() -> void:
 		and NetworkSession.final_base_destroyed,
 		"Host synchronizes final base destruction"
 	)
-	_check(NetworkSession.enemies_destroyed == 1, "Host synchronizes mission enemy totals")
+	_check(NetworkSession.enemies_destroyed == expected_enemy_total, "Host synchronizes mission enemy and boss-turret totals")
 	_check(
-		int(local_contribution.get("enemies_destroyed", 0)) == (1 if expected_slot == 1 else 0)
+		int(local_contribution.get("enemies_destroyed", 0)) == (expected_enemy_total if expected_slot == 1 else 0)
 		and int(local_contribution.get("passengers_rescued", 0)) == (1 if expected_slot == 1 else 0)
 		and int(local_contribution.get("final_bases_destroyed", 0)) == (1 if expected_slot == 1 else 0),
 		"Host synchronizes player contribution totals"

@@ -34,9 +34,13 @@ func _ready() -> void:
 	_create_final_base()
 	add_child(PAUSE_MENU_SCENE.instantiate())
 	NetworkSession.player_left.connect(_on_player_left)
+	NetworkSession.game_start_requested.connect(_on_game_start_requested)
 
 func _exit_tree() -> void:
 	AudioDirector.stop_mission_audio()
+
+func _on_game_start_requested() -> void:
+	get_tree().change_scene_to_file(NetworkSession.current_level_scene())
 
 func _draw() -> void:
 	var palette: Array = _layout["palette"]

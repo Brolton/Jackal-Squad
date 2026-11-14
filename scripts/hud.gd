@@ -97,7 +97,7 @@ func _refresh_victory_panel() -> void:
 	_victory_panel.visible = _mission_completed
 	if not _mission_completed:
 		return
-	if not _auto_advance_started and (not NetworkSession.is_networked or NetworkSession.is_host):
+	if NetworkSession.auto_advance_enabled and not _auto_advance_started and (not NetworkSession.is_networked or NetworkSession.is_host):
 		_auto_advance_started = true
 		_auto_continue_after_delay.call_deferred()
 	_victory_title.text = (
