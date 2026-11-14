@@ -72,3 +72,10 @@ LAN/Tailscale sessions have not been tested yet.
 - [x] Replace flat roads and water rectangles with richer battlefield rendering.
 - [x] Add original music and gameplay sound effects.
 - [x] Run regression and multiplayer validation, then publish a refreshed build.
+
+## Action-movie audio and visibility pass
+
+- [x] Widen the tactical camera and bias the view toward the driving direction.
+- [ ] Replace the mission loop with a faster original 1990s-style action chiptune.
+- [ ] Add a synchronized infantry death cry.
+- [ ] Run regression, multiplayer validation, and publish a refreshed build.

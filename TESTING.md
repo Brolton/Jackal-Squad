@@ -194,3 +194,7 @@ Final validation completed on Godot `4.7.2.stable.official.ed1daf0bf`:
 - SHA-256: `7F410442F1A082D286C211C137454DD8BE1B821A31901E1DE832BF70EA800D77`.
 
 Windows window capture did not grant automation access to the local QA executable, so final interactive visual judgment remains a manual check. Automated tests directly cover base-viewport menu fit, compact HUD dimensions, fixed fullscreen framing, vehicle scale contracts, terrain assets/rendering layers, and audio wiring.
+
+## Action pass — wider tactical camera
+
+The gameplay camera now uses 0.78× zoom, exposing roughly 1231×692 world units instead of 1067×600, while fixed 16:9 stretching still prevents window resizing from revealing additional terrain. A 70-unit forward offset gives the player more reaction space in the driving direction. `test_controls_camera.gd` directly verifies the zoom, look-ahead, world-visibility ceiling, aspect behavior, and combat bindings.
