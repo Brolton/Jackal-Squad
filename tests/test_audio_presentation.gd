@@ -7,6 +7,7 @@ func _initialize() -> void:
 
 func _run_tests() -> void:
 	var audio: Node = root.get_node("AudioDirector")
+	audio.call("set_music_enabled", true)
 	var manifest: Dictionary = audio.call("audio_manifest")
 	_check(float(manifest["music_seconds"]) >= 6.0, "Mission music has a developed multi-phrase action loop")
 	_check(int(manifest["tempo_bpm"]) >= 145, "Mission music uses a fast action tempo")
@@ -32,6 +33,20 @@ func _run_tests() -> void:
 	var soldier: Node = game.get_node("Infantry01")
 	soldier.call("take_damage", int(soldier.get("maximum_health")), 1)
 	_check(audio.get_node_or_null("SFX_soldier_death") != null, "Infantry death triggers a distinct synthesized cry")
+	var enemy_scene: PackedScene = load("res://scenes/infantry.tscn")
+	var vehicle_names := ["turret", "tank", "boat"]
+	for index in range(vehicle_names.size()):
+		var vehicle: Node = enemy_scene.instantiate()
+		vehicle.call("configure_enemy", index + 1)
+		game.add_child(vehicle)
+		var explosions_before := _count_sfx(audio, "explosion")
+		vehicle.call("take_damage", int(vehicle.get("health")), 1)
+		var explosions_after := _count_sfx(audio, "explosion")
+		_check(
+			explosions_after > explosions_before,
+			"Destroying an enemy %s plays an explosion (%d to %d)"
+			% [vehicle_names[index], explosions_before, explosions_after]
+		)
 	player.call("try_add_passenger")
 	_check(
 		audio.get_node_or_null("SFX_passenger_boarded") != null,
@@ -42,6 +57,14 @@ func _run_tests() -> void:
 	_check(
 		audio.get_node_or_null("SFX_helicopter_arrival") != null,
 		"Helicopter arrival plays a distinct sound"
+	)
+	var player_explosions_before := _count_sfx(audio, "explosion")
+	player.call("take_damage", int(player.get("health")))
+	var player_explosions_after := _count_sfx(audio, "explosion")
+	_check(
+		player_explosions_after > player_explosions_before,
+		"A destroyed player jeep plays an explosion (%d to %d)"
+		% [player_explosions_before, player_explosions_after]
 	)
 
 	game.queue_free()
@@ -78,3 +101,14 @@ func _check(condition: bool, message: String) -> void:
 	else:
 		_failures += 1
 		push_error("FAIL: %s" % message)
+
+func _count_sfx(audio: Node, kind: String) -> int:
+	var cache: Dictionary = audio.get("_sfx_cache")
+	var stream: AudioStream = cache.get(StringName(kind))
+	if stream == null:
+		return 0
+	var count := 0
+	for child in audio.get_children():
+		if child is AudioStreamPlayer and child.stream == stream:
+			count += 1
+	return count

@@ -67,11 +67,13 @@ func rpc_destroy_base() -> void:
 	if NetworkSession.is_host or _destroyed:
 		return
 	_destroyed = true
+	AudioDirector.play_sfx(&"explosion", -0.5)
 	queue_free()
 
 func _destroy(attacker_peer_id: int) -> void:
 	_destroyed = true
 	NetworkSession.record_final_base_destroyed(attacker_peer_id)
+	AudioDirector.play_sfx(&"explosion", -0.5)
 	if NetworkSession.is_networked and NetworkSession.is_host:
 		rpc("rpc_destroy_base")
 	queue_free()

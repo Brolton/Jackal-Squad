@@ -233,9 +233,12 @@ func rpc_receive_state(
 	last_authoritative_position = world_position
 	authoritative_state_count += 1
 	if health != current_health:
+		var was_alive := health > 0
 		health = current_health
 		minimum_received_health = mini(minimum_received_health, current_health)
 		health_changed.emit(health, maximum_health)
+		if was_alive and health <= 0:
+			AudioDirector.play_sfx(&"explosion", -1.0)
 	_set_lives(remaining_lives)
 	var was_eliminated := _eliminated
 	var previous_spectator_target := _spectator_target_peer_id
@@ -368,6 +371,7 @@ func take_damage(amount: int) -> void:
 	queue_redraw()
 	health_changed.emit(health, maximum_health)
 	if health == 0:
+		AudioDirector.play_sfx(&"explosion", -1.0)
 		_respawn()
 
 func apply_weapon_upgrade(upgrade_type: StringName) -> bool:

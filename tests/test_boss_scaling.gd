@@ -47,6 +47,13 @@ func _run_tests() -> void:
 	_check(not bool(boss.get("shielded")), "Destroying the final turret exposes the core")
 	boss.call("take_damage", 3, 1)
 	_check(int(boss.get("health")) == health_before - 3, "Exposed boss core takes damage")
+	var audio: Node = root.get_node("AudioDirector")
+	var explosions_before := _count_sfx(audio, "explosion")
+	boss.call("take_damage", int(boss.get("health")), 1)
+	_check(
+		boss.is_queued_for_deletion() and _count_sfx(audio, "explosion") == explosions_before + 1,
+		"Destroying the final base plays an explosion"
+	)
 	boss.queue_free()
 	await process_frame
 
@@ -92,3 +99,14 @@ func _check(condition: bool, message: String) -> void:
 	else:
 		_failures += 1
 		push_error("FAIL: %s" % message)
+
+func _count_sfx(audio: Node, kind: String) -> int:
+	var cache: Dictionary = audio.get("_sfx_cache")
+	var stream: AudioStream = cache.get(StringName(kind))
+	if stream == null:
+		return 0
+	var count := 0
+	for child in audio.get_children():
+		if child is AudioStreamPlayer and child.stream == stream:
+			count += 1
+	return count

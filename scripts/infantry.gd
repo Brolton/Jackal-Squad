@@ -21,6 +21,7 @@ var projectile_damage := 1
 var projectile_speed := 300.0
 var _fire_cooldown := 0.45
 var _network_sync_timer := 0.0
+var _death_sound_played := false
 var _target_position := Vector2.ZERO
 var _target_rotation := 0.0
 var _has_authoritative_state := false
@@ -179,8 +180,7 @@ func take_damage(amount: int, attacker_peer_id: int = 0) -> void:
 	_hit_flash = 0.10
 	queue_redraw()
 	if health == 0:
-		if enemy_type == EnemyType.INFANTRY:
-			AudioDirector.play_sfx(&"soldier_death")
+		_play_death_sound()
 		NetworkSession.record_enemy_destroyed(attacker_peer_id)
 		if NetworkSession.is_networked and multiplayer.is_server():
 			for peer_id in NetworkSession.connected_peer_ids():
@@ -194,16 +194,27 @@ func rpc_receive_state(world_position: Vector2, world_rotation: float, current_h
 	_target_position = world_position
 	_target_rotation = world_rotation
 	_has_authoritative_state = true
+	var was_alive := health > 0
 	health = current_health
 	if health <= 0:
+		if was_alive:
+			_play_death_sound()
 		queue_free()
 
 @rpc("authority", "call_remote", "reliable")
 func rpc_enemy_destroyed() -> void:
 	if not multiplayer.is_server():
-		if enemy_type == EnemyType.INFANTRY:
-			AudioDirector.play_sfx(&"soldier_death")
+		_play_death_sound()
 		queue_free()
+
+func _play_death_sound() -> void:
+	if _death_sound_played:
+		return
+	_death_sound_played = true
+	if enemy_type == EnemyType.INFANTRY:
+		AudioDirector.play_sfx(&"soldier_death")
+	else:
+		AudioDirector.play_sfx(&"explosion", -2.0)
 
 func _broadcast_state(delta: float) -> void:
 	if not NetworkSession.is_host:
