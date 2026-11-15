@@ -178,6 +178,17 @@ The parser/import check, `test_milestone3.gd`, and `test_visual_presentation.gd`
 
 The parser/import check, `test_visual_presentation.gd`, and `test_level_layouts.gd` passed after replacing flat terrain primitives. The test verifies the high-resolution painted river texture and the rendering contract for layered road shoulders, surfaces, dual wheel tracks, irregular bank/foam layers, and planked bridge decks. All three campaign maps still instantiate with their expected bounds, encounters, rescues, cameras, extraction zones, and bases.
 
+## Player feedback pass — lives and spectator mode
+
+```powershell
+godot --headless --editor --path . --quit
+godot --headless --path . --script res://tests/test_lives_spectator.gd
+```
+
+The focused test verifies the HUD life count and spectator notice, the game-over statistics and restart action, one-life loss and return to the current level's start, permanent elimination at zero lives, spectator target assignment without duplicate targets when enough survivors are available, the +3 level-clear bonus capped at five lives, team game over, and campaign restart from mission one. The Emerald Approach layout test also verifies that each bridge aligns with both the river and a road crossing.
+
+Final validation on Godot `4.7.2.stable.official.ed1daf0bf` passed the editor import, the lives/spectator test, campaign and transition tests, layout, gameplay-polish, controls, visual-presentation, and Milestone 1, 3, 4, and 5 suites. Two-player ENet loopback passed on the host and client. The Windows release export started headlessly and produced `builds\JackalSquad.exe` (128,454,752 bytes; SHA-256 `F3A0DCF63C6342FBA627B6EA92852E7A9FD7E47DBA77AFEEA31BD99A6FC17293`).
+
 ## Presentation pass — original audio
 
 `test_audio_presentation.gd` and the Milestone 3 regression passed after adding runtime-synthesized 16 kHz PCM. The focused test verifies a four-second looping chiptune, a responsive looping engine waveform, seven gameplay effect types, level music startup, and live machine-gun/grenade triggers. Mission teardown stops and frees active audio voices so scene changes do not retain playback nodes.

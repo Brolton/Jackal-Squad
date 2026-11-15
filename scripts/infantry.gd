@@ -124,7 +124,7 @@ func _physics_process(delta: float) -> void:
 			rotation = lerp_angle(rotation, _target_rotation, weight)
 			_update_walk_animation(global_position.distance_squared_to(previous_position) > 0.0025, delta)
 		return
-	if NetworkSession.mission_completed:
+	if NetworkSession.mission_completed or NetworkSession.game_over:
 		velocity = Vector2.ZERO
 		_update_walk_animation(false, delta)
 		return

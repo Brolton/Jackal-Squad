@@ -63,7 +63,11 @@ func _configure_reinforcements() -> void:
 		_reinforcement_serials[enemy_type] = 0
 
 func _update_reinforcements(delta: float) -> void:
-	if NetworkSession.mission_completed or (NetworkSession.is_networked and not NetworkSession.is_host):
+	if (
+		NetworkSession.mission_completed
+		or NetworkSession.game_over
+		or (NetworkSession.is_networked and not NetworkSession.is_host)
+	):
 		return
 	var boss := get_node_or_null("FinalBase") as Node2D
 	if boss == null:
@@ -440,6 +444,7 @@ func _create_players_and_enemies() -> void:
 		player.name = "Player_%d" % int(peer_id)
 		player.configure(int(peer_id), str(profile["nickname"]), slot)
 		player.configure_world_bounds(map_size)
+		player.configure_lives(NetworkSession.ensure_player_lives(int(peer_id)))
 		player.position = _layout["spawns"][slot]
 		add_child(player)
 		if not NetworkSession.is_networked or int(peer_id) == multiplayer.get_unique_id():
@@ -467,9 +472,12 @@ func _create_players_and_enemies() -> void:
 	add_child(hud)
 	if local_player != null:
 		local_player.connect(&"health_changed", Callable(hud, "update_health"))
+		local_player.connect(&"lives_changed", Callable(hud, "update_lives"))
+		local_player.connect(&"spectator_changed", Callable(hud, "update_spectator_state"))
 		local_player.connect(&"weapon_upgrades_changed", Callable(hud, "update_weapon_upgrades"))
 		local_player.connect(&"passenger_count_changed", Callable(hud, "update_passengers"))
 		hud.call("update_health", local_player.get("health"), local_player.get("maximum_health"))
+		hud.call("update_lives", local_player.get("lives"), NetworkSession.STARTING_PLAYER_LIVES)
 		hud.call(
 			"update_weapon_upgrades",
 			local_player.get("primary_upgrade_level"),

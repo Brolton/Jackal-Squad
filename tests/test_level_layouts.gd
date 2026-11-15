@@ -97,6 +97,18 @@ func _run_tests() -> void:
 					if bridge.position.y <= water.get_center().y and bridge.end.y >= water.get_center().y:
 						crosses_river = true
 				_check(crosses_river, "Every bridge is aligned with the river")
+				var closest_road_distance := INF
+				for road_path: Array in layout["roads"]:
+					for segment_index in range(1, road_path.size()):
+						closest_road_distance = minf(
+							closest_road_distance,
+							_point_to_segment_distance(
+								bridge.get_center(),
+								road_path[segment_index - 1],
+								road_path[segment_index]
+							)
+						)
+				_check(closest_road_distance <= 1.0, "Every bridge lines up with a road crossing")
 			var boat_count := 0
 			var patrol_boat: Node2D
 			for enemy in get_nodes_in_group("enemies"):
@@ -166,3 +178,8 @@ func _max_flank_gap(layout: Dictionary, left_edge: bool) -> float:
 	for index in range(1, positions.size()):
 		maximum_gap = maxf(maximum_gap, positions[index] - positions[index - 1])
 	return maximum_gap
+
+func _point_to_segment_distance(point: Vector2, start: Vector2, finish: Vector2) -> float:
+	var segment := finish - start
+	var projection := clampf((point - start).dot(segment) / segment.length_squared(), 0.0, 1.0)
+	return point.distance_to(start + segment * projection)

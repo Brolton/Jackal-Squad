@@ -9,6 +9,8 @@ signal mission_state_changed(state: Dictionary)
 
 const PORT := 24567
 const MAX_PLAYERS := 4
+const STARTING_PLAYER_LIVES := 5
+const LEVEL_CLEAR_LIFE_BONUS := 3
 const RESCUE_OBJECTIVE_TOTAL := 6
 const MAIN_SCENE := "res://scenes/main.tscn"
 const GAME_SCENE := "res://scenes/level_01.tscn"
@@ -27,12 +29,15 @@ var evacuated_passengers := 0
 var rescued_passengers := 0
 var mission_started := false
 var mission_completed := false
+var game_over := false
 var mission_elapsed := 0.0
 var enemies_destroyed := 0
 var final_base_destroyed := false
 var player_contributions: Dictionary = {}
 var campaign_level_index := 0
 var loaded_level_index := -1
+var player_lives: Dictionary = {}
+var spectator_targets: Dictionary = {}
 var _pending_passenger_contributions: Dictionary = {}
 var _mission_state_timer := 0.0
 
@@ -44,7 +49,7 @@ func _ready() -> void:
 	multiplayer.server_disconnected.connect(_on_server_disconnected)
 
 func _process(delta: float) -> void:
-	if not mission_started or mission_completed or (is_networked and not is_host):
+	if not mission_started or mission_completed or game_over or (is_networked and not is_host):
 		return
 	mission_elapsed += delta
 	_mission_state_timer -= delta
@@ -58,6 +63,7 @@ func start_solo(nickname: String, selected_level: int = 0) -> void:
 	_reset_rescue_score()
 	local_nickname = _clean_nickname(nickname)
 	players = {1: _make_profile(local_nickname, 0)}
+	_reset_player_lives()
 	match_started = true
 	_start_mission()
 	_set_status("Starting solo mission.")
@@ -78,6 +84,7 @@ func host_game(nickname: String) -> bool:
 	match_started = false
 	_reset_rescue_score()
 	players = {1: _make_profile(local_nickname, 0)}
+	_reset_player_lives()
 	_publish_lobby()
 	var discovery_ready := LanDiscovery.start_host(local_nickname, players.size(), MAX_PLAYERS)
 	var addresses := LanDiscovery.local_ipv4_addresses()
@@ -107,6 +114,8 @@ func join_game(address: String, nickname: String) -> bool:
 	match_started = false
 	_reset_rescue_score()
 	players.clear()
+	player_lives.clear()
+	spectator_targets.clear()
 	_set_status("Connecting to %s:%d..." % [host_address, PORT])
 	return true
 
@@ -143,12 +152,29 @@ func advance_campaign() -> bool:
 	if is_networked and not is_host:
 		return false
 	campaign_level_index += 1
+	for peer_id in players:
+		var current_lives := int(player_lives.get(peer_id, STARTING_PLAYER_LIVES))
+		player_lives[peer_id] = mini(STARTING_PLAYER_LIVES, current_lives + LEVEL_CLEAR_LIFE_BONUS)
+	_update_spectator_targets()
 	_reset_rescue_score()
 	_start_mission()
 	game_start_requested.emit()
 	if is_host:
 		for peer_id in connected_peer_ids():
 			rpc_id(peer_id, "rpc_advance_campaign", campaign_level_index, _get_mission_state())
+	return true
+
+func restart_campaign() -> bool:
+	if is_networked and not is_host:
+		return false
+	campaign_level_index = 0
+	_reset_player_lives()
+	_reset_rescue_score()
+	_start_mission()
+	game_start_requested.emit()
+	if is_host:
+		for peer_id in connected_peer_ids():
+			rpc_id(peer_id, "rpc_restart_mission", campaign_level_index, _get_mission_state())
 	return true
 
 func restart_current_mission() -> bool:
@@ -161,6 +187,34 @@ func restart_current_mission() -> bool:
 		for peer_id in connected_peer_ids():
 			rpc_id(peer_id, "rpc_restart_mission", campaign_level_index, _get_mission_state())
 	return true
+
+func ensure_player_lives(peer_id: int) -> int:
+	if peer_id <= 0:
+		push_error("Player life state requires a positive peer ID.")
+		return 0
+	if not player_lives.has(peer_id):
+		player_lives[peer_id] = STARTING_PLAYER_LIVES
+	return int(player_lives[peer_id])
+
+func consume_player_life(peer_id: int) -> int:
+	if is_networked and not is_host:
+		return ensure_player_lives(peer_id)
+	if peer_id <= 0:
+		push_error("Cannot consume a life for an invalid peer ID.")
+		return 0
+	var remaining_lives := maxi(0, ensure_player_lives(peer_id) - 1)
+	player_lives[peer_id] = remaining_lives
+	_ensure_player_contribution(peer_id)
+	var contribution: Dictionary = player_contributions[peer_id]
+	contribution["deaths"] = int(contribution.get("deaths", 0)) + 1
+	player_contributions[peer_id] = contribution
+	_update_spectator_targets()
+	_check_team_elimination()
+	_publish_mission_state()
+	return remaining_lives
+
+func spectator_target_for(peer_id: int) -> int:
+	return int(spectator_targets.get(peer_id, 0))
 
 @rpc("authority", "call_remote", "reliable")
 func rpc_restart_mission(level_index: int, mission_state: Dictionary) -> void:
@@ -216,7 +270,7 @@ func collect_evacuated_passengers() -> void:
 	_publish_rescue_score()
 
 func record_enemy_destroyed(attacker_peer_id: int) -> void:
-	if (is_networked and not is_host) or mission_completed:
+	if (is_networked and not is_host) or mission_completed or game_over:
 		return
 	enemies_destroyed += 1
 	if attacker_peer_id > 0:
@@ -227,7 +281,7 @@ func record_enemy_destroyed(attacker_peer_id: int) -> void:
 	_publish_mission_state()
 
 func record_final_base_destroyed(attacker_peer_id: int) -> void:
-	if (is_networked and not is_host) or final_base_destroyed:
+	if (is_networked and not is_host) or final_base_destroyed or game_over:
 		return
 	final_base_destroyed = true
 	if attacker_peer_id > 0:
@@ -286,6 +340,7 @@ func rpc_register_player(requested_nickname: String) -> void:
 		return
 
 	players[peer_id] = _make_profile(requested_nickname, _first_available_slot())
+	player_lives[peer_id] = STARTING_PLAYER_LIVES
 	_publish_lobby()
 	_set_status("%s joined the lobby." % players[peer_id]["nickname"])
 
@@ -414,7 +469,13 @@ func _on_peer_disconnected(peer_id: int) -> void:
 	player_left.emit(peer_id)
 	var departed_name: String = players[peer_id]["nickname"]
 	players.erase(peer_id)
+	player_lives.erase(peer_id)
+	spectator_targets.erase(peer_id)
+	_update_spectator_targets()
+	_check_team_elimination()
 	_publish_lobby(peer_id)
+	if match_started:
+		_publish_mission_state()
 	_set_status("%s left the lobby." % departed_name)
 
 func _on_connected_to_server() -> void:
@@ -428,6 +489,8 @@ func _on_connection_failed() -> void:
 	multiplayer.multiplayer_peer = null
 	players.clear()
 	_reset_rescue_score()
+	player_lives.clear()
+	spectator_targets.clear()
 	lobby_changed.emit({})
 	_set_status(
 		"Host unreachable. Use the LAN address shown on the host and allow JackalSquad.exe through Windows Firewall (UDP %d/%d)."
@@ -443,6 +506,8 @@ func _on_server_disconnected() -> void:
 	multiplayer.multiplayer_peer = null
 	players.clear()
 	_reset_rescue_score()
+	player_lives.clear()
+	spectator_targets.clear()
 	lobby_changed.emit({})
 	_set_status("Disconnected from the host.")
 	if get_tree().current_scene != null and get_tree().current_scene.scene_file_path != MAIN_SCENE:
@@ -474,6 +539,7 @@ func _reset_rescue_score() -> void:
 	rescued_passengers = 0
 	mission_started = false
 	mission_completed = false
+	game_over = false
 	mission_elapsed = 0.0
 	enemies_destroyed = 0
 	final_base_destroyed = false
@@ -486,6 +552,7 @@ func _reset_rescue_score() -> void:
 func _start_mission() -> void:
 	mission_started = true
 	mission_completed = false
+	game_over = false
 	mission_elapsed = 0.0
 	enemies_destroyed = 0
 	final_base_destroyed = false
@@ -493,13 +560,48 @@ func _start_mission() -> void:
 	_pending_passenger_contributions.clear()
 	_mission_state_timer = 0.5
 	for peer_id in players:
+		ensure_player_lives(int(peer_id))
 		_ensure_player_contribution(int(peer_id))
+	_update_spectator_targets()
+	_check_team_elimination()
 	mission_state_changed.emit(_get_mission_state())
+
+func _reset_player_lives() -> void:
+	player_lives.clear()
+	spectator_targets.clear()
+	for peer_id in players:
+		player_lives[int(peer_id)] = STARTING_PLAYER_LIVES
+
+func _update_spectator_targets() -> void:
+	spectator_targets.clear()
+	var active_players: Array[int] = []
+	var eliminated_players: Array[int] = []
+	for peer_id in players:
+		var id := int(peer_id)
+		if int(player_lives.get(id, STARTING_PLAYER_LIVES)) > 0:
+			active_players.append(id)
+		else:
+			eliminated_players.append(id)
+	if active_players.is_empty():
+		return
+	active_players.shuffle()
+	eliminated_players.sort()
+	for index in range(eliminated_players.size()):
+		spectator_targets[eliminated_players[index]] = active_players[index % active_players.size()]
+
+func _check_team_elimination() -> void:
+	if players.is_empty():
+		return
+	for peer_id in players:
+		if int(player_lives.get(peer_id, STARTING_PLAYER_LIVES)) > 0:
+			return
+	game_over = true
 
 func _get_mission_state() -> Dictionary:
 	return {
 		"mission_started": mission_started,
 		"mission_completed": mission_completed,
+		"game_over": game_over,
 		"mission_elapsed": mission_elapsed,
 		"enemies_destroyed": enemies_destroyed,
 		"final_base_destroyed": final_base_destroyed,
@@ -511,6 +613,8 @@ func _get_mission_state() -> Dictionary:
 		"level_name": CampaignCatalog.display_name(campaign_level_index),
 		"campaign_completed": mission_completed and CampaignCatalog.is_last(campaign_level_index),
 		"player_contributions": player_contributions.duplicate(true),
+		"player_lives": player_lives.duplicate(true),
+		"spectator_targets": spectator_targets.duplicate(true),
 	}
 
 func _apply_mission_state(state: Dictionary) -> void:
@@ -521,12 +625,15 @@ func _apply_mission_state(state: Dictionary) -> void:
 	)
 	mission_started = bool(state.get("mission_started", false))
 	mission_completed = bool(state.get("mission_completed", false))
+	game_over = bool(state.get("game_over", false))
 	mission_elapsed = float(state.get("mission_elapsed", 0.0))
 	enemies_destroyed = int(state.get("enemies_destroyed", 0))
 	final_base_destroyed = bool(state.get("final_base_destroyed", false))
 	evacuated_passengers = int(state.get("evacuated_passengers", 0))
 	rescued_passengers = int(state.get("rescued_passengers", 0))
 	player_contributions = state.get("player_contributions", {}).duplicate(true)
+	player_lives = state.get("player_lives", player_lives).duplicate(true)
+	spectator_targets = state.get("spectator_targets", spectator_targets).duplicate(true)
 	rescue_score_changed.emit(evacuated_passengers, rescued_passengers)
 	mission_state_changed.emit(_get_mission_state())
 
@@ -547,12 +654,14 @@ func _ensure_player_contribution(peer_id: int) -> void:
 		"enemies_destroyed": 0,
 		"passengers_rescued": 0,
 		"final_bases_destroyed": 0,
+		"deaths": 0,
 	}
 
 func _check_mission_completion() -> void:
 	if (
 		mission_started
 		and not mission_completed
+		and not game_over
 		and final_base_destroyed
 	):
 		mission_completed = true
@@ -583,5 +692,8 @@ func _close_session() -> void:
 	is_networked = false
 	is_host = false
 	match_started = false
+	player_lives.clear()
+	spectator_targets.clear()
+	game_over = false
 	if multiplayer.multiplayer_peer != null:
 		multiplayer.multiplayer_peer = null

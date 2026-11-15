@@ -1,6 +1,8 @@
 extends CharacterBody2D
 
 signal health_changed(current: int, maximum: int)
+signal lives_changed(current: int, maximum: int)
+signal spectator_changed(spectating: bool, target_name: String)
 signal weapon_upgrades_changed(primary_level: int, secondary_level: int)
 signal passenger_count_changed(current: int, maximum: int)
 
@@ -24,6 +26,7 @@ const EXTRACTION_UNLOAD_INTERVAL := 0.75
 @export var maximum_health := 5
 
 var health := 5
+var lives := 5
 var facing := Vector2.UP
 var spawn_position := Vector2.ZERO
 var player_peer_id := 1
@@ -50,6 +53,10 @@ var _secondary_cooldown := 0.0
 var _extraction_unload_timer := 0.0
 var _extraction_active := false
 var _respawning := false
+var _eliminated := false
+var _spectator_target_peer_id := 0
+var _spectator_target_name := ""
+var _spectator_status_active := false
 var _hit_flash := 0.0
 var _camera_trauma := 0.0
 var _engine_audio: AudioStreamPlayer
@@ -68,6 +75,16 @@ func configure(peer_id: int, nickname: String, slot: int) -> void:
 
 func configure_world_bounds(bounds: Vector2) -> void:
 	world_size = bounds
+
+func configure_lives(remaining_lives: int) -> void:
+	lives = clampi(remaining_lives, 0, NetworkSession.STARTING_PLAYER_LIVES)
+
+func _set_lives(remaining_lives: int) -> void:
+	var bounded_lives := clampi(remaining_lives, 0, NetworkSession.STARTING_PLAYER_LIVES)
+	if lives == bounded_lives:
+		return
+	lives = bounded_lives
+	lives_changed.emit(lives, NetworkSession.STARTING_PLAYER_LIVES)
 
 func _ready() -> void:
 	motion_mode = CharacterBody2D.MOTION_MODE_FLOATING
@@ -94,6 +111,11 @@ func _ready() -> void:
 	add_child(_engine_audio)
 	_engine_audio.play()
 	health_changed.emit(health, maximum_health)
+	lives_changed.emit(lives, NetworkSession.STARTING_PLAYER_LIVES)
+
+func _process(_delta: float) -> void:
+	if _eliminated:
+		_update_spectator_camera()
 
 func _on_trample_body_entered(body: Node2D) -> void:
 	if NetworkSession.is_networked and not multiplayer.is_server():
@@ -104,11 +126,17 @@ func _on_trample_body_entered(body: Node2D) -> void:
 
 func _physics_process(delta: float) -> void:
 	_update_feedback(delta)
+	if _eliminated:
+		velocity = Vector2.ZERO
+		_update_spectator_camera()
+		if NetworkSession.is_networked and multiplayer.is_server():
+			_broadcast_state(delta)
+		return
 	if _respawning:
 		if NetworkSession.is_networked and multiplayer.is_server():
 			_broadcast_state(delta)
 		return
-	if NetworkSession.mission_completed:
+	if NetworkSession.mission_completed or NetworkSession.game_over:
 		velocity = Vector2.ZERO
 		return
 	if _primary_cooldown > 0.0:
@@ -192,7 +220,9 @@ func rpc_receive_state(
 	is_visible: bool,
 	received_primary_level: int,
 	received_secondary_level: int,
-	received_passengers: int
+	received_passengers: int,
+	remaining_lives: int,
+	spectator_target_peer_id: int
 ) -> void:
 	if not NetworkSession.is_networked or multiplayer.is_server():
 		return
@@ -205,9 +235,19 @@ func rpc_receive_state(
 		health = current_health
 		minimum_received_health = mini(minimum_received_health, current_health)
 		health_changed.emit(health, maximum_health)
+	_set_lives(remaining_lives)
+	var was_eliminated := _eliminated
+	var previous_spectator_target := _spectator_target_peer_id
+	_eliminated = remaining_lives <= 0
+	_spectator_target_peer_id = spectator_target_peer_id
 	if visible != is_visible:
 		visible = is_visible
 		_collision_shape.set_deferred("disabled", not is_visible)
+	if _eliminated:
+		if not was_eliminated or previous_spectator_target != spectator_target_peer_id:
+			_enter_spectator_mode()
+	elif was_eliminated:
+		_leave_spectator_mode()
 	if (
 		primary_upgrade_level != received_primary_level
 		or secondary_upgrade_level != received_secondary_level
@@ -227,6 +267,63 @@ func rpc_receive_state(
 		passenger_count = received_passengers
 		passenger_count_changed.emit(passenger_count, passenger_capacity)
 
+func _enter_spectator_mode() -> void:
+	if not _is_local_player():
+		return
+	_camera.set_as_top_level(true)
+	_camera.make_current()
+	_update_spectator_camera()
+
+func _leave_spectator_mode() -> void:
+	if not _is_local_player():
+		return
+	_camera.set_as_top_level(false)
+	_camera.position = Vector2(0.0, -70.0)
+	_camera.make_current()
+	if _spectator_status_active:
+		_spectator_status_active = false
+		spectator_changed.emit(false, "")
+
+func _update_spectator_camera() -> void:
+	if not _eliminated or not _is_local_player():
+		return
+	var target_id := NetworkSession.spectator_target_for(player_peer_id)
+	if target_id > 0:
+		_spectator_target_peer_id = target_id
+	var target: Node2D
+	for candidate in get_tree().get_nodes_in_group("players"):
+		if (
+			candidate is Node2D
+			and int(candidate.get("player_peer_id")) == _spectator_target_peer_id
+			and int(candidate.get("lives")) > 0
+			and candidate.visible
+		):
+			target = candidate
+			break
+	if target == null:
+		_update_spectator_message("a teammate")
+		return
+	var target_camera := target.get_node_or_null("Camera2D") as Camera2D
+	if target_camera != null:
+		_camera.zoom = target_camera.zoom
+		_camera.limit_left = target_camera.limit_left
+		_camera.limit_top = target_camera.limit_top
+		_camera.limit_right = target_camera.limit_right
+		_camera.limit_bottom = target_camera.limit_bottom
+		_camera.global_position = target_camera.global_position
+	else:
+		_camera.global_position = target.global_position + Vector2(0.0, -70.0)
+	_update_spectator_message(str(target.get("player_nickname")))
+
+func _update_spectator_message(target_name: String) -> void:
+	if not _spectator_status_active or _spectator_target_name != target_name:
+		_spectator_status_active = true
+		_spectator_target_name = target_name
+		spectator_changed.emit(true, target_name)
+
+func _is_local_player() -> bool:
+	return not NetworkSession.is_networked or player_peer_id == multiplayer.get_unique_id()
+
 func _broadcast_state(delta: float) -> void:
 	if not NetworkSession.is_host:
 		return
@@ -244,7 +341,9 @@ func _broadcast_state(delta: float) -> void:
 			visible,
 			primary_upgrade_level,
 			secondary_upgrade_level,
-			passenger_count
+			passenger_count,
+			lives,
+			NetworkSession.spectator_target_for(player_peer_id)
 		)
 
 func _read_movement() -> Vector2:
@@ -257,7 +356,7 @@ func _secondary_pressed() -> bool:
 	return Input.is_action_pressed("fire_secondary")
 
 func take_damage(amount: int) -> void:
-	if amount <= 0 or _respawning:
+	if amount <= 0 or _respawning or _eliminated:
 		return
 	if NetworkSession.is_networked and not multiplayer.is_server():
 		return
@@ -433,10 +532,18 @@ func _respawn() -> void:
 	if _respawning:
 		return
 	_respawning = true
+	lives = NetworkSession.consume_player_life(player_peer_id)
+	lives_changed.emit(lives, NetworkSession.STARTING_PLAYER_LIVES)
 	_reset_weapon_upgrades()
 	_extraction_active = false
 	visible = false
 	_collision_shape.set_deferred("disabled", true)
+	if lives == 0:
+		_eliminated = true
+		_respawning = false
+		_spectator_target_peer_id = NetworkSession.spectator_target_for(player_peer_id)
+		_enter_spectator_mode()
+		return
 	await get_tree().create_timer(1.0).timeout
 	if not is_inside_tree():
 		return

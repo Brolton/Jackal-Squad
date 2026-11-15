@@ -34,7 +34,7 @@ func _ready() -> void:
 	queue_redraw()
 
 func _physics_process(delta: float) -> void:
-	if _destroyed or NetworkSession.mission_completed:
+	if _destroyed or NetworkSession.mission_completed or NetworkSession.game_over:
 		return
 	if _hit_flash > 0.0:
 		_hit_flash = maxf(0.0, _hit_flash - delta)
