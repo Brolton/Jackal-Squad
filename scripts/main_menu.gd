@@ -121,6 +121,22 @@ func _build_ui() -> void:
 	content.add_child(_briefing_label)
 	_on_mission_selected(0)
 
+	var settings_row := HBoxContainer.new()
+	settings_row.add_theme_constant_override("separation", 6)
+	var settings_label := Label.new()
+	settings_label.text = "SETTINGS"
+	settings_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	settings_label.add_theme_font_size_override("font_size", 10)
+	settings_label.add_theme_color_override("font_color", VisualTheme.GOLD)
+	settings_row.add_child(settings_label)
+	var music_toggle := CheckButton.new()
+	music_toggle.name = "MusicToggle"
+	music_toggle.text = "Music"
+	music_toggle.button_pressed = AudioDirector.is_music_enabled()
+	music_toggle.toggled.connect(AudioDirector.set_music_enabled)
+	settings_row.add_child(music_toggle)
+	content.add_child(settings_row)
+
 	_main_view = VBoxContainer.new()
 	_main_view.add_theme_constant_override("separation", 5)
 	content.add_child(_main_view)

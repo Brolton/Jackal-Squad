@@ -46,6 +46,25 @@ func _run_tests() -> void:
 
 	game.queue_free()
 	await process_frame
+	audio.call("set_music_enabled", true)
+	var menu: Node = load("res://scenes/main.tscn").instantiate()
+	root.add_child(menu)
+	current_scene = menu
+	await process_frame
+	var music_toggle := menu.find_child("MusicToggle", true, false) as CheckButton
+	_check(
+		music_toggle != null and music_toggle.button_pressed,
+		"Main menu music setting reflects the saved audio preference"
+	)
+	if music_toggle != null:
+		music_toggle.button_pressed = false
+		_check(not audio.call("is_music_enabled") and not music.playing, "Turning off menu music stops mission music")
+		audio.call("start_music", 0)
+		_check(not music.playing, "Disabled music stays off when a mission starts")
+		music_toggle.button_pressed = true
+		_check(audio.call("is_music_enabled"), "Turning music back on updates the audio preference")
+	menu.queue_free()
+	await process_frame
 	if _failures == 0:
 		print("Audio presentation checks passed.")
 		quit()

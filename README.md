@@ -39,6 +39,8 @@ The presentation uses original project-specific key art, painted terrain, and hi
 
 The soundtrack and sound effects are original procedural 8-bit PCM synthesized by the game at runtime. Missions use a fast 148 BPM jungle-action chiptune with marching snares, syncopated bass, heroic lead phrases, and tom fills. Gameplay includes responsive jeep-engine, machine-gun, enemy-fire, grenade, explosion, impact, ramming, pickup, infantry-death, helicopter-arrival, and passenger-boarding audio. Grenades have a shorter throw, defeat route turrets in one hit, and defeat a standard tank in two close hits; an upgraded rocket defeats a standard tank in one hit, while boss turrets take reduced rocket damage.
 
+Music can be turned on or off from the **Settings** row in the main menu; the choice is saved between launches. This setting affects music only, not gameplay sound effects.
+
 Minefields create route hazards on all three maps. Damage now produces a hit flash and local camera response. Enemy health, damage, and firing rate stay fixed across squad sizes; co-op difficulty increases through the number of units instead. The pause/results flows support restart, mission advancement, campaign completion, and return to command.
 
 Automated solo and two-/four-player loopback tests pass. The Windows release export was built and its headless startup check passed. Windowed visual play and connectivity outside loopback remain unverified.

@@ -3,13 +3,45 @@ extends Node
 const SAMPLE_RATE := 16000
 const BEAT_SECONDS := 60.0 / 148.0
 const MUSIC_BEATS := 16
+const SETTINGS_PATH := "user://settings.cfg"
 
 var _music_player: AudioStreamPlayer
 var _music_stream: AudioStreamWAV
 var _engine_stream: AudioStreamWAV
 var _sfx_cache: Dictionary = {}
+var _music_enabled := true
+
+func _ready() -> void:
+	var settings := ConfigFile.new()
+	var error := settings.load(SETTINGS_PATH)
+	if error == OK:
+		var saved_value: Variant = settings.get_value("audio", "music_enabled", true)
+		if typeof(saved_value) == TYPE_BOOL:
+			_music_enabled = saved_value
+		else:
+			push_warning("Ignoring invalid music setting in %s." % SETTINGS_PATH)
+	elif error != ERR_FILE_NOT_FOUND:
+		push_error("Could not load audio settings from %s: %s" % [SETTINGS_PATH, error_string(error)])
+
+func is_music_enabled() -> bool:
+	return _music_enabled
+
+func set_music_enabled(enabled: bool) -> void:
+	if _music_enabled == enabled:
+		return
+	_music_enabled = enabled
+	if not _music_enabled:
+		stop_music()
+	var settings := ConfigFile.new()
+	settings.set_value("audio", "music_enabled", _music_enabled)
+	var error := settings.save(SETTINGS_PATH)
+	if error != OK:
+		push_error("Could not save audio settings to %s: %s" % [SETTINGS_PATH, error_string(error)])
 
 func start_music(level_index: int = 0) -> void:
+	if not _music_enabled:
+		stop_music()
+		return
 	if _music_player == null:
 		_music_player = AudioStreamPlayer.new()
 		_music_player.name = "MissionMusic"
