@@ -19,6 +19,7 @@ const PLAYER_COLORS := [
 const MAX_WEAPON_UPGRADE_LEVEL := 3
 const MAX_PASSENGERS := 6
 const EXTRACTION_UNLOAD_INTERVAL := 0.75
+const PRIMARY_GUN_SPACING := 16.0
 
 @export var acceleration := 850.0
 @export var maximum_speed := 220.0
@@ -391,7 +392,7 @@ func apply_weapon_upgrade(upgrade_type: StringName) -> bool:
 
 func weapon_visual_signature() -> Dictionary:
 	return {
-		"barrels": 1 + primary_upgrade_level,
+		"barrels": 2 if primary_upgrade_level > 0 else 1,
 		"rocket_pods": secondary_upgrade_level,
 		"primary_pips": primary_upgrade_level,
 		"secondary_pips": secondary_upgrade_level,
@@ -449,28 +450,35 @@ func _fire_primary() -> void:
 		projectile_damage = 3
 	var projectile_speed := 620.0 + float(primary_upgrade_level) * 80.0
 	var projectile_range := _visible_projectile_distance(90.0)
-	var projectile := PROJECTILE_SCENE.instantiate()
-	projectile.configure(
-		global_position + facing * 25.0,
-		facing,
-		self,
-		false,
-		projectile_damage,
-		projectile_speed,
-		true,
-		primary_upgrade_level,
-		projectile_range
-	)
-	get_tree().current_scene.add_child(projectile)
-	NetworkSession.spawn_projectile_visual(
-		global_position + facing * 25.0,
-		facing,
-		false,
-		projectile_damage,
-		projectile_speed,
-		primary_upgrade_level,
-		projectile_range
-	)
+	var barrel_count := 2 if primary_upgrade_level > 0 else 1
+	var side_direction := facing.rotated(PI * 0.5)
+	for barrel_index in range(barrel_count):
+		var barrel_offset := (
+			float(barrel_index) - float(barrel_count - 1) * 0.5
+		) * PRIMARY_GUN_SPACING
+		var spawn_position := global_position + facing * 25.0 + side_direction * barrel_offset
+		var projectile := PROJECTILE_SCENE.instantiate()
+		projectile.configure(
+			spawn_position,
+			facing,
+			self,
+			false,
+			projectile_damage,
+			projectile_speed,
+			true,
+			primary_upgrade_level,
+			projectile_range
+		)
+		get_tree().current_scene.add_child(projectile)
+		NetworkSession.spawn_projectile_visual(
+			spawn_position,
+			facing,
+			false,
+			projectile_damage,
+			projectile_speed,
+			primary_upgrade_level,
+			projectile_range
+		)
 
 func _fire_secondary() -> void:
 	if _secondary_cooldown > 0.0:
@@ -579,9 +587,11 @@ func _draw() -> void:
 func _draw_weapon_upgrades() -> void:
 	var steel := Color(0.23, 0.27, 0.27)
 	var hot := Color(1.0, 0.70, 0.22)
-	var barrel_count := 1 + primary_upgrade_level
+	var barrel_count := 2 if primary_upgrade_level > 0 else 1
 	for index in range(barrel_count):
-		var barrel_x := (float(index) - float(barrel_count - 1) * 0.5) * 4.5
+		var barrel_x := (
+			float(index) - float(barrel_count - 1) * 0.5
+		) * PRIMARY_GUN_SPACING
 		draw_line(Vector2(barrel_x, -8), Vector2(barrel_x, -34), steel, 3.0)
 		draw_circle(Vector2(barrel_x, -34), 1.8, hot if primary_upgrade_level >= 2 else steel.lightened(0.3))
 	for pod_index in range(secondary_upgrade_level):

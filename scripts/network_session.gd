@@ -180,6 +180,7 @@ func restart_campaign() -> bool:
 func restart_current_mission() -> bool:
 	if is_networked and not is_host:
 		return false
+	_reset_player_lives()
 	_reset_rescue_score()
 	_start_mission()
 	game_start_requested.emit()

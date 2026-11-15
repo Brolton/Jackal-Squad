@@ -105,7 +105,7 @@ godot --headless --editor --path . --quit
 godot --headless --path . --script res://tests/test_level_layouts.gd
 ```
 
-The layout test instantiates all three campaign missions and verifies their 2625×29400, 2450×25200, and 2800×28000 world bounds; matching camera limits; extended encounter rosters; rescue sites; extraction zones; and command bases. It also checks the jungle, cactus desert, and snowy forest themes. Campaign and Milestone 1, 3, 4, and 5 regression suites all passed after the data-driven level refactor.
+The layout test instantiates all three campaign missions and verifies their 2625×29400, 2450×25200, and 2800×28000 world bounds; matching camera limits; extended encounter rosters; rescue sites; extraction zones; and command bases. Co-op adds 35% of the original enemy count per additional player. It also checks the jungle, cactus desert, and snowy forest themes. Campaign and Milestone 1, 3, 4, and 5 regression suites all passed after the data-driven level refactor.
 
 ## Production stage 3 — 2D art and presentation
 
@@ -124,7 +124,7 @@ godot --headless --editor --path . --quit
 godot --headless --path . --script res://tests/test_gameplay_polish.gd
 ```
 
-The gameplay-polish test verifies designed minefields and authoritative mine damage, explosion state, player hit flash and camera trauma, fixed enemy health and firing rates, the complete pause menu, solo pause/resume, and current-mission restart semantics. The presentation, level-layout, campaign, and Milestone 1, 3, 4, and 5 suites all passed after these additions.
+The gameplay-polish test verifies designed minefields and authoritative mine damage, explosion state, player hit flash and camera trauma, fixed enemy health and firing rates, one-grenade destruction of a route turret, the complete pause menu, solo pause/resume, and current-mission restart semantics. The presentation and Milestone 3 tests verify that upgraded machine guns visibly add a second barrel and fire two parallel shots. The presentation, level-layout, campaign, and Milestone 1, 3, 4, and 5 suites all passed after these additions.
 
 ## Production stage 5 — final validation
 
@@ -185,7 +185,7 @@ godot --headless --editor --path . --quit
 godot --headless --path . --script res://tests/test_lives_spectator.gd
 ```
 
-The focused test verifies the HUD life count and spectator notice, the game-over statistics and restart action, one-life loss and return to the current level's start, permanent elimination at zero lives, spectator target assignment without duplicate targets when enough survivors are available, the +3 level-clear bonus capped at five lives, team game over, and campaign restart from mission one. The Emerald Approach layout test also verifies that each bridge aligns with both the river and a road crossing.
+The focused test verifies the HUD life count and spectator notice, the game-over statistics and restart action, one-life loss and return to the current level's start, permanent elimination at zero lives, spectator target assignment without duplicate targets when enough survivors are available, the +3 level-clear bonus capped at five lives, team game over, current-mission restart restoring all players to five lives, and campaign restart from mission one. The Emerald Approach layout test also verifies that each bridge aligns with both the river and a road crossing.
 
 Final validation on Godot `4.7.2.stable.official.ed1daf0bf` passed the editor import, the lives/spectator test, campaign and transition tests, layout, gameplay-polish, controls, visual-presentation, and Milestone 1, 3, 4, and 5 suites. Two-player ENet loopback passed on the host and client. The Windows release export started headlessly and produced `builds\JackalSquad.exe` (128,454,752 bytes; SHA-256 `F3A0DCF63C6342FBA627B6EA92852E7A9FD7E47DBA77AFEEA31BD99A6FC17293`).
 
@@ -239,7 +239,7 @@ The extraction zone is labeled as an optional rescue/repair bonus. Its former ab
 
 ## Boss pass — upgrade clarity
 
-Weapon pickups now have distinct arcade silhouettes and labels: gold multi-barrel `MG / RAPID FIRE` and cyan grenade/ring `BIGGER BOOM`. Collection triggers a large colored ring and `MG UP!` or `BLAST UP!` over the jeep plus type-specific pickup audio. Machine-gun levels change projectile color, core size, glow, and trail length. Grenade levels change projectile size, explosion palette, spark count, shockwave-ring count, radius, and use four distinct synthesized blast sounds. Presentation and Milestone 3 tests verify pickup semantics, jeep attachments, projectile/blast style propagation, level-specific sounds, and mechanical stat changes.
+Weapon pickups now have distinct arcade silhouettes and labels: gold twin-barrel `MG / DUAL MG` and cyan grenade/ring `BIGGER BOOM`. Collection triggers a large colored ring and `MG UP!` or `BLAST UP!` over the jeep plus type-specific pickup audio. An upgraded machine gun fires two parallel shots; its levels also change projectile color, core size, glow, and trail length. Grenade levels change projectile size, explosion palette, spark count, shockwave-ring count, radius, and use four distinct synthesized blast sounds. Presentation and Milestone 3 tests verify pickup semantics, jeep attachments, projectile/blast style propagation, level-specific sounds, and mechanical stat changes.
 
 ## Boss and campaign pass — final validation
 

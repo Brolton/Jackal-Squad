@@ -54,6 +54,18 @@ func _run_tests() -> void:
 	var game_over_state: Dictionary = session.call("mission_state_snapshot")
 	_check(bool(game_over_state.get("game_over", false)), "Game-over state is included in mission synchronization")
 
+	session.set("campaign_level_index", 1)
+	session.set("player_lives", {1: 2, 2: 0})
+	_check(bool(session.call("restart_current_mission")), "A player can restart the current mission")
+	var mission_restart_lives: Dictionary = session.get("player_lives")
+	_check(
+		int(session.get("campaign_level_index")) == 1
+		and not bool(session.get("game_over"))
+		and int(mission_restart_lives[1]) == 5
+		and int(mission_restart_lives[2]) == 5,
+		"Restarting the current mission preserves selection and restores every player's lives"
+	)
+
 	session.call("restart_campaign")
 	var reset_lives: Dictionary = session.get("player_lives")
 	_check(

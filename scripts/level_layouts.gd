@@ -2,6 +2,7 @@ class_name LevelLayouts
 extends RefCounted
 
 const MAP_SCALE := Vector2(1.75, 7.0)
+const EXTRA_ENEMIES_PER_PLAYER := 0.35
 
 static func get_layout(index: int) -> Dictionary:
 	var layout: Dictionary
@@ -41,7 +42,9 @@ static func scaled_infantry_positions(
 	var heavy_enemies: Array = layout["heavy_enemies"]
 	var base_enemy_count := positions.size() + heavy_enemies.size() + base_boss_turret_count
 	var players := clampi(player_count, 1, 4)
-	var target_enemy_count := roundi(float(base_enemy_count) * (1.0 + 0.5 * float(players - 1)))
+	var target_enemy_count := roundi(
+		float(base_enemy_count) * (1.0 + EXTRA_ENEMIES_PER_PLAYER * float(players - 1))
+	)
 	var current_enemy_count := positions.size() + heavy_enemies.size() + player_boss_turret_count
 	positions.append_array(_additional_route_positions(layout, target_enemy_count - current_enemy_count))
 	return positions

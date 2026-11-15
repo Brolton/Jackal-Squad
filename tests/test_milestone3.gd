@@ -70,8 +70,20 @@ func _run_tests() -> void:
 	_check(int(player.get("primary_upgrade_level")) == 1, "Collecting a machine-gun pickup upgrades the jeep")
 	_check(game.get_node_or_null("PrimaryUpgrade01") == null, "Collected pickups are removed")
 	player.set("_primary_cooldown", 0.0)
+	var shots_before_upgrade := primary_shots.size()
 	player.call("_fire_primary")
 	primary_shots = get_nodes_in_group("player_projectiles")
+	var first_upgraded_shot: Node2D = primary_shots[-2]
+	var second_upgraded_shot: Node2D = primary_shots[-1]
+	_check(
+		primary_shots.size() == shots_before_upgrade + 2
+		and first_upgraded_shot.get("direction") == second_upgraded_shot.get("direction")
+		and is_equal_approx(
+			first_upgraded_shot.global_position.distance_to(second_upgraded_shot.global_position),
+			16.0
+		),
+		"An upgraded machine gun fires two parallel, spaced shots"
+	)
 	_check(
 		float(primary_shots[-1].get("speed")) > base_shot_speed,
 		"Machine-gun upgrades improve primary fire"
@@ -110,7 +122,7 @@ func _run_tests() -> void:
 	first_grenade.configure(grenade_tank.global_position, Vector2.UP, player)
 	game.add_child(first_grenade)
 	first_grenade.call("_explode")
-	_check(int(grenade_tank.get("health")) == 3, "A direct grenade removes half a standard tank's health")
+	_check(int(grenade_tank.get("health")) == 2, "A direct grenade removes two thirds of a standard tank's health")
 	var second_grenade: Area2D = grenade_scene.instantiate()
 	second_grenade.configure(grenade_tank.global_position, Vector2.UP, player)
 	game.add_child(second_grenade)

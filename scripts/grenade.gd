@@ -1,5 +1,7 @@
 extends Area2D
 
+const BLAST_DAMAGE := 4
+
 @export var blast_radius := 92.0
 
 var direction := Vector2.UP
@@ -80,14 +82,12 @@ func _explode() -> void:
 		var body: Object = result["collider"]
 		if body == shooter or not body is Node2D or not body.has_method("take_damage"):
 			continue
-		var distance := global_position.distance_to((body as Node2D).global_position)
-		var damage := 3 if distance <= blast_radius * 0.5 else 2
 		if attacker_peer_id >= 0 and (
 			body.is_in_group("enemies") or body.is_in_group("final_base")
 		):
-			body.call("take_damage", damage, attacker_peer_id)
+			body.call("take_damage", BLAST_DAMAGE, attacker_peer_id)
 		else:
-			body.call("take_damage", damage)
+			body.call("take_damage", BLAST_DAMAGE)
 	queue_redraw()
 
 func _draw() -> void:

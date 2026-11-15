@@ -32,12 +32,14 @@ func _run_tests() -> void:
 				base_boss_turret_count,
 				player_boss_turret_count
 			)
-			var expected_enemy_count := roundi(float(base_enemy_count) * (1.0 + 0.5 * float(player_count - 1)))
+			var expected_enemy_count := roundi(
+				float(base_enemy_count) * (1.0 + 0.35 * float(player_count - 1))
+			)
 			_check(
 				scaled_infantry.size() + layout["heavy_enemies"].size() + player_boss_turret_count == expected_enemy_count,
 				"Mission %d scales the enemy roster to %d%% for %d player(s)" % [
 					level_index + 1,
-					100 + 50 * (player_count - 1),
+					roundi((1.0 + 0.35 * float(player_count - 1)) * 100.0),
 					player_count,
 				]
 			)
@@ -204,13 +206,13 @@ func _run_tests() -> void:
 				current_scene = coop_game
 				await process_frame
 				var expected_coop_enemy_count := roundi(
-					float(base_enemy_count) * (1.0 + 0.5 * float(player_count - 1))
+					float(base_enemy_count) * (1.0 + 0.35 * float(player_count - 1))
 				)
 				var coop_enemies := get_nodes_in_group("enemies")
 				_check(
 					coop_enemies.size() == expected_coop_enemy_count,
 					"Mission 1 actually spawns %d%% enemies for %d players (%d/%d)" % [
-						100 + 50 * (player_count - 1),
+						roundi((1.0 + 0.35 * float(player_count - 1)) * 100.0),
 						player_count,
 						coop_enemies.size(),
 						expected_coop_enemy_count,

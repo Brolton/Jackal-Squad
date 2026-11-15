@@ -43,6 +43,17 @@ func _run_tests() -> void:
 		)
 	enemy.free()
 
+	var turret: CharacterBody2D = load("res://scenes/infantry.tscn").instantiate()
+	turret.configure_enemy(1)
+	turret.position = Vector2(1800.0, 14000.0)
+	game.add_child(turret)
+	var grenade: Area2D = load("res://scenes/grenade.tscn").instantiate()
+	grenade.configure(turret.position, Vector2.UP, player)
+	game.add_child(grenade)
+	await physics_frame
+	grenade.call("_explode")
+	_check(turret.is_queued_for_deletion(), "One grenade destroys a route turret")
+
 	for existing_enemy in get_nodes_in_group("enemies"):
 		existing_enemy.set_physics_process(false)
 	var sentry: CharacterBody2D = load("res://scenes/infantry.tscn").instantiate()

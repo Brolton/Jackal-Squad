@@ -120,7 +120,11 @@ func _run_tests() -> void:
 	player.call("apply_weapon_upgrade", &"primary")
 	player.call("apply_weapon_upgrade", &"secondary")
 	var upgraded_signature: Dictionary = player.call("weapon_visual_signature")
-	_check(int(upgraded_signature["barrels"]) > int(base_signature["barrels"]), "Primary upgrades add visible gun barrels")
+	_check(
+		int(upgraded_signature["barrels"]) == 2
+		and int(base_signature["barrels"]) == 1,
+		"Primary upgrades add a second visible gun barrel"
+	)
 	_check(int(upgraded_signature["rocket_pods"]) > int(base_signature["rocket_pods"]), "Secondary upgrades add visible rocket pods")
 	_check(int(upgraded_signature["projectile_style"]) > int(base_signature["projectile_style"]), "Primary upgrades switch projectile presentation")
 	_check(int(upgraded_signature["blast_style"]) > int(base_signature["blast_style"]), "Secondary upgrades switch explosion presentation")
@@ -133,7 +137,7 @@ func _run_tests() -> void:
 	root.add_child(blast_pickup)
 	var gun_signature: Dictionary = gun_pickup.call("upgrade_visual_signature")
 	var blast_signature: Dictionary = blast_pickup.call("upgrade_visual_signature")
-	_check(str(gun_signature["label"]) == "RAPID FIRE" and str(gun_signature["icon"]) == "multi_barrel", "Machine-gun pickup clearly names and depicts its effect")
+	_check(str(gun_signature["label"]) == "DUAL MG" and str(gun_signature["icon"]) == "multi_barrel", "Machine-gun pickup clearly names and depicts its effect")
 	_check(str(blast_signature["label"]) == "ROCKETS" and str(blast_signature["icon"]) == "rocket", "Secondary pickup clearly shows that grenades become rockets")
 	gun_pickup.queue_free()
 	blast_pickup.queue_free()
