@@ -23,16 +23,19 @@ func _run_tests() -> void:
 	_check(float(player.get("_hit_flash")) > 0.0 and float(player.get("_camera_trauma")) > 0.0, "Player damage activates hit flash and camera feedback")
 
 	var enemy: CharacterBody2D = load("res://scenes/infantry.tscn").instantiate()
-	enemy.call("configure_enemy", 2)
-	var solo_health := int(enemy.get("maximum_health"))
-	enemy.call("apply_coop_scaling", 4)
-	_check(int(enemy.get("maximum_health")) > solo_health, "Enemy durability scales for a four-player squad")
-	_check(float(enemy.get("fire_interval")) < 1.8, "Co-op scaling also increases enemy pressure")
+	var expected_enemy_health := [1, 4, 6, 4]
+	var expected_fire_intervals := [1.55, 1.2, 1.8, 1.6]
+	for enemy_type in range(4):
+		enemy.call("configure_enemy", enemy_type)
+		_check(
+			int(enemy.get("maximum_health")) == expected_enemy_health[enemy_type]
+			and is_equal_approx(float(enemy.get("fire_interval")), expected_fire_intervals[enemy_type]),
+			"Enemy type %d retains its standard health and fire rate" % enemy_type
+		)
 	var player_camera: Camera2D = player.get_node("Camera2D")
 	var half_view := root.get_visible_rect().size * 0.5 / player_camera.zoom
 	var visible_distance := Vector2(half_view.x, half_view.y + absf(player_camera.position.y)).length()
 	for enemy_type in range(4):
-		enemy.call("configure_enemy", enemy_type)
 		_check(
 			float(enemy.get("detection_range")) >= visible_distance
 			and float(enemy.get("attack_range")) >= visible_distance,

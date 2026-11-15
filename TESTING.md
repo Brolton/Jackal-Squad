@@ -124,7 +124,7 @@ godot --headless --editor --path . --quit
 godot --headless --path . --script res://tests/test_gameplay_polish.gd
 ```
 
-The gameplay-polish test verifies designed minefields and authoritative mine damage, explosion state, player hit flash and camera trauma, four-player enemy durability/fire-pressure scaling, the complete pause menu, solo pause/resume, and current-mission restart semantics. The presentation, level-layout, campaign, and Milestone 1, 3, 4, and 5 suites all passed after these additions.
+The gameplay-polish test verifies designed minefields and authoritative mine damage, explosion state, player hit flash and camera trauma, fixed enemy health and firing rates, the complete pause menu, solo pause/resume, and current-mission restart semantics. The presentation, level-layout, campaign, and Milestone 1, 3, 4, and 5 suites all passed after these additions.
 
 ## Production stage 5 — final validation
 
@@ -227,7 +227,7 @@ Final validation completed on Godot `4.7.2.stable.official.ed1daf0bf`:
 
 ## Boss pass — mission rules and infantry durability
 
-Infantry maximum health is fixed at one in solo and co-op, while heavy-unit durability still scales with player count. Mission completion now depends only on destroying the final boss; enemy clearing and rescues are optional. Boarding a rescued passenger repairs one missing health point and rescue totals remain in the result statistics. The HUD labels boss destruction as the goal and rescues as a bonus, and solo/host sessions automatically advance four seconds after victory if the player does not press the button first.
+Infantry maximum health is fixed at one, and heavy-unit health and firing rates no longer scale with player count. Mission completion depends only on destroying the final boss; enemy clearing and rescues are optional. Boarding a rescued passenger repairs one missing health point and rescue totals remain in the result statistics. The HUD labels boss destruction as the goal and rescues as a bonus, and solo/host sessions automatically advance four seconds after victory if the player does not press the button first.
 
 ## Boss pass — scalable final encounters
 

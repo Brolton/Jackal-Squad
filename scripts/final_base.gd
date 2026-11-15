@@ -19,21 +19,11 @@ func configure_coop_scaling(player_count: int) -> void:
 func configure_boss(level_index: int, player_count: int) -> void:
 	mission_level = clampi(level_index, 0, 2)
 	coop_player_count = clampi(player_count, 1, 4)
-	turret_count = turret_count_for(mission_level, coop_player_count)
+	turret_count = LevelLayouts.boss_turret_count_for(mission_level, coop_player_count)
 	turrets_remaining = turret_count
 	shielded = turret_count > 0
-	maximum_health = BASE_HEALTH + mission_level * 6 + maxi(0, coop_player_count - 1) * 4
+	maximum_health = BASE_HEALTH + mission_level * 6
 	health = maximum_health
-
-static func turret_count_for(level_index: int, player_count: int) -> int:
-	var players := clampi(player_count, 1, 4)
-	match clampi(level_index, 0, 2):
-		0:
-			return 1 if players <= 2 else 2
-		1:
-			return mini(players, 3)
-		_:
-			return mini(players, 4)
 
 func _ready() -> void:
 	collision_layer = 4

@@ -21,6 +21,33 @@ func _run_tests() -> void:
 
 		_check(game.get("map_size") == expected_sizes[level_index], "Mission %d is wider and seven times longer" % (level_index + 1))
 		_check(layout["terrain_theme"] == expected_themes[level_index], "Mission %d has its own terrain style" % (level_index + 1))
+		var base_boss_turret_count := LevelLayouts.boss_turret_count_for(level_index, 1)
+		var base_enemy_count: int = layout["infantry"].size() + layout["heavy_enemies"].size() + base_boss_turret_count
+		var playable_rect := Rect2(Vector2.ZERO, layout["map_size"])
+		for player_count in range(1, 5):
+			var player_boss_turret_count := LevelLayouts.boss_turret_count_for(level_index, player_count)
+			var scaled_infantry := LevelLayouts.scaled_infantry_positions(
+				layout,
+				player_count,
+				base_boss_turret_count,
+				player_boss_turret_count
+			)
+			var expected_enemy_count := roundi(float(base_enemy_count) * (1.0 + 0.5 * float(player_count - 1)))
+			_check(
+				scaled_infantry.size() + layout["heavy_enemies"].size() + player_boss_turret_count == expected_enemy_count,
+				"Mission %d scales the enemy roster to %d%% for %d player(s)" % [
+					level_index + 1,
+					100 + 50 * (player_count - 1),
+					player_count,
+				]
+			)
+			var additions_are_inside_playable_map := true
+			for index in range(layout["infantry"].size(), scaled_infantry.size()):
+				var position: Vector2 = scaled_infantry[index]
+				if not playable_rect.has_point(position) or position.y <= float(layout["base"].y):
+					additions_are_inside_playable_map = false
+					break
+			_check(additions_are_inside_playable_map, "Mission %d extra enemies stay in front of the final base" % (level_index + 1))
 		_check(
 			_max_flank_gap(layout, true) <= 1400.0 and _max_flank_gap(layout, false) <= 1400.0,
 			"Mission %d has continuous enemy coverage along both map edges" % (level_index + 1)
@@ -48,7 +75,16 @@ func _run_tests() -> void:
 				and layout["water"].is_empty(),
 				"Snowbound Highlands has snow-covered forests and rocky snow"
 			)
-		_check(get_nodes_in_group("enemies").size() >= minimum_enemy_counts[level_index], "Mission %d has its full encounter roster" % (level_index + 1))
+		var actual_enemy_count := get_nodes_in_group("enemies").size()
+		_check(
+			actual_enemy_count == base_enemy_count,
+			"Mission %d spawns its original one-player roster (%d/%d)" % [
+				level_index + 1,
+				actual_enemy_count,
+				base_enemy_count,
+			]
+		)
+		_check(get_nodes_in_group("enemies").size() >= minimum_enemy_counts[level_index], "Mission %d meets the minimum encounter count" % (level_index + 1))
 		_check(game.get_tree().get_nodes_in_group("rescue_buildings").size() == 2 or game.get_node_or_null("RescueBuilding02") != null, "Mission %d has two rescue sites" % (level_index + 1))
 		_check(game.get_node_or_null("ExtractionZone") != null and game.get_node_or_null("FinalBase") != null, "Mission %d has extraction and a command base" % (level_index + 1))
 		_check(get_nodes_in_group("extraction_zones").size() >= 3, "Mission %d provides helipads along the route" % (level_index + 1))
@@ -64,6 +100,15 @@ func _run_tests() -> void:
 		)
 		var player: Node2D = game.get_node("Player_1")
 		var final_base: Node2D = game.get_node("FinalBase")
+		var north_boundary: StaticBody2D = game.get_node("NorthBoundary")
+		var north_boundary_shape := north_boundary.get_child(0).shape as RectangleShape2D
+		_check(
+			is_equal_approx(
+				north_boundary.position.y + north_boundary_shape.size.y * 0.5,
+				final_base.position.y - 40.0
+			),
+			"Mission %d north collision wall meets the rear wall of the final base" % (level_index + 1)
+		)
 		player.global_position = final_base.global_position + Vector2(0.0, 700.0)
 		var reinforcement_slots: Dictionary = game.get("_reinforcement_slots")
 		for enemy_type in [0, 2]:
@@ -144,6 +189,47 @@ func _run_tests() -> void:
 
 		game.queue_free()
 		await process_frame
+		if level_index == 0:
+			for player_count in range(2, 5):
+				session.call("start_solo", "CoopLayoutTester", 0)
+				var profiles: Dictionary = {}
+				for peer_id in range(1, player_count + 1):
+					profiles[peer_id] = {
+						"nickname": "Player%d" % peer_id,
+						"slot": peer_id - 1,
+					}
+				session.set("players", profiles)
+				var coop_game: Node = load(scene_path).instantiate()
+				root.add_child(coop_game)
+				current_scene = coop_game
+				await process_frame
+				var expected_coop_enemy_count := roundi(
+					float(base_enemy_count) * (1.0 + 0.5 * float(player_count - 1))
+				)
+				var coop_enemies := get_nodes_in_group("enemies")
+				_check(
+					coop_enemies.size() == expected_coop_enemy_count,
+					"Mission 1 actually spawns %d%% enemies for %d players (%d/%d)" % [
+						100 + 50 * (player_count - 1),
+						player_count,
+						coop_enemies.size(),
+						expected_coop_enemy_count,
+					]
+				)
+				var enemy_stats_are_unchanged := true
+				for enemy in coop_enemies:
+					if not enemy is CharacterBody2D:
+						continue
+					var enemy_type := int(enemy.get("enemy_type"))
+					if (
+						int(enemy.get("maximum_health")) != [1, 4, 6, 4][enemy_type]
+						or not is_equal_approx(float(enemy.get("fire_interval")), [1.55, 1.2, 1.8, 1.6][enemy_type])
+					):
+						enemy_stats_are_unchanged = false
+						break
+				_check(enemy_stats_are_unchanged, "Mission 1 enemy durability and firing rate stay fixed in co-op")
+				coop_game.queue_free()
+				await process_frame
 
 	if _failures == 0:
 		print("Large level layout checks passed.")

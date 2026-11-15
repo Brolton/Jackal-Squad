@@ -118,8 +118,6 @@ func _run_tests() -> void:
 	_check(grenade_tank.is_queued_for_deletion(), "Two direct grenades destroy a standard tank")
 
 	tank.set("health", int(tank.get("maximum_health")))
-	tank.call("apply_coop_scaling", 4)
-	tank.set("health", int(tank.get("maximum_health")))
 	var rocket_scene: PackedScene = load("res://scenes/rocket.tscn")
 	var anti_tank_rocket: Area2D = rocket_scene.instantiate()
 	anti_tank_rocket.configure(tank.global_position, Vector2.UP, player, false, 112.0, 1, 900.0, 10)

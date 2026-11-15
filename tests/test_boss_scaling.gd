@@ -23,6 +23,10 @@ func _run_tests() -> void:
 			await process_frame
 			var state: Dictionary = boss.call("boss_state_signature")
 			_check(int(state["turrets"]) == expected[level_index][player_count - 1], "Mission %d with %d player(s) spawns %d boss turret(s)" % [level_index + 1, player_count, expected[level_index][player_count - 1]])
+			_check(
+				int(boss.get("maximum_health")) == 18 + level_index * 6,
+				"Mission %d boss core health is unchanged for %d player(s)" % [level_index + 1, player_count]
+			)
 			_check(bool(state["shielded"]), "Boss core starts shielded")
 			boss.queue_free()
 			await process_frame

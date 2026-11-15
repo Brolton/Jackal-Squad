@@ -24,7 +24,6 @@ var _network_sync_timer := 0.0
 var _target_position := Vector2.ZERO
 var _target_rotation := 0.0
 var _has_authoritative_state := false
-var coop_player_count := 1
 var _hit_flash := 0.0
 var _walk_phase := 0.0
 var _walk_strength := 0.0
@@ -82,14 +81,6 @@ func configure_boat_patrol(bounds: Rect2) -> void:
 		push_error("Boat patrol bounds must have positive dimensions.")
 		return
 	_boat_patrol_bounds = bounds
-
-func apply_coop_scaling(player_count: int) -> void:
-	coop_player_count = clampi(player_count, 1, 4)
-	if coop_player_count <= 1:
-		return
-	if enemy_type != EnemyType.INFANTRY:
-		maximum_health += ceili(float(maximum_health) * 0.22 * float(coop_player_count - 1))
-	fire_interval = maxf(0.65, fire_interval * (1.0 - 0.06 * float(coop_player_count - 1)))
 
 func _ready() -> void:
 	motion_mode = CharacterBody2D.MOTION_MODE_FLOATING

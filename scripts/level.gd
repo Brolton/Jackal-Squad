@@ -139,7 +139,6 @@ func _create_reinforcement_enemy(enemy_type: int, enemy_name: String, spawn_posi
 	var enemy := INFANTRY_SCENE.instantiate()
 	enemy.name = enemy_name
 	enemy.configure_enemy(enemy_type)
-	enemy.apply_coop_scaling(maxi(1, NetworkSession.players.size()))
 	enemy.position = spawn_position
 	enemy.add_to_group("reinforcement_enemies")
 	add_child(enemy)
@@ -387,7 +386,8 @@ func _best_bridge_for_crossing(water: Rect2, from_position: Vector2, target_posi
 func _create_map_collisions() -> void:
 	_add_wall("WestBoundary", Vector2(-16.0, map_size.y * 0.5), Vector2(32.0, map_size.y + 64.0))
 	_add_wall("EastBoundary", Vector2(map_size.x + 16.0, map_size.y * 0.5), Vector2(32.0, map_size.y + 64.0))
-	_add_wall("NorthBoundary", Vector2(map_size.x * 0.5, -16.0), Vector2(map_size.x, 32.0))
+	var base_position: Vector2 = _layout["base"]
+	_add_wall("NorthBoundary", Vector2(map_size.x * 0.5, base_position.y - 56.0), Vector2(map_size.x, 32.0))
 	_add_wall("SouthBoundary", Vector2(map_size.x * 0.5, map_size.y + 16.0), Vector2(map_size.x, 32.0))
 	for barrier: Dictionary in _layout["barriers"]:
 		_add_wall(barrier["name"], barrier["center"], barrier["size"], 32)
@@ -450,11 +450,17 @@ func _create_players_and_enemies() -> void:
 		if not NetworkSession.is_networked or int(peer_id) == multiplayer.get_unique_id():
 			local_player = player
 
-	var infantry_positions: Array = _layout["infantry"]
+	var base_boss_turret_count := LevelLayouts.boss_turret_count_for(level_index, 1)
+	var player_boss_turret_count := LevelLayouts.boss_turret_count_for(level_index, player_count)
+	var infantry_positions := LevelLayouts.scaled_infantry_positions(
+		_layout,
+		player_count,
+		base_boss_turret_count,
+		player_boss_turret_count
+	)
 	for index in range(infantry_positions.size()):
 		var enemy := INFANTRY_SCENE.instantiate()
 		enemy.name = "Infantry%02d" % (index + 1)
-		enemy.apply_coop_scaling(player_count)
 		enemy.position = infantry_positions[index]
 		add_child(enemy)
 	for placement: Dictionary in _layout["heavy_enemies"]:
@@ -462,7 +468,6 @@ func _create_players_and_enemies() -> void:
 		enemy.name = placement["name"]
 		var enemy_type := int(placement["type"])
 		enemy.configure_enemy(enemy_type)
-		enemy.apply_coop_scaling(player_count)
 		enemy.position = placement["position"]
 		if enemy_type == 3:
 			enemy.configure_boat_patrol(_boat_patrol_bounds(placement["position"]))

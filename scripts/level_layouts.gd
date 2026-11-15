@@ -18,6 +18,86 @@ static func get_layout(index: int) -> Dictionary:
 	_add_long_route_obstacles(layout)
 	return layout
 
+static func boss_turret_count_for(level_index: int, player_count: int) -> int:
+	var players := clampi(player_count, 1, 4)
+	match clampi(level_index, 0, 2):
+		0:
+			return 1 if players <= 2 else 2
+		1:
+			return mini(players, 3)
+		_:
+			return mini(players, 4)
+
+static func scaled_infantry_positions(
+	layout: Dictionary,
+	player_count: int,
+	base_boss_turret_count: int,
+	player_boss_turret_count: int
+) -> Array[Vector2]:
+	var positions: Array[Vector2] = []
+	for position: Vector2 in layout["infantry"]:
+		positions.append(position)
+
+	var heavy_enemies: Array = layout["heavy_enemies"]
+	var base_enemy_count := positions.size() + heavy_enemies.size() + base_boss_turret_count
+	var players := clampi(player_count, 1, 4)
+	var target_enemy_count := roundi(float(base_enemy_count) * (1.0 + 0.5 * float(players - 1)))
+	var current_enemy_count := positions.size() + heavy_enemies.size() + player_boss_turret_count
+	positions.append_array(_additional_route_positions(layout, target_enemy_count - current_enemy_count))
+	return positions
+
+static func _additional_route_positions(layout: Dictionary, count: int) -> Array[Vector2]:
+	var positions: Array[Vector2] = []
+	if count <= 0:
+		return positions
+
+	var route: Array = layout["road"]
+	var minimum_y := float(layout["base"].y) + 120.0
+	var route_points: Array[Vector2] = []
+	route_points.append(route[0])
+	for index in range(1, route.size()):
+		var start: Vector2 = route[index - 1]
+		var finish: Vector2 = route[index]
+		if finish.y < minimum_y:
+			if start.y > minimum_y:
+				route_points.append(start.lerp(finish, (start.y - minimum_y) / (start.y - finish.y)))
+			break
+		route_points.append(finish)
+
+	var segment_lengths: Array[float] = []
+	var route_length := 0.0
+	for index in range(1, route_points.size()):
+		var segment_length := route_points[index - 1].distance_to(route_points[index])
+		segment_lengths.append(segment_length)
+		route_length += segment_length
+	if route_length <= 0.0:
+		return positions
+
+	var map_size: Vector2 = layout["map_size"]
+	var base_position: Vector2 = layout["base"]
+	var lateral_offset := float(layout["road_width"]) * 0.55
+	for enemy_index in range(count):
+		var distance := route_length * (float(enemy_index) + 0.5) / float(count)
+		var segment_start_distance := 0.0
+		for segment_index in range(segment_lengths.size()):
+			var segment_length := segment_lengths[segment_index]
+			if distance > segment_start_distance + segment_length and segment_index < segment_lengths.size() - 1:
+				segment_start_distance += segment_length
+				continue
+			var start: Vector2 = route_points[segment_index]
+			var finish: Vector2 = route_points[segment_index + 1]
+			var progress := (distance - segment_start_distance) / segment_length
+			var direction := (finish - start).normalized()
+			var side := Vector2(-direction.y, direction.x)
+			var side_sign := 1.0 if enemy_index % 2 == 0 else -1.0
+			var position := start.lerp(finish, progress) + side * lateral_offset * side_sign
+			positions.append(Vector2(
+				clampf(position.x, 24.0, map_size.x - 24.0),
+				clampf(position.y, base_position.y + 64.0, map_size.y - 24.0)
+			))
+			break
+	return positions
+
 static func _scale_rect(rect: Rect2) -> Rect2:
 	var scaled_size := rect.size * Vector2(MAP_SCALE.x, 1.0)
 	return Rect2(rect.get_center() * MAP_SCALE - scaled_size * 0.5, scaled_size)
