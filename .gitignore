@@ -20,6 +20,7 @@ data_*/
 mono_crash.*.json
 
 # Export outputs
+builds/v1.0/
 *.exe
 builds/network-qa-*/
 builds/lan-discovery-*/

@@ -72,7 +72,7 @@ func _build_ui() -> void:
 	panel.add_child(margin)
 
 	var content := VBoxContainer.new()
-	content.add_theme_constant_override("separation", 6)
+	content.add_theme_constant_override("separation", 3)
 	margin.add_child(content)
 
 	var title := Label.new()

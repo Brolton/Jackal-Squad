@@ -292,3 +292,14 @@ Final validation on Godot `4.7.2.stable.official.ed1daf0bf`:
 The expanded maps now place regular guards along both outer flanks. Enemy detection and attack ranges cover the visible combat area. River and bridge rectangles preserve their intended centers when the map is scaled, aligning water with collision barriers and boat spawns. Boats patrol the river sections between bridges without entering bridge decks.
 
 The level-layout, gameplay-polish, and Milestone 1, 3, and 4 tests pass, including coverage for flank spacing, on-screen enemy engagement, aligned bridges, boat patrol bounds and movement, and passenger river crossings. The refreshed Windows release at `builds\JackalSquad.exe` is 128,440,896 bytes and passed a headless startup check.
+
+## Release v1.0 validation (2026-11-16)
+
+- Godot 4.7.2 exports: Windows x86-64, Linux x86-64, macOS universal (Intel and Apple Silicon).
+- All 13 focused gameplay and presentation suites pass. The sentry movement assertion now checks positive movement because move_and_slide uses the physics tick rather than the manually passed delta. Main-menu spacing was reduced so the music settings row fits the base viewport.
+- Final Windows and Linux/WSL exported executables pass headless startup with exit code 0.
+- macOS ZIP integrity, executable permissions, bundle version and both Mach-O architectures verified. macOS runtime and signing/notarization are unverified/unavailable.
+- Two-player loopback assertions passed on repeat, with passenger RPC errors; the first run also failed a damage synchronization assertion.
+- Four-player loopback with distinct client roles fails movement and rescue synchronization checks, with passenger RPC errors. Four-player co-op remains a known release limitation.
+- Physical-machine LAN, Tailscale, internet play and interactive platform QA remain unverified.
+- Release archives and SHA256SUMS.txt are under builds/v1.0 and uploaded as GitHub release assets.

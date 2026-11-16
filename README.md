@@ -1,5 +1,27 @@
 # Jackal Squad
 
+## Release v1.0
+
+Download the ready-to-play builds from [GitHub Releases](https://github.com/Brolton/Jackal-Squad/releases/tag/v1.0):
+
+- Windows x86-64: extract the ZIP and run `JackalSquad.exe`. The package includes the optional LAN firewall helper.
+- Linux x86-64: extract the `.tar.gz` and run `./JackalSquad.x86_64`.
+- macOS Intel and Apple Silicon: extract the universal ZIP and open `Jackal Squad.app`. This build is unsigned and not notarized; macOS may require **System Settings > Privacy & Security > Open Anyway** for a trusted download. macOS runtime testing remains unverified.
+
+`SHA256SUMS.txt` provides checksums for all three downloads. Use the same release on every computer for multiplayer.
+
+Release validation: all 13 focused gameplay/presentation suites pass, and Windows plus Linux (WSL) pass headless startup. Two-player loopback assertions passed on a repeat run, with passenger RPC errors in the logs. Four-player loopback currently fails movement/rescue synchronization checks; treat four-player co-op as a known limitation of this release. Physical LAN and macOS runtime testing remain unverified.
+
+All three export templates are included in Godot 4.7.2's standard export-template package. Create the output directories before exporting:
+
+```powershell
+New-Item -ItemType Directory -Force builds/v1.0/windows, builds/v1.0/linux
+godot --headless --editor --path . --quit
+godot --headless --path . --export-release "Windows Desktop" builds/v1.0/windows/JackalSquad.exe
+godot --headless --path . --export-release "Linux" builds/v1.0/linux/JackalSquad.x86_64
+godot --headless --path . --export-release "macOS" builds/v1.0/JackalSquad-v1.0-macOS-universal.zip
+```
+
 Jackal Squad is an original top-down 2D cooperative jeep action game for Windows, built with Godot 4 and GDScript. It takes inspiration from the broad genre and play style of classic top-down action games; all game code, art, maps, audio, and branding will be original.
 
 ## Development setup

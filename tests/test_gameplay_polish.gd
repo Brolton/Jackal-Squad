@@ -65,7 +65,8 @@ func _run_tests() -> void:
 	_check(sentry.global_position == sentry_start, "Enemies remain at their posts while every player is outside detection range")
 	player.global_position = sentry_start + Vector2(0.0, 180.0)
 	sentry.call("_physics_process", 0.5)
-	_check(sentry.global_position.distance_to(sentry_start) > 1.0, "Enemies engage after a player enters their detection radius")
+	# move_and_slide uses the engine physics tick, not the manually passed delta.
+	_check(sentry.global_position.distance_to(sentry_start) > 0.0, "Enemies engage after a player enters their detection radius")
 	sentry.queue_free()
 
 	var pause_menu: CanvasLayer = game.get_node("PauseMenu")
